@@ -1,4 +1,4 @@
-// Netlify Function: send-order-sms
+// Netlify Function: netlify/functions/send-order-sms.js
 //
 // Sends the finished order details as a text message to the shop owner's
 // phone via Mobile Message (mobilemessage.com.au), and reports back whether
