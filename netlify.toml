@@ -1,5 +1,0 @@
-[build]
-  functions = "."
-  publish = "."
-
-[functions]
