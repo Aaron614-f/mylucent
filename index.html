@@ -906,12 +906,22 @@
       phone: document.getElementById('sumPhone').textContent
     };
 
-    fetch('/.netlify/functions/send-order-sms', {
+    fetch('/api/send-order-sms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(orderPayload)
     })
-      .then(function(res){ return res.json().then(function(data){ return { ok: res.ok, data: data }; }); })
+      .then(function(res){
+        return res.text().then(function(rawText){
+          var data = null;
+          try { data = JSON.parse(rawText); } catch (e) { /* not JSON, handled below */ }
+          if (!data){
+            throw new Error('Server returned an unexpected response (HTTP ' + res.status + '). ' +
+              (rawText ? 'Raw response: ' + rawText.slice(0, 200) : 'The response body was empty.'));
+          }
+          return { ok: res.ok, data: data };
+        });
+      })
       .then(function(result){
         if (result.ok && result.data.success){
           confirmStatus.classList.add('success');

@@ -1,6 +1,0 @@
-[build]
-  functions = "."
-  publish = "."
-
-[functions]
-  node_bundler = "esbuild"
