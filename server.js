@@ -1,8 +1,10 @@
 // server.js
 //
-// Serves the myLucent.co website and texts the shop owner ONLY once a
-// Stripe payment has actually completed — via a Stripe webhook — using
-// Mobile Message (mobilemessage.com.au).
+// Serves the myLucent.co website. Once a Stripe payment actually completes
+// (verified via a Stripe webhook), this:
+//   1. Texts the shop owner the order details, via Mobile Message.
+//   2. Emails the customer an order confirmation, via the owner's own
+//      Gmail account.
 //
 // Flow:
 //   1. When a customer reaches checkout, the page calls POST /api/register-order
@@ -11,7 +13,7 @@
 //      reference as client_reference_id).
 //   3. Stripe calls POST /api/stripe-webhook the moment payment succeeds.
 //      We verify it's really from Stripe, look up the stored order by
-//      reference, and text the owner.
+//      reference, text the owner, and email the customer.
 //
 // REQUIRED environment variables (Railway -> your service -> Variables):
 //   MOBILEMESSAGE_USERNAME  - your Mobile Message API username
@@ -23,10 +25,21 @@
 //                              from Stripe Dashboard -> Developers ->
 //                              Webhooks -> your endpoint. Test mode and
 //                              live mode each have their OWN secret.
+//   GMAIL_USER               - the Gmail address confirmation emails are
+//                              sent FROM (e.g. hello@mylucent.co if that's
+//                              a Gmail/Google Workspace address, or your
+//                              own gmail.com address).
+//   GMAIL_APP_PASSWORD       - a 16-character Google "App Password" for
+//                              that account (NOT your normal Gmail
+//                              password). Generate one at
+//                              myaccount.google.com/apppasswords — this
+//                              requires 2-Step Verification to be turned
+//                              on for the account first.
 
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -126,6 +139,67 @@ async function sendOwnerText(messageBody, reference) {
   return result;
 }
 
+async function sendCustomerConfirmationEmail(order) {
+  const { GMAIL_USER, GMAIL_APP_PASSWORD } = process.env;
+
+  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+    throw new Error('Server is missing Gmail configuration.');
+  }
+  if (!order.email) {
+    throw new Error('No customer email on file for this order.');
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD }
+  });
+
+  const textBody = [
+    'Thanks for your order, ' + order.name + '!',
+    '',
+    'Here\'s what we\'ve got for you:',
+    'Order reference: ' + order.reference,
+    'Size: ' + order.size,
+    'Design: ' + order.design,
+    'Language: ' + order.language,
+    'Font: ' + order.font,
+    'Finish: ' + order.finish,
+    'Name / wording: ' + order.name,
+    '',
+    'This is a pickup-only order — no delivery. We\'ll contact you at ' + order.phone + ' to confirm the pickup address and timing.',
+    '',
+    '— myLucent.co'
+  ].join('\n');
+
+  const htmlBody = `
+    <div style="font-family:Arial,sans-serif; color:#1B2733; max-width:480px; margin:0 auto;">
+      <h2 style="font-weight:600;">Thanks for your order, ${order.name}!</h2>
+      <p>Here's what we've got for you:</p>
+      <table style="width:100%; border-collapse:collapse; font-size:14px;">
+        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Order reference</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;"><b>${order.reference}</b></td></tr>
+        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Size</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;">${order.size}</td></tr>
+        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Design</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;">${order.design}</td></tr>
+        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Language</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;">${order.language}</td></tr>
+        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Font</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;">${order.font}</td></tr>
+        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Finish</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;">${order.finish}</td></tr>
+        <tr><td style="padding:8px 0; color:#666;">Name / wording</td><td style="padding:8px 0; text-align:right;">${order.name}</td></tr>
+      </table>
+      <p style="margin-top:20px; padding:14px 16px; background:#fbf3ec; border:1px solid #e6d3c2; border-radius:8px; font-size:13px;">
+        <b>No delivery available.</b> This is a pickup-only order. We'll contact you at ${order.phone} to confirm the pickup address and timing.
+      </p>
+      <p style="margin-top:24px; color:#999; font-size:12px;">— myLucent.co</p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: 'myLucent.co <' + GMAIL_USER + '>',
+    to: order.email,
+    subject: 'Your myLucent.co order is confirmed (' + order.reference + ')',
+    text: textBody,
+    html: htmlBody
+  });
+}
+
 // --- Stripe webhook: needs the RAW body for signature verification, so
 // this route is registered BEFORE the general express.json() parser below. ---
 app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -164,6 +238,12 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
       } catch (err) {
         console.error('Failed to send order text for', reference, err.message);
       }
+      try {
+        await sendCustomerConfirmationEmail(stored.order);
+        console.log('Confirmation email sent for', reference);
+      } catch (err) {
+        console.error('Failed to send confirmation email for', reference, err.message);
+      }
     } else {
       console.error('Payment completed but no matching order found for reference:', reference);
       try {
@@ -183,7 +263,7 @@ app.use(express.static(__dirname));
 // Called from the site when a customer reaches checkout, before paying.
 app.post('/api/register-order', (req, res) => {
   const order = req.body;
-  const required = ['reference', 'size', 'design', 'language', 'font', 'finish', 'name', 'phone'];
+  const required = ['reference', 'size', 'design', 'language', 'font', 'finish', 'name', 'phone', 'email'];
   for (const field of required) {
     if (!order || !order[field]) {
       return res.status(400).json({ success: false, error: 'Missing order field: ' + field });
