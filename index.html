@@ -118,6 +118,77 @@
     letter-spacing:0.5px;
   }
 
+  .qty-block{
+    margin-top:24px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+  }
+  .qty-label{
+    font-size:10px; letter-spacing:2px; color:var(--muted);
+    margin-bottom:10px; text-align:center;
+  }
+  .qty-row{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+  }
+  .qty-chip{
+    width:36px; height:36px;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line);
+    border-radius:4px;
+    font-size:13px;
+    cursor:pointer;
+    background:var(--white);
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .qty-chip:hover{ border-color:var(--gold); }
+  .qty-chip.selected{
+    border-color:var(--gold);
+    background:var(--gold);
+    color:var(--white);
+  }
+
+  .price-table{
+    margin-top:16px;
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+  .price-table-label{
+    font-size:10px; letter-spacing:2px; color:var(--muted);
+    margin-bottom:10px; text-align:center;
+  }
+  .price-row{
+    display:flex;
+    justify-content:space-between;
+    padding:6px 4px;
+    font-size:12.5px;
+    color:var(--charcoal);
+    border-radius:3px;
+  }
+  .price-row.selected{
+    background:rgba(169,120,79,0.1);
+    font-weight:600;
+  }
+  .price-row .qty-n{ color:var(--muted); }
+  .price-row.selected .qty-n{ color:var(--charcoal); }
+  .price-extra-note{
+    margin-top:8px;
+    font-size:10.5px;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.5;
+  }
+  .price-unavailable{
+    margin-top:16px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+    font-size:11.5px;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.5;
+  }
+
   .field-group{ margin-bottom:38px; }
   .field-group .step-label{
     font-size:11px; letter-spacing:2px; color:var(--gold);
@@ -498,6 +569,28 @@
                 <text id="previewName" x="200" y="138" text-anchor="middle" font-size="34" fill="#6B5636" font-family="'Spectral', serif">Your Name</text>
               </svg>
               <div class="preview-meta" id="previewMeta">Medium · Classic · Silver</div>
+
+              <div class="qty-block">
+                <div class="qty-label">HOW MANY?</div>
+                <div class="qty-row" id="qtyRow">
+                  <div class="qty-chip selected" data-qty="1">1</div>
+                  <div class="qty-chip" data-qty="2">2</div>
+                  <div class="qty-chip" data-qty="3">3</div>
+                  <div class="qty-chip" data-qty="4">4</div>
+                  <div class="qty-chip" data-qty="5">5</div>
+                </div>
+              </div>
+
+              <div class="price-table" id="priceTable">
+                <div class="price-table-label">PRICING</div>
+                <div class="price-row" id="priceRow1"><span class="qty-n">1 plaque</span><span class="amt">—</span></div>
+                <div class="price-row" id="priceRow2"><span class="qty-n">2 plaques</span><span class="amt">—</span></div>
+                <div class="price-row" id="priceRow3"><span class="qty-n">3 plaques</span><span class="amt">—</span></div>
+                <div class="price-extra-note" id="priceExtraNote"></div>
+              </div>
+              <div class="price-unavailable" id="priceUnavailable" hidden>
+                Custom sizing is priced individually — we'll confirm a quote with you by phone or email.
+              </div>
             </div>
 
             <div class="config-form">
@@ -600,6 +693,7 @@
           <div class="checkout-card">
             <h2>Review Your Order</h2>
             <div class="summary-row"><span class="k">Size</span><span class="v" id="sumSize">—</span></div>
+            <div class="summary-row"><span class="k">Quantity</span><span class="v" id="sumQty">—</span></div>
             <div class="summary-row"><span class="k">Design</span><span class="v" id="sumDesign">—</span></div>
             <div class="summary-row"><span class="k">Language</span><span class="v" id="sumLang">—</span></div>
             <div class="summary-row"><span class="k">Font</span><span class="v" id="sumFont">—</span></div>
@@ -608,6 +702,7 @@
             <div class="summary-row"><span class="k">Phone</span><span class="v" id="sumPhone">—</span></div>
             <div class="summary-row"><span class="k">Email</span><span class="v" id="sumEmail">—</span></div>
             <div class="summary-row"><span class="k">Order Reference</span><span class="v" id="sumRef">—</span></div>
+            <div class="summary-row" id="sumTotalRow" hidden><span class="k">Total</span><span class="v" id="sumTotal">—</span></div>
 
             <div class="pickup-note">
               <b>No delivery available.</b> This is a pickup-only order. We'll confirm the pickup address and available time with you by phone after payment.
@@ -691,8 +786,71 @@
     design: 'Design 1 — Classic',
     lang: 'en',
     font: FONTS.en[0],
-    color: 'rose'
+    color: 'rose',
+    quantity: 1
   };
+
+  // ---------- Pricing ----------
+  // Prices come from pricing.js on the server (GET /api/pricing) so the
+  // number shown here always matches what checkout actually charges.
+  var PRICING = null;
+  fetch('/api/pricing')
+    .then(function(r){ return r.json(); })
+    .then(function(data){ PRICING = data; updatePriceDisplay(); })
+    .catch(function(){ /* price table just stays hidden/blank if this fails */ });
+
+  var qtyChips = document.querySelectorAll('#qtyRow .qty-chip');
+  var priceTable = document.getElementById('priceTable');
+  var priceUnavailable = document.getElementById('priceUnavailable');
+  var priceRow1 = document.getElementById('priceRow1');
+  var priceRow2 = document.getElementById('priceRow2');
+  var priceRow3 = document.getElementById('priceRow3');
+  var priceExtraNote = document.getElementById('priceExtraNote');
+
+  qtyChips.forEach(function(chip){
+    chip.addEventListener('click', function(){
+      qtyChips.forEach(function(c){ c.classList.remove('selected'); });
+      chip.classList.add('selected');
+      state.quantity = parseInt(chip.dataset.qty, 10);
+      updatePriceDisplay();
+    });
+  });
+
+  function formatMoney(dollars){
+    return '$' + dollars.toLocaleString('en-AU', { minimumFractionDigits: dollars % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 });
+  }
+
+  function updatePriceDisplay(){
+    if (!PRICING) return;
+
+    if (state.size === 'custom'){
+      priceTable.hidden = true;
+      priceUnavailable.hidden = false;
+      return;
+    }
+
+    var sizeConfig = PRICING[state.size];
+    priceUnavailable.hidden = true;
+    priceTable.hidden = false;
+
+    var rows = [
+      { el: priceRow1, qty: 1 },
+      { el: priceRow2, qty: 2 },
+      { el: priceRow3, qty: 3 }
+    ];
+
+    rows.forEach(function(row){
+      var amt = sizeConfig.pricing[row.qty];
+      row.el.querySelector('.amt').textContent = amt ? formatMoney(amt) : '—';
+      row.el.classList.toggle('selected', state.quantity === row.qty);
+    });
+
+    if (sizeConfig.additionalUnitPrice){
+      priceExtraNote.textContent = 'Each additional plaque after 3: ' + formatMoney(sizeConfig.additionalUnitPrice);
+    } else {
+      priceExtraNote.textContent = '';
+    }
+  }
 
   var sizeChips = document.querySelectorAll('#sizeChips .chip');
   var customFields = document.getElementById('customSizeFields');
@@ -743,6 +901,7 @@
         state.sizeH = parseFloat(chip.dataset.h);
       }
       updatePreview();
+      updatePriceDisplay();
     });
   });
   [customWidth, customHeight].forEach(function(inp){
@@ -839,6 +998,7 @@
     previewMeta.textContent = sizeLabel + ' · ' + state.design.split(' — ')[1] + ' · ' + COLOR_LABEL[state.color];
   }
   updatePreview();
+  updatePriceDisplay();
 
   var toCheckoutBtn = document.getElementById('toCheckoutBtn');
   var backToConfigBtn = document.getElementById('backToConfigBtn');
@@ -864,17 +1024,6 @@
   var sizeError = document.getElementById('sizeError');
   var payOnlineBlock = document.getElementById('payOnlineBlock');
   var customSizeNotice = document.getElementById('customSizeNotice');
-
-  // ---------- Stripe Payment Links ----------
-  // Create a Payment Link for each preset size in your Stripe Dashboard
-  // (Payment Links → New), then paste the URLs below. Each link can also
-  // have its own price and, optionally, Stripe "custom fields" if you want
-  // Stripe itself to capture engraving details as a backup.
-  var STRIPE_LINKS = {
-    small:  'https://buy.stripe.com/test_bJeaEXgsu59HfFq0S31B600',
-    medium: 'https://buy.stripe.com/test_bJeaEXgsu59HfFq0S31B600',
-    large:  'https://buy.stripe.com/test_bJeaEXgsu59HfFq0S31B600'
-  };
 
   var currentOrderRef = '';
   function generateOrderRef(){
@@ -904,6 +1053,7 @@
     currentOrderRef = generateOrderRef();
 
     document.getElementById('sumSize').textContent = sizeLabel;
+    document.getElementById('sumQty').textContent = state.quantity;
     document.getElementById('sumDesign').textContent = state.design;
     document.getElementById('sumLang').textContent = state.lang === 'he' ? 'Hebrew' : 'English';
     document.getElementById('sumFont').textContent = state.font.label;
@@ -913,12 +1063,29 @@
     document.getElementById('sumEmail').textContent = emailInput.value.trim();
     document.getElementById('sumRef').textContent = currentOrderRef;
 
+    var sumTotalRow = document.getElementById('sumTotalRow');
     if (state.size === 'custom'){
       payOnlineBlock.hidden = true;
       customSizeNotice.hidden = false;
+      sumTotalRow.hidden = true;
     } else {
       payOnlineBlock.hidden = false;
       customSizeNotice.hidden = true;
+      if (PRICING && PRICING[state.size]){
+        var amt = PRICING[state.size].pricing[state.quantity];
+        if (!amt && state.quantity > 3){
+          var highest = PRICING[state.size].pricing[3];
+          amt = highest + (state.quantity - 3) * PRICING[state.size].additionalUnitPrice;
+        }
+        if (amt){
+          document.getElementById('sumTotal').textContent = formatMoney(amt);
+          sumTotalRow.hidden = false;
+        } else {
+          sumTotalRow.hidden = true;
+        }
+      } else {
+        sumTotalRow.hidden = true;
+      }
     }
 
     panelConfigure.hidden = true;
@@ -935,7 +1102,9 @@
   function registerOrder(){
     var orderPayload = {
       reference: currentOrderRef,
-      size: document.getElementById('sumSize').textContent,
+      size: state.size,
+      sizeLabel: document.getElementById('sumSize').textContent,
+      quantity: state.quantity,
       design: document.getElementById('sumDesign').textContent,
       language: document.getElementById('sumLang').textContent,
       font: document.getElementById('sumFont').textContent,
@@ -965,6 +1134,7 @@
       '',
       'Order Reference: ' + currentOrderRef,
       'Size: ' + document.getElementById('sumSize').textContent,
+      'Quantity: ' + document.getElementById('sumQty').textContent,
       'Design: ' + document.getElementById('sumDesign').textContent,
       'Language: ' + document.getElementById('sumLang').textContent,
       'Font: ' + document.getElementById('sumFont').textContent,
@@ -979,13 +1149,28 @@
   }
 
   document.getElementById('payOnlineBtn').addEventListener('click', function(){
-    var link = STRIPE_LINKS[state.size];
-    if (!link || link.indexOf('REPLACE_WITH') !== -1){
-      alert('Online payment isn\'t set up yet for this size — please use "Send Order Details by Email" instead, and we\'ll follow up with a payment link.');
-      return;
-    }
-    var url = link + '?client_reference_id=' + encodeURIComponent(currentOrderRef);
-    window.open(url, '_blank');
+    var btn = this;
+    var originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Redirecting to secure checkout…';
+
+    fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference: currentOrderRef })
+    })
+      .then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+      .then(function(result){
+        if (!result.ok || !result.data.url){
+          throw new Error(result.data.error || 'Could not start checkout.');
+        }
+        window.location.href = result.data.url;
+      })
+      .catch(function(err){
+        alert(err.message || 'Something went wrong starting checkout. Please try again, or use "Send Order Details by Email" instead.');
+        btn.disabled = false;
+        btn.textContent = originalText;
+      });
   });
 
   document.getElementById('submitOrderBtn').addEventListener('click', function(){
