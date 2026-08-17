@@ -24,38 +24,37 @@
 // ============================================================
 
 module.exports = {
-
-  currency: 'aud',
+  currency: "aud",
 
   small: {
-    label: 'Small (45 × 10.4mm)',
+    label: "Small (45 × 10.4mm)",
     pricing: {
-      1: 25,   // <-- set price for ordering 1
-      2: 35,   // <-- set TOTAL price for ordering 2
-      3: 40    // <-- set TOTAL price for ordering 3
+      1: 20, // <-- set price for ordering 1
+      2: 25, // <-- set TOTAL price for ordering 2
+      3: 32, // <-- set TOTAL price for ordering 3
     },
-    additionalUnitPrice: 2.5   // price for each extra beyond 3
+    additionalUnitPrice: 2.5, // price for each extra beyond 3
   },
 
   medium: {
-    label: 'Medium (65 × 15mm)',
+    label: "Medium (65 × 15mm)",
     pricing: {
-      1: 25,   // <-- set price for ordering 1
-      2: 35,   // <-- set TOTAL price for ordering 2
-      3: 40    // <-- set TOTAL price for ordering 3
+      1: 25, // <-- set price for ordering 1
+      2: 35, // <-- set TOTAL price for ordering 2
+      3: 40, // <-- set TOTAL price for ordering 3
     },
-    additionalUnitPrice: 2.5   // price for each extra beyond 3
+    additionalUnitPrice: 2.5, // price for each extra beyond 3
   },
 
   large: {
-    label: 'Large (85 × 19.6mm)',
+    label: "Large (85 × 19.6mm)",
     pricing: {
-      1: 25,   // <-- set price for ordering 1
-      2: 35,   // <-- set TOTAL price for ordering 2
-      3: 40    // <-- set TOTAL price for ordering 3
+      1: 25, // <-- set price for ordering 1
+      2: 35, // <-- set TOTAL price for ordering 2
+      3: 40, // <-- set TOTAL price for ordering 3
     },
-    additionalUnitPrice: 2.5   // price for each extra beyond 3
-  }
+    additionalUnitPrice: 2.5, // price for each extra beyond 3
+  },
 
   // Custom sizes are handled separately (quote by phone/email) and
   // are not priced through this file.
