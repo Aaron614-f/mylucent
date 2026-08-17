@@ -100,89 +100,162 @@
   .preview-card{
     position:sticky;
     top:100px;
-    border:1px solid var(--line);
-    border-radius:4px;
-    padding:28px;
-    background:var(--ivory);
-  }
-  .preview-card .preview-label{
-    font-size:10px; letter-spacing:2px; color:var(--muted);
-    margin-bottom:16px; text-align:center;
-  }
-  .plate-preview{ width:100%; height:auto; display:block; }
-  .preview-meta{
-    margin-top:18px;
-    font-size:11px;
-    color:var(--muted);
-    text-align:center;
-    letter-spacing:0.5px;
-  }
-
-  .qty-block{
-    margin-top:24px;
-    padding-top:20px;
-    border-top:1px solid var(--line);
-  }
-  .qty-label{
-    font-size:10px; letter-spacing:2px; color:var(--muted);
-    margin-bottom:10px; text-align:center;
-  }
-  .qty-row{
-    display:flex;
-    justify-content:center;
-    gap:8px;
-  }
-  .qty-chip{
-    width:36px; height:36px;
-    display:flex; align-items:center; justify-content:center;
-    border:1px solid var(--line);
-    border-radius:4px;
-    font-size:13px;
-    cursor:pointer;
+    border-radius:18px;
     background:var(--white);
-    transition:border-color .15s, color .15s, background .15s;
-  }
-  .qty-chip:hover{ border-color:var(--gold); }
-  .qty-chip.selected{
-    border-color:var(--gold);
-    background:var(--gold);
-    color:var(--white);
+    box-shadow: 0 24px 48px -28px rgba(27,39,51,0.18), 0 2px 10px rgba(27,39,51,0.05);
+    overflow:hidden;
   }
 
-  .price-table{
-    margin-top:16px;
-    border-top:1px solid var(--line);
-    padding-top:16px;
+  .preview-stage{
+    position:relative;
+    padding:34px 28px 26px;
+    background:
+      radial-gradient(ellipse at 50% 40%, rgba(169,120,79,0.10), rgba(169,120,79,0) 65%),
+      var(--ivory);
   }
-  .price-table-label{
+  .preview-label{
+    display:flex; align-items:center; justify-content:center; gap:7px;
     font-size:10px; letter-spacing:2px; color:var(--muted);
-    margin-bottom:10px; text-align:center;
+    margin-bottom:18px; text-align:center;
   }
+  .live-dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 0 0 rgba(169,120,79,0.5);
+    animation: liveDotPulse 2.2s ease-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce){ .live-dot{ animation:none; } }
+  @keyframes liveDotPulse{
+    0%   { box-shadow:0 0 0 0 rgba(169,120,79,0.45); }
+    70%  { box-shadow:0 0 0 7px rgba(169,120,79,0); }
+    100% { box-shadow:0 0 0 0 rgba(169,120,79,0); }
+  }
+
+  .plate-preview{
+    width:100%; height:auto; display:block;
+    filter: drop-shadow(0 14px 22px rgba(27,39,51,0.16));
+  }
+
+  .preview-meta-pills{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:6px;
+    margin-top:20px;
+  }
+  .meta-pill{
+    font-size:10px; letter-spacing:0.4px;
+    padding:5px 11px;
+    border-radius:20px;
+    background:rgba(169,120,79,0.09);
+    border:1px solid rgba(169,120,79,0.18);
+    color:var(--charcoal);
+    font-family:'Inter', sans-serif;
+  }
+
+  .preview-details{
+    padding:24px 28px 28px;
+    border-top:1px solid var(--line);
+  }
+
+  .section-eyebrow{
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:16px;
+  }
+  .section-eyebrow::before, .section-eyebrow::after{
+    content:''; flex:1; height:1px; background:var(--line);
+  }
+  .section-eyebrow span{
+    font-size:10px; letter-spacing:2px; color:var(--muted);
+    white-space:nowrap;
+  }
+
+  .qty-block{ margin-bottom:26px; }
+  .qty-stepper{
+    display:flex; align-items:stretch; justify-content:center;
+  }
+  .qty-stepper-inner{
+    display:inline-flex; align-items:stretch;
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .qty-btn{
+    width:38px;
+    background:var(--white);
+    border:none;
+    cursor:pointer;
+    font-size:15px;
+    color:var(--charcoal);
+    transition: background .15s ease, color .15s ease;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .qty-btn:hover{ background:rgba(169,120,79,0.1); color:var(--gold); }
+  .qty-btn:active{ background:rgba(169,120,79,0.18); }
+  .qty-input{
+    width:52px;
+    text-align:center;
+    font-size:15px;
+    font-weight:600;
+    font-family:'Inter', sans-serif;
+    border:none;
+    border-left:1px solid var(--line);
+    border-right:1px solid var(--line);
+    background:var(--white);
+    color:var(--charcoal);
+    -moz-appearance:textfield;
+  }
+  .qty-input::-webkit-inner-spin-button, .qty-input::-webkit-outer-spin-button{
+    -webkit-appearance:none; margin:0;
+  }
+  .qty-input:focus{ outline:none; background:rgba(169,120,79,0.05); }
+
+  .qty-total-display{
+    margin-top:18px;
+    text-align:center;
+  }
+  .qty-total-display .amount{
+    font-family:'Spectral', serif;
+    font-size:30px;
+    font-weight:600;
+    color:var(--charcoal);
+    display:inline-block;
+    transition: transform .28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .qty-total-display .amount.pulse{ transform:scale(1.1); }
+  .qty-total-display .label{
+    font-size:10px; letter-spacing:1.5px; color:var(--muted);
+    margin-top:3px;
+  }
+
+  .price-table{}
   .price-row{
-    display:flex;
+    display:flex; align-items:center;
     justify-content:space-between;
-    padding:6px 4px;
+    padding:8px 10px;
     font-size:12.5px;
     color:var(--charcoal);
-    border-radius:3px;
+    border-radius:8px;
+    font-variant-numeric: tabular-nums;
   }
-  .price-row.selected{
-    background:rgba(169,120,79,0.1);
-    font-weight:600;
+  .price-row .qty-n{ display:flex; align-items:center; gap:8px; color:var(--muted); }
+  .price-row .dot{
+    width:5px; height:5px; border-radius:50%;
+    background:var(--line);
+    flex-shrink:0;
   }
-  .price-row .qty-n{ color:var(--muted); }
+  .price-row.selected{ background:rgba(169,120,79,0.1); font-weight:600; }
   .price-row.selected .qty-n{ color:var(--charcoal); }
-  .price-extra-note{
-    margin-top:8px;
-    font-size:10.5px;
+  .price-row.selected .dot{ background:var(--gold); }
+  .price-row.extra-row{
+    margin-top:4px;
+    padding-top:12px;
+    border-top:1px dashed var(--line);
+    border-radius:0;
+    font-size:11px;
     color:var(--muted);
-    text-align:center;
-    line-height:1.5;
+    font-style:italic;
   }
+  .price-row.extra-row.selected{ font-style:normal; }
   .price-unavailable{
-    margin-top:16px;
-    padding-top:16px;
-    border-top:1px solid var(--line);
+    padding-top:4px;
     font-size:11.5px;
     color:var(--muted);
     text-align:center;
@@ -533,8 +606,9 @@
           <div class="config-grid">
 
             <div class="preview-card">
-              <div class="preview-label">LIVE PREVIEW</div>
-              <svg class="plate-preview" id="plateSvg" viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
+              <div class="preview-stage">
+                <div class="preview-label"><span class="live-dot"></span>LIVE PREVIEW</div>
+                <svg class="plate-preview" id="plateSvg" viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <linearGradient id="grad-rose" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%" stop-color="#F3D2C2"/>
@@ -567,29 +641,41 @@
                 </g>
 
                 <text id="previewName" x="200" y="138" text-anchor="middle" font-size="34" fill="#6B5636" font-family="'Spectral', serif">Your Name</text>
-              </svg>
-              <div class="preview-meta" id="previewMeta">Medium · Classic · Silver</div>
+                </svg>
 
-              <div class="qty-block">
-                <div class="qty-label">HOW MANY?</div>
-                <div class="qty-row" id="qtyRow">
-                  <div class="qty-chip selected" data-qty="1">1</div>
-                  <div class="qty-chip" data-qty="2">2</div>
-                  <div class="qty-chip" data-qty="3">3</div>
-                  <div class="qty-chip" data-qty="4">4</div>
-                  <div class="qty-chip" data-qty="5">5</div>
+                <div class="preview-meta-pills">
+                  <span class="meta-pill" id="metaPillSize">Medium</span>
+                  <span class="meta-pill" id="metaPillDesign">Classic</span>
+                  <span class="meta-pill" id="metaPillFinish">Silver</span>
                 </div>
               </div>
 
-              <div class="price-table" id="priceTable">
-                <div class="price-table-label">PRICING</div>
-                <div class="price-row" id="priceRow1"><span class="qty-n">1 plaque</span><span class="amt">—</span></div>
-                <div class="price-row" id="priceRow2"><span class="qty-n">2 plaques</span><span class="amt">—</span></div>
-                <div class="price-row" id="priceRow3"><span class="qty-n">3 plaques</span><span class="amt">—</span></div>
-                <div class="price-extra-note" id="priceExtraNote"></div>
-              </div>
+              <div class="preview-details">
+                <div class="qty-block">
+                  <div class="section-eyebrow"><span>QUANTITY</span></div>
+                  <div class="qty-stepper">
+                    <div class="qty-stepper-inner">
+                      <button type="button" class="qty-btn" id="qtyMinus" aria-label="Decrease quantity">−</button>
+                      <input type="number" id="qtyInput" class="qty-input" value="1" min="1" step="1" inputmode="numeric">
+                      <button type="button" class="qty-btn" id="qtyPlus" aria-label="Increase quantity">+</button>
+                    </div>
+                  </div>
+                  <div class="qty-total-display">
+                    <div class="amount" id="qtyTotalAmount">—</div>
+                    <div class="label">TOTAL</div>
+                  </div>
+                </div>
+
+                <div class="section-eyebrow"><span>PRICING</span></div>
+                <div class="price-table" id="priceTable">
+                  <div class="price-row" id="priceRow1"><span class="qty-n"><span class="dot"></span>1 plaque</span><span class="amt">—</span></div>
+                  <div class="price-row" id="priceRow2"><span class="qty-n"><span class="dot"></span>2 plaques</span><span class="amt">—</span></div>
+                  <div class="price-row" id="priceRow3"><span class="qty-n"><span class="dot"></span>3 plaques</span><span class="amt">—</span></div>
+                  <div class="price-row extra-row" id="priceRowExtra"><span class="qty-n">Ordering more than 3?</span><span class="amt">—</span></div>
+                </div>
               <div class="price-unavailable" id="priceUnavailable" hidden>
                 Custom sizing is priced individually — we'll confirm a quote with you by phone or email.
+              </div>
               </div>
             </div>
 
@@ -799,22 +885,61 @@
     .then(function(data){ PRICING = data; updatePriceDisplay(); })
     .catch(function(){ /* price table just stays hidden/blank if this fails */ });
 
-  var qtyChips = document.querySelectorAll('#qtyRow .qty-chip');
+  var qtyInput = document.getElementById('qtyInput');
   var priceTable = document.getElementById('priceTable');
   var priceUnavailable = document.getElementById('priceUnavailable');
+  var qtyTotalAmount = document.getElementById('qtyTotalAmount');
   var priceRow1 = document.getElementById('priceRow1');
   var priceRow2 = document.getElementById('priceRow2');
   var priceRow3 = document.getElementById('priceRow3');
-  var priceExtraNote = document.getElementById('priceExtraNote');
+  var priceRowExtra = document.getElementById('priceRowExtra');
 
-  qtyChips.forEach(function(chip){
-    chip.addEventListener('click', function(){
-      qtyChips.forEach(function(c){ c.classList.remove('selected'); });
-      chip.classList.add('selected');
-      state.quantity = parseInt(chip.dataset.qty, 10);
+  function sanitizeQty(){
+    var n = parseInt(qtyInput.value, 10);
+    if (!Number.isInteger(n) || n < 1) n = 1;
+    qtyInput.value = n;
+    return n;
+  }
+
+  qtyInput.addEventListener('input', function(){
+    var n = parseInt(qtyInput.value, 10);
+    if (Number.isInteger(n) && n >= 1){
+      state.quantity = n;
       updatePriceDisplay();
-    });
+    } else if (qtyInput.value === ''){
+      qtyTotalAmount.textContent = '—';
+    }
   });
+  qtyInput.addEventListener('blur', function(){
+    state.quantity = sanitizeQty();
+    updatePriceDisplay();
+  });
+
+  document.getElementById('qtyMinus').addEventListener('click', function(){
+    var n = Math.max(1, sanitizeQty() - 1);
+    qtyInput.value = n;
+    state.quantity = n;
+    updatePriceDisplay();
+  });
+  document.getElementById('qtyPlus').addEventListener('click', function(){
+    var n = sanitizeQty() + 1;
+    qtyInput.value = n;
+    state.quantity = n;
+    updatePriceDisplay();
+  });
+
+  // Mirrors the server's bracket + additional-unit pricing logic, so the
+  // number shown here always matches what checkout will actually charge.
+  function calcTotal(sizeConfig, qty){
+    if (sizeConfig.pricing[qty] !== undefined){
+      return sizeConfig.pricing[qty] || null;
+    }
+    var highest = Math.max.apply(null, Object.keys(sizeConfig.pricing).map(Number));
+    if (qty > highest && sizeConfig.pricing[highest] && sizeConfig.additionalUnitPrice){
+      return sizeConfig.pricing[highest] + (qty - highest) * sizeConfig.additionalUnitPrice;
+    }
+    return null;
+  }
 
   function formatMoney(dollars){
     return '$' + dollars.toLocaleString('en-AU', { minimumFractionDigits: dollars % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 });
@@ -826,6 +951,7 @@
     if (state.size === 'custom'){
       priceTable.hidden = true;
       priceUnavailable.hidden = false;
+      qtyTotalAmount.textContent = '—';
       return;
     }
 
@@ -833,23 +959,32 @@
     priceUnavailable.hidden = true;
     priceTable.hidden = false;
 
-    var rows = [
-      { el: priceRow1, qty: 1 },
-      { el: priceRow2, qty: 2 },
-      { el: priceRow3, qty: 3 }
-    ];
+    var qty = state.quantity || 1;
+    var total = calcTotal(sizeConfig, qty);
+    var newText = total ? formatMoney(total) : '—';
+    if (qtyTotalAmount.textContent !== newText){
+      qtyTotalAmount.textContent = newText;
+      qtyTotalAmount.classList.add('pulse');
+      setTimeout(function(){ qtyTotalAmount.classList.remove('pulse'); }, 220);
+    }
 
+    var rows = [
+      { el: priceRow1, n: 1 },
+      { el: priceRow2, n: 2 },
+      { el: priceRow3, n: 3 }
+    ];
     rows.forEach(function(row){
-      var amt = sizeConfig.pricing[row.qty];
+      var amt = sizeConfig.pricing[row.n];
       row.el.querySelector('.amt').textContent = amt ? formatMoney(amt) : '—';
-      row.el.classList.toggle('selected', state.quantity === row.qty);
+      row.el.classList.toggle('selected', qty === row.n);
     });
 
     if (sizeConfig.additionalUnitPrice){
-      priceExtraNote.textContent = 'Each additional plaque after 3: ' + formatMoney(sizeConfig.additionalUnitPrice);
+      priceRowExtra.querySelector('.amt').textContent = formatMoney(sizeConfig.additionalUnitPrice) + ' each';
     } else {
-      priceExtraNote.textContent = '';
+      priceRowExtra.querySelector('.amt').textContent = 'Message us for a quote';
     }
+    priceRowExtra.classList.toggle('selected', qty > 3);
   }
 
   var sizeChips = document.querySelectorAll('#sizeChips .chip');
@@ -865,7 +1000,9 @@
   var emailInput = document.getElementById('emailInput');
 
   var previewName = document.getElementById('previewName');
-  var previewMeta = document.getElementById('previewMeta');
+  var metaPillSize = document.getElementById('metaPillSize');
+  var metaPillDesign = document.getElementById('metaPillDesign');
+  var metaPillFinish = document.getElementById('metaPillFinish');
   var plateRect = document.getElementById('plateRect');
   var designGroups = { 'Design 1 — Classic': 'design-classic', 'Design 2 — Ornate': 'design-ornate', 'Design 3 — Black Center': 'design-blackcenter' };
   var designInnerGroupId = { 'Design 1 — Classic': 'classicInner', 'Design 2 — Ornate': 'ornateInner', 'Design 3 — Black Center': 'blackcenterInner' };
@@ -995,7 +1132,9 @@
     var sizeLabel = state.size === 'custom'
       ? (state.sizeW && state.sizeH ? state.sizeW + ' × ' + state.sizeH + ' mm' : 'Custom size')
       : state.size.charAt(0).toUpperCase() + state.size.slice(1) + ' (' + state.sizeW + ' × ' + state.sizeH + ' mm)';
-    previewMeta.textContent = sizeLabel + ' · ' + state.design.split(' — ')[1] + ' · ' + COLOR_LABEL[state.color];
+    metaPillSize.textContent = sizeLabel;
+    metaPillDesign.textContent = state.design.split(' — ')[1];
+    metaPillFinish.textContent = COLOR_LABEL[state.color];
   }
   updatePreview();
   updatePriceDisplay();
@@ -1037,6 +1176,9 @@
     emailError.classList.remove('visible');
     sizeError.classList.remove('visible');
 
+    state.quantity = sanitizeQty();
+    updatePriceDisplay();
+
     if (!nameInput.value.trim()){ nameError.classList.add('visible'); valid = false; }
     if (!isValidAusMobile(phoneInput.value)){ phoneError.classList.add('visible'); valid = false; }
     if (!isValidEmail(emailInput.value)){ emailError.classList.add('visible'); valid = false; }
@@ -1072,11 +1214,7 @@
       payOnlineBlock.hidden = false;
       customSizeNotice.hidden = true;
       if (PRICING && PRICING[state.size]){
-        var amt = PRICING[state.size].pricing[state.quantity];
-        if (!amt && state.quantity > 3){
-          var highest = PRICING[state.size].pricing[3];
-          amt = highest + (state.quantity - 3) * PRICING[state.size].additionalUnitPrice;
-        }
+        var amt = calcTotal(PRICING[state.size], state.quantity || 1);
         if (amt){
           document.getElementById('sumTotal').textContent = formatMoney(amt);
           sumTotalRow.hidden = false;
