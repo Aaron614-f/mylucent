@@ -55,6 +55,8 @@ module.exports = {
       3: 40    // <-- set TOTAL price for ordering 3
     },
     additionalUnitPrice: 2.5   // price for each extra beyond 3
+  }
+
   // Custom sizes are handled separately (quote by phone/email) and
   // are not priced through this file.
 };
