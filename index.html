@@ -18,7 +18,7 @@
   }
 
   *{ box-sizing:border-box; }
-  html,body{ margin:0; padding:0; background:var(--ivory); color:var(--charcoal); font-family:'Inter', sans-serif; }
+  html,body{ margin:0; padding:0; background:var(--white); color:var(--charcoal); font-family:'Inter', sans-serif; }
   h1,h2,h3{ font-family:'Spectral', serif; margin:0; }
   a{ color:inherit; }
   img{ max-width:100%; display:block; }
@@ -45,13 +45,13 @@
     background-position:center 35%;
     text-align:center;
     overflow:hidden;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 130px), 0 100%);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 80px), 0 100%);
   }
   .hero::before{
     content:'';
     position:absolute; inset:0;
     background:
-      linear-gradient(155deg, rgba(244,241,234,0.93) 0%, rgba(244,241,234,0.82) 35%, rgba(169,120,79,0.55) 100%);
+      linear-gradient(155deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.78) 40%, rgba(169,120,79,0.28) 100%);
   }
   .hero > *{ position:relative; z-index:1; }
   .hero .eyebrow{
@@ -77,15 +77,15 @@
   .hero-cta:hover{ background:var(--gold); transform:translateY(-1px); }
 
   @media (max-width: 760px){
-    .hero{ padding:80px 20px 110px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 44px), 0 100%); }
+    .hero{ padding:80px 20px 90px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 30px), 0 100%); }
     .hero h1{ font-size:32px; }
   }
 
   section{ padding:0 44px; }
-  .section-inner{ max-width:1100px; margin:0 auto; padding:80px 0; }
+  .section-inner{ max-width:1100px; margin:0 auto; padding:56px 0; }
   @media (max-width: 760px){
     section{ padding:0 20px; }
-    .section-inner{ padding:56px 0; }
+    .section-inner{ padding:40px 0; }
   }
   .section-eyebrow{
     display:flex; align-items:center; gap:14px;
@@ -101,50 +101,42 @@
   .section-sub{ font-size:14px; color:var(--muted); max-width:560px; line-height:1.7; }
 
   #gallery-teaser{
-    background:var(--charcoal); padding-bottom:0; overflow:hidden;
-    margin-top:-130px; position:relative; z-index:2;
-    padding-top:130px;
+    background:var(--white);
+    padding:0;
+    overflow:hidden;
+    position:relative;
+    z-index:3;
+    box-shadow: 0 -18px 34px -14px rgba(27,39,51,0.22);
   }
-  #gallery-teaser .section-inner{ max-width:1100px; }
-  #gallery-teaser .section-eyebrow span{ color:var(--gold-soft); }
-  #gallery-teaser h2, #gallery-teaser .section-sub{ color:var(--ivory); }
-  #gallery-teaser .section-sub{ color:rgba(244,241,234,0.65); }
-  @media (max-width: 760px){
-    #gallery-teaser{ margin-top:-44px; padding-top:44px; }
-  }
-
-
   .teaser-full{
     position:relative;
     width:100vw;
     margin-left:calc(50% - 50vw);
-    height:520px;
+    height:560px;
     overflow:hidden;
     display:block;
     text-decoration:none;
-    margin-top:44px;
   }
   .teaser-rotator{
     position:absolute;
-    left:-6%; right:-6%; top:-40px; bottom:-40px;
+    left:-6%; right:-6%; top:-70px;
     display:flex;
     flex-direction:column;
-    justify-content:center;
-    gap:16px;
+    gap:10px;
     transform: rotate(-4deg);
     transform-origin:center;
   }
   .teaser-row{
     display:flex;
-    gap:16px;
-    height:150px;
+    gap:10px;
+    height:340px;
     flex-shrink:0;
     will-change: transform;
   }
   .teaser-row img{
     height:100%; width:auto; flex-shrink:0;
     object-fit:cover;
-    border-radius:10px;
+    border-radius:0;
     box-shadow: 0 14px 30px -14px rgba(0,0,0,0.5);
   }
   .teaser-row.dir-left{ animation: teaserLeft 42s linear infinite; }
@@ -170,11 +162,19 @@
     text-transform:uppercase;
   }
   @media (max-width: 760px){
-    .teaser-full{ height:340px; }
-    .teaser-row{ height:96px; }
+    .teaser-full{ height:320px; }
+    .teaser-rotator{ top:-36px; gap:6px; }
+    .teaser-row{ height:180px; gap:6px; }
   }
 
-  #process{ background:var(--ivory); }
+  #process{
+    background:var(--white);
+    margin-top:-80px; position:relative; z-index:2;
+    padding-top:80px;
+  }
+  @media (max-width: 760px){
+    #process{ margin-top:-30px; padding-top:30px; }
+  }
   .process-grid{
     display:grid; grid-template-columns:repeat(3, 1fr); gap:32px;
     margin-top:48px;
@@ -182,9 +182,15 @@
   @media (max-width: 800px){ .process-grid{ grid-template-columns:1fr; } }
   .process-card{
     background:var(--white);
+    border:1px solid var(--line);
     border-radius:16px;
     padding:36px 30px;
-    box-shadow: 0 24px 48px -34px rgba(27,39,51,0.22);
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  }
+  .process-card:hover{
+    border-color:var(--gold);
+    box-shadow: 0 20px 40px -28px rgba(169,120,79,0.4);
+    transform:translateY(-3px);
   }
   .process-num{
     width:38px; height:38px; border-radius:50%;
@@ -192,6 +198,10 @@
     display:flex; align-items:center; justify-content:center;
     font-family:'Spectral', serif; font-size:15px; color:var(--gold);
     margin-bottom:22px;
+    transition: background .2s ease, color .2s ease;
+  }
+  .process-card:hover .process-num{
+    background:var(--gold); color:var(--white);
   }
   .process-card h3{ font-size:19px; font-weight:500; margin-bottom:10px; }
   .process-card p{ font-size:13.5px; color:var(--muted); line-height:1.7; margin:0; }
@@ -267,22 +277,6 @@
     <a class="hero-cta" href="order.html">Start Your Order →</a>
   </section>
 
-  <section id="gallery-teaser">
-    <div class="section-inner">
-      <div class="section-eyebrow"><span>OUR WORK</span></div>
-      <h2 class="section-title">See what we've already brought to life.</h2>
-      <p class="section-sub">A running collection of finished pieces — simchas, homes, and everything in between.</p>
-
-      <a class="teaser-full" href="gallery.html" aria-label="View the full gallery" id="teaserFull">
-        <div class="teaser-rotator" id="teaserRotator"></div>
-        <div class="teaser-overlay">
-          <h3>View the Full Gallery</h3>
-          <span>Click to see our other work →</span>
-        </div>
-      </a>
-    </div>
-  </section>
-
   <section id="process">
     <div class="section-inner">
       <div class="section-eyebrow"><span>HOW IT WORKS</span></div>
@@ -306,6 +300,16 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <section id="gallery-teaser">
+    <a class="teaser-full" href="gallery.html" aria-label="View the full gallery" id="teaserFull">
+      <div class="teaser-rotator" id="teaserRotator"></div>
+      <div class="teaser-overlay">
+        <h3>View the Full Gallery</h3>
+        <span>Click to see our other work →</span>
+      </div>
+    </a>
   </section>
 
   <section id="contact-cta">
@@ -341,8 +345,7 @@
     var rotator = document.getElementById('teaserRotator');
     var rowDefs = [
       { dir: 'left',  offset: 0 },
-      { dir: 'right', offset: 1 },
-      { dir: 'left',  offset: 2 }
+      { dir: 'right', offset: 1 }
     ];
 
     rowDefs.forEach(function(def){
@@ -352,7 +355,7 @@
       // Build enough images to comfortably fill the row twice over (for the
       // seamless loop), cycling through available photos starting at a
       // different offset per row so rows don't look identical.
-      var need = Math.max(allPhotos.length * 2, 14);
+      var need = Math.max(allPhotos.length * 2, 10);
       var seq = [];
       for (var i = 0; i < need; i++){
         seq.push(allPhotos[(i + def.offset) % allPhotos.length]);
