@@ -77,15 +77,20 @@
 
   /* How it works */
   .hw-row{display:flex;border:1px solid rgba(27,39,51,0.12);border-radius:10px;overflow:hidden;min-height:300px;}
-  @media (max-width:760px){ .hw-row{flex-direction:column;} }
+  @media (max-width:760px){ .hw-row{flex-direction:column;min-height:0;} }
   .hw-panel{flex:1 1 0;padding:36px 32px;background:#FFFFFF;cursor:pointer;overflow:hidden;transition:flex-grow .55s cubic-bezier(.2,.7,.2,1),background .45s;border-left:1px solid rgba(27,39,51,0.12);}
   .hw-panel:first-child{border-left:none;}
-  @media (max-width:760px){ .hw-panel{border-left:none;border-top:1px solid rgba(27,39,51,0.12);} .hw-panel:first-child{border-top:none;} }
+  @media (max-width:760px){ .hw-panel{flex:none !important;border-left:none;border-top:1px solid rgba(27,39,51,0.12);padding:28px 24px;} .hw-panel:first-child{border-top:none;} }
   .hw-panel.active{flex-grow:2.4;background:#FBFAF7;}
   .hw-num{display:block;font-family:'Spectral',serif;font-size:15px;color:#A9784F;margin-bottom:22px;}
   .hw-panel h3{font-weight:500;font-size:21px;margin:0 0 14px;}
   .hw-desc{opacity:0.25;transition:opacity .45s .1s;}
   .hw-panel.active .hw-desc{opacity:1;}
+  @media (max-width:760px){
+    .hw-panel h3{margin-bottom:4px;}
+    .hw-desc{max-height:0;opacity:0;overflow:hidden;transition:max-height .35s ease,opacity .3s ease,margin-top .35s ease;margin-top:0;}
+    .hw-panel.active .hw-desc{max-height:240px;opacity:1;margin-top:10px;}
+  }
   .hw-desc p{font-size:14px;line-height:1.75;color:rgba(27,39,51,0.72);margin:0;max-width:380px;}
 
   @keyframes ctaArrowDrift{0%,100%{transform:translateX(0);}50%{transform:translateX(8px);}}
@@ -323,14 +328,16 @@
     });
   })();
 
-  // How it works: hover to expand a panel
+  // How it works: hover to expand a panel (desktop), tap to expand (mobile)
   (function(){
     var panels = document.querySelectorAll('.hw-panel');
+    function activate(p){
+      panels.forEach(function(o){ o.classList.remove('active'); });
+      p.classList.add('active');
+    }
     panels.forEach(function(p){
-      p.addEventListener('mouseenter', function(){
-        panels.forEach(function(o){ o.classList.remove('active'); });
-        p.classList.add('active');
-      });
+      p.addEventListener('mouseenter', function(){ activate(p); });
+      p.addEventListener('click', function(){ activate(p); });
     });
   })();
 </script>
