@@ -3,356 +3,210 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>myLucent.co — Personalized Acrylic Art &amp; Silver Nameplates</title>
+<title>myLucent.co — Custom Acrylic Art</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap');
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#EEF2F6;color:#1B2733;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  a:hover{color:#A9784F;}
+  img{max-width:100%;display:block;}
+  h1,h2,h3{font-family:'Spectral',serif;margin:0;}
 
-  :root{
-    --ivory:#F4F1EA;
-    --white:#FFFFFF;
-    --charcoal:#1B2733;
-    --gold:#A9784F;
-    --gold-soft:#C9A97D;
-    --line: rgba(27,39,51,0.12);
-    --muted: rgba(27,39,51,0.6);
+  .nav-link{position:relative;color:#1B2733 !important;text-decoration:none;font-size:12px;letter-spacing:1.5px;padding:6px 2px;white-space:nowrap;}
+  .nav-link::after{content:'';position:absolute;left:0;right:100%;bottom:0;height:1px;background:#1B2733;transition:right .3s ease;}
+  .nav-link:hover::after{right:0;}
+  #site-header{transition:transform .3s ease,opacity .3s ease;}
+  #site-header.hdr-hidden{transform:translateY(-140%);opacity:0;}
+  @media (max-width:760px){
+    #site-header{ margin:10px 12px -96px !important; padding:14px 16px !important; }
+    #site-header nav{ gap:12px !important; }
+    #site-header .nav-link{ font-size:9.5px !important; letter-spacing:0.8px !important; }
   }
+  #site-header > a{ flex-shrink:0; }
+  #site-header nav{ flex-shrink:1; min-width:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  #site-header nav::-webkit-scrollbar{ display:none; }
 
-  *{ box-sizing:border-box; }
-  html,body{ margin:0; padding:0; background:var(--white); color:var(--charcoal); font-family:'Inter', sans-serif; }
-  h1,h2,h3{ font-family:'Spectral', serif; margin:0; }
-  a{ color:inherit; }
-  img{ max-width:100%; display:block; }
+  .pop-btn{position:relative;transition:padding-left .3s ease;}
+  .pop-btn::before{content:'';position:absolute;left:-14px;top:50%;width:0;height:1.5px;background:#1B2733;transition:width .3s ease;}
+  .pop-btn:hover::before{width:10px;}
+  .pop-btn:hover{padding-left:34px !important;}
 
-  header{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:22px 44px;
-    background:var(--charcoal);
-  }
-  .brand{ display:flex; align-items:center; }
-  .brand-logo{ height:26px; width:94px; display:block; }
-  nav{ display:flex; gap:32px; }
-  nav a{
-    position:relative;
-    font-size:11px; letter-spacing:2.5px; text-decoration:none;
-    color:var(--ivory); opacity:0.85;
-    padding-bottom:4px;
-  }
-  nav a::after{
-    content:''; position:absolute; left:0; right:100%; bottom:0;
-    height:1px; background:var(--gold-soft);
-    transition: right .25s ease;
-  }
-  nav a:hover{ opacity:1; }
-  nav a:hover::after{ right:0; }
+  @keyframes arrowBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(10px);}}
+  .arrow-bounce{animation:arrowBounce 1.4s ease-in-out infinite;}
 
-  .hero{
-    position:relative;
-    padding:150px 44px 210px;
-    background-image: url('assets/project-02.jpg');
-    background-size:cover;
-    background-position:center 35%;
-    text-align:left;
-    overflow:hidden;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 80px), 0 100%);
-  }
-  .hero::before{
-    content:'';
-    position:absolute; inset:0;
-    background: rgba(255,255,255,0.8);
-  }
-  .hero-content{ position:relative; z-index:1; max-width:620px; }
-  .hero .eyebrow{
-    font-size:11px; letter-spacing:3px; color:var(--gold);
-    display:flex; align-items:center; gap:10px;
-    margin-bottom:22px;
-  }
-  .hero .eyebrow::before{ content:''; width:28px; height:1px; background:var(--gold); }
-  .hero h1{
-    font-size:64px; font-weight:600; line-height:1.05; letter-spacing:-1px;
-    margin:0 0 24px;
-  }
-  .hero p{
-    font-size:15.5px; color:var(--charcoal); opacity:0.72; max-width:440px;
-    margin:0 0 38px; line-height:1.7;
-  }
-  .hero-cta{
-    display:inline-block;
-    background:var(--charcoal); color:var(--ivory);
-    padding:16px 36px;
-    border-radius:8px;
-    font-size:12.5px; letter-spacing:1.5px; text-decoration:none;
-    transition: background .2s ease, transform .2s ease;
-  }
-  .hero-cta:hover{ background:var(--gold); transform:translateY(-1px); }
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease;}
+  .reveal.in-view{opacity:1;transform:translateY(0);}
 
-  @media (max-width: 760px){
-    .hero{ padding:90px 20px 90px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 30px), 0 100%); }
-    .hero h1{ font-size:34px; letter-spacing:-0.5px; }
-    .hero-content{ max-width:100%; }
-  }
+  .section-inner{max-width:1080px;margin:0 auto;padding:80px 44px;}
+  @media (max-width:760px){ .section-inner{padding:56px 20px;} }
+  .rule-label{display:flex;align-items:center;gap:10px;margin-bottom:24px;}
+  .rule-label .rule{flex:1;height:1px;background:rgba(27,39,51,0.12);}
+  .rule-label span{font-size:10px;letter-spacing:2px;color:rgba(27,39,51,0.6);white-space:nowrap;}
 
-  section{ padding:0 44px; }
-  .section-inner{ max-width:1100px; margin:0 auto; padding:56px 0; }
-  @media (max-width: 760px){
-    section{ padding:0 20px; }
-    .section-inner{ padding:40px 0; }
-  }
-  .section-eyebrow{
-    display:flex; align-items:center; gap:10px;
-    margin-bottom:14px;
-  }
-  .section-eyebrow::before{
-    content:''; flex:0 0 24px; height:1px; background:var(--gold);
-  }
-  .section-eyebrow span{
-    font-size:11px; letter-spacing:2.5px; color:var(--gold);
-  }
-  .section-title{ font-size:32px; font-weight:600; letter-spacing:-0.5px; margin-bottom:14px; max-width:600px; }
-  .section-sub{ font-size:14px; color:var(--muted); max-width:560px; line-height:1.7; }
+  /* Gallery */
+  .gal-tabs{display:flex;justify-content:center;gap:28px;margin-bottom:36px;flex-wrap:wrap;}
+  .gal-tab{background:transparent;border:none;font-family:'Inter',sans-serif;font-size:11px;letter-spacing:2px;color:rgba(27,39,51,0.55);padding:8px 4px;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s ease,border-color .2s ease;}
+  .gal-tab:hover{color:#1B2733;}
+  .gal-tab.active{color:#1B2733;border-color:#A9784F;}
+  .gal-grid{display:grid;gap:24px;grid-template-columns:repeat(3,minmax(0,1fr));}
+  @media (max-width:800px){ .gal-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+  @media (max-width:520px){ .gal-grid{grid-template-columns:1fr;} }
+  .gal-card{position:relative;z-index:1;border-radius:12px;border:1px solid rgba(27,39,51,0.14);padding:8px;cursor:pointer;background:#FFFFFF;transition:box-shadow .25s ease,border-color .25s ease,transform .25s ease;}
+  .gal-card.hidden{display:none;}
+  .gal-card:hover{z-index:3;transform:scale(1.05);box-shadow:-6px -6px 20px -10px rgba(27,39,51,0.3);}
+  .gal-img-wrap{position:relative;overflow:hidden;border-radius:7px;}
+  .gal-img-wrap img{transition:transform .5s ease;width:100%;height:260px;object-fit:cover;display:block;}
+  .gal-card:hover .gal-img-wrap img{transform:scale(1.08);}
+  .gal-caption{max-height:0;overflow:hidden;background:#FFFFFF;transition:max-height .3s ease;}
+  .gal-card:hover .gal-caption{max-height:56px;}
+  .gal-caption .title{display:block;padding:14px 6px 2px;font-family:'Spectral',serif;font-weight:500;font-size:16px;color:#1B2733;}
+  .gal-empty{grid-column:1/-1;text-align:center;padding:40px 0;color:rgba(27,39,51,0.5);font-size:13px;}
 
-  .reveal{ opacity:0; transform:translateY(22px); transition: opacity .7s ease, transform .7s ease; }
-  .reveal.in-view{ opacity:1; transform:none; }
-  .process-grid .reveal:nth-child(1){ transition-delay:0s; }
-  .process-grid .reveal:nth-child(2){ transition-delay:.12s; }
-  .process-grid .reveal:nth-child(3){ transition-delay:.24s; }
+  .gal-modal-backdrop{position:fixed;inset:0;background:rgba(27,39,51,0.92);z-index:100;display:none;align-items:center;justify-content:center;padding:40px;}
+  .gal-modal-backdrop.open{display:flex;}
+  .gal-modal{max-width:720px;width:100%;background:#FFFFFF;border-radius:14px;overflow:hidden;}
+  .gal-modal-close{position:absolute;top:24px;right:32px;background:none;border:none;color:#F4F1EA;font-size:28px;line-height:1;cursor:pointer;font-family:'Inter',sans-serif;}
 
-  #gallery-teaser{
-    background:var(--white);
-    padding:0;
-    overflow:hidden;
-    position:relative;
-    z-index:3;
-    box-shadow: 0 -18px 34px -14px rgba(27,39,51,0.22);
-  }
-  .teaser-full{
-    position:relative;
-    width:100vw;
-    margin-left:calc(50% - 50vw);
-    height:85vh;
-    overflow:hidden;
-    display:block;
-    text-decoration:none;
-  }
-  .teaser-rotator{
-    position:absolute;
-    inset:0;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  .teaser-row{
-    display:flex;
-    gap:10px;
-    flex:1 1 0;
-    min-height:0;
-    will-change: transform;
-  }
-  .teaser-row img{
-    height:100%; width:auto; flex-shrink:0;
-    object-fit:cover;
-    border-radius:0;
-    box-shadow: 0 14px 30px -14px rgba(0,0,0,0.5);
-  }
-  .teaser-row.dir-left{ animation: teaserLeft 42s linear infinite; }
-  .teaser-row.dir-right{ animation: teaserRight 36s linear infinite; }
-  @media (prefers-reduced-motion: reduce){ .teaser-row{ animation:none !important; } }
-  @keyframes teaserLeft{ from{ transform: translateX(0); } to{ transform: translateX(-50%); } }
-  @keyframes teaserRight{ from{ transform: translateX(-50%); } to{ transform: translateX(0); } }
+  /* How it works */
+  .hw-row{display:flex;border:1px solid rgba(27,39,51,0.12);border-radius:10px;overflow:hidden;min-height:300px;}
+  @media (max-width:760px){ .hw-row{flex-direction:column;} }
+  .hw-panel{flex:1 1 0;padding:36px 32px;background:#FFFFFF;cursor:pointer;overflow:hidden;transition:flex-grow .55s cubic-bezier(.2,.7,.2,1),background .45s;border-left:1px solid rgba(27,39,51,0.12);}
+  .hw-panel:first-child{border-left:none;}
+  @media (max-width:760px){ .hw-panel{border-left:none;border-top:1px solid rgba(27,39,51,0.12);} .hw-panel:first-child{border-top:none;} }
+  .hw-panel.active{flex-grow:2.4;background:#FBFAF7;}
+  .hw-num{display:block;font-family:'Spectral',serif;font-size:15px;color:#A9784F;margin-bottom:22px;}
+  .hw-panel h3{font-weight:500;font-size:21px;margin:0 0 14px;}
+  .hw-desc{opacity:0.25;transition:opacity .45s .1s;}
+  .hw-panel.active .hw-desc{opacity:1;}
+  .hw-desc p{font-size:14px;line-height:1.75;color:rgba(27,39,51,0.72);margin:0;max-width:380px;}
 
-  .teaser-overlay{
-    position:absolute; inset:0;
-    background: rgba(27,39,51,0.25);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; gap:10px;
-    opacity:0; transition: opacity .25s ease, background .25s ease;
-  }
-  .teaser-full:hover .teaser-overlay{
-    opacity:1;
-    background: rgba(27,39,51,0.72);
-  }
-  .teaser-overlay h3{ color:var(--white); font-size:28px; font-weight:500; }
-  .teaser-overlay span{
-    font-size:12px; letter-spacing:2px; color:var(--gold-soft);
-    text-transform:uppercase;
-  }
-  @media (max-width: 760px){
-    .teaser-full{ height:60vh; }
-    .teaser-rotator{ gap:6px; }
-    .teaser-row{ gap:6px; }
-  }
-
-  #process{
-    background:var(--white);
-    margin-top:-80px; position:relative; z-index:2;
-    padding-top:80px;
-  }
-  @media (max-width: 760px){
-    #process{ margin-top:-30px; padding-top:30px; }
-  }
-  .process-grid{
-    display:grid; grid-template-columns:repeat(3, 1fr); gap:32px;
-    margin-top:48px;
-  }
-  @media (max-width: 800px){ .process-grid{ grid-template-columns:1fr; } }
-  .process-card{
-    position:relative;
-    background:var(--white);
-    border:1px solid var(--line);
-    border-radius:16px;
-    padding:36px 30px;
-    overflow:hidden;
-    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-  }
-  .process-card:hover{
-    border-color:var(--gold);
-    box-shadow: 0 20px 40px -28px rgba(169,120,79,0.4);
-    transform:translateY(-3px);
-  }
-  .process-num{
-    position:absolute; top:-14px; right:16px;
-    font-family:'Spectral', serif; font-weight:600; font-size:88px; line-height:1;
-    color:rgba(27,39,51,0.06);
-    z-index:0; pointer-events:none;
-    transition: color .25s ease;
-  }
-  .process-card:hover .process-num{ color:rgba(169,120,79,0.16); }
-  .process-card h3{ position:relative; z-index:1; font-size:19px; font-weight:600; margin-bottom:10px; }
-  .process-card p{ position:relative; z-index:1; font-size:13.5px; color:var(--muted); line-height:1.7; margin:0; }
-
-  #contact-cta{ background:var(--charcoal); }
-  #contact-cta .section-inner{ text-align:center; }
-  #contact-cta .section-eyebrow{ justify-content:center; }
-  #contact-cta .section-eyebrow::before{ display:none; }
-  #contact-cta .section-eyebrow span{ color:var(--gold-soft); }
-  #contact-cta h2{ color:var(--ivory); font-size:30px; font-weight:600; letter-spacing:-0.5px; margin-bottom:14px; }
-  #contact-cta p{ color:rgba(244,241,234,0.7); font-size:14px; max-width:480px; margin:0 auto 30px; line-height:1.7; }
-  .contact-cta-btn{
-    display:inline-block;
-    background:var(--gold); color:var(--charcoal);
-    padding:15px 34px; border-radius:8px;
-    font-size:12.5px; letter-spacing:1.5px; text-decoration:none;
-    transition: background .2s ease, transform .2s ease;
-  }
-  .contact-cta-btn:hover{ background:var(--gold-soft); transform:translateY(-1px); }
-
-  footer{
-    padding:40px 44px 28px;
-    text-align:center;
-    border-top:1px solid var(--line);
-    background:var(--white);
-  }
-  .footer-inner{
-    display:flex; justify-content:center; gap:24px;
-    margin-bottom:16px;
-  }
-  .footer-inner a{
-    font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
-    color:var(--charcoal); text-decoration:none;
-  }
-  .footer-inner a:hover{ color:var(--gold); }
-  footer p{ font-size:11px; letter-spacing:1px; color:var(--muted); margin:0; }
+  @keyframes ctaArrowDrift{0%,100%{transform:translateX(0);}50%{transform:translateX(8px);}}
+  .cta-btn{position:relative;display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(244,241,234,0.5);padding:16px 30px;transition:background .35s ease,border-color .35s ease,color .35s ease;}
+  .cta-btn span{display:inline-block;animation:ctaArrowDrift 1.5s ease-in-out infinite;}
+  .cta-btn:hover{background:#F4F1EA;border-color:#F4F1EA;color:#1B2733 !important;}
+  .cta-btn:hover span{animation:none;transform:translateX(6px);transition:transform .35s cubic-bezier(.2,.7,.2,1);}
 </style>
 </head>
 <body>
 
-  <header>
-    <div class="brand">
-      <svg class="brand-logo" viewBox="0 0 4913 1352" xmlns="http://www.w3.org/2000/svg" aria-label="myLucent.co">
-        <path fill="#A9784F" d="M633 1101c-32,0 -56,-7 -70,-22 -14,-15 -22,-33 -22,-56 0,-7 1,-15 3,-24 2,-9 4,-16 6,-23l57 -194c12,-41 19,-72 20,-91 1,-19 -5,-28 -18,-28 -13,0 -27,8 -43,24 -16,16 -33,38 -50,65 -17,28 -33,59 -48,94 -15,35 -27,72 -37,111l-12 0c10,-38 23,-78 38,-117 15,-40 33,-76 53,-109 20,-33 43,-60 68,-80 25,-20 53,-31 83,-31 30,0 52,7 66,21 14,14 22,32 24,55 2,23 -2,48 -10,75l-76 262c-1,4 -2,8 -3,12 -1,4 -1,8 -1,11 0,4 1,7 4,10 2,2 6,4 11,4 10,0 21,-4 33,-12 12,-8 25,-22 39,-43 14,-20 28,-49 43,-86l19 7c-16,40 -33,73 -50,97 -17,24 -35,42 -55,53 -20,11 -44,16 -70,16zm-633 -10l112 -441 -65 0 0 -20 200 0 -116 461 -131 0zm266 0l79 -309c10,-42 16,-73 19,-92 2,-19 -3,-29 -17,-29 -13,0 -27,8 -44,24 -17,16 -34,38 -51,66 -18,28 -34,59 -49,95 -15,35 -28,72 -38,111l-12 0c10,-38 23,-77 39,-116 16,-40 34,-76 55,-109 21,-33 44,-60 69,-81 25,-21 52,-31 81,-31 27,0 48,7 62,21 14,14 23,32 26,55 3,23 1,48 -6,75l-82 320 -130 0zm622 261c-26,0 -48,-5 -67,-16 -19,-10 -34,-25 -44,-43 -11,-18 -16,-39 -16,-62 0,-15 4,-30 11,-43 7,-13 17,-24 29,-32 12,-8 26,-12 42,-12 12,0 24,3 35,8 12,5 22,13 29,24 8,11 12,25 12,41 0,23 -7,41 -22,55 -15,14 -31,21 -50,21 -13,0 -26,-3 -39,-8 -13,-5 -24,-13 -33,-22 -9,-10 -13,-20 -13,-33l19 0c0,20 4,38 13,53 9,15 21,27 36,36 16,9 35,13 57,13 28,0 57,-9 88,-27 31,-18 62,-42 94,-72 32,-30 62,-64 93,-102 30,-38 58,-76 85,-116 26,-40 49,-79 69,-116 20,-37 35,-71 47,-101 11,-30 17,-53 17,-70 0,-15 -3,-29 -9,-42 -6,-14 -14,-25 -25,-33 -11,-9 -25,-13 -42,-13l0 -19c17,0 31,4 44,11 13,7 23,17 30,29 7,12 11,24 11,38 0,14 -4,27 -12,39 -8,12 -18,21 -31,27 -13,7 -26,10 -41,10 -25,0 -45,-8 -61,-23 -16,-15 -23,-33 -23,-55 0,-21 8,-40 24,-54 16,-15 35,-22 59,-22 23,0 42,5 56,16 14,11 24,25 31,41 6,16 10,33 10,49 0,19 -6,44 -17,75 -11,32 -27,67 -48,106 -21,39 -44,79 -71,120 -27,41 -56,81 -87,119 -31,39 -63,73 -97,104 -33,31 -66,55 -99,73 -33,18 -64,27 -94,27zm239 -165c-12,-21 -24,-46 -37,-76 -13,-29 -25,-60 -37,-94 -12,-33 -23,-67 -34,-101 -11,-34 -21,-65 -30,-96 -9,-30 -18,-57 -25,-81 -7,-23 -13,-41 -18,-53 -2,-5 -5,-11 -10,-17 -4,-6 -12,-9 -22,-9 -13,0 -27,7 -42,20 -15,13 -28,37 -40,70l-19 -9c11,-30 24,-54 40,-72 15,-18 33,-31 53,-39 20,-8 42,-12 66,-12 38,0 66,9 84,26 18,18 31,40 39,68 7,23 15,49 23,80 8,31 17,63 28,96 10,34 22,66 35,98 13,31 27,59 43,83 -7,9 -14,18 -21,28 -7,10 -15,19 -24,29 -8,10 -17,19 -25,29 -9,10 -17,20 -26,30z"/>
-        <path fill="#F4F1EA" d="M4801 1067c15,0 28,-4 39,-12 11,-8 20,-19 26,-34 6,-15 9,-31 9,-51 0,-19 -3,-36 -9,-51 -6,-15 -15,-26 -26,-34 -11,-8 -24,-12 -39,-12 -14,0 -27,4 -38,12 -11,8 -20,20 -26,34 -6,15 -9,32 -9,51 0,19 3,36 9,51 6,15 15,26 26,34 11,8 24,12 38,12zm0 31c-20,0 -38,-5 -55,-15 -17,-10 -31,-24 -41,-43 -10,-19 -16,-42 -16,-69 0,-27 5,-50 16,-69 10,-19 24,-34 41,-44 17,-10 35,-15 55,-15 20,0 38,5 55,15 17,10 31,25 41,44 11,19 16,42 16,69 0,27 -5,50 -16,69 -11,19 -24,33 -41,43 -17,10 -35,15 -55,15zm-216 0c-21,0 -41,-5 -58,-15 -17,-10 -31,-24 -41,-43 -10,-19 -15,-42 -15,-69 0,-27 5,-50 16,-69 11,-19 25,-34 42,-44 17,-10 36,-15 57,-15 16,0 30,3 41,9 11,6 21,13 30,20l-19 24c-7,-7 -15,-12 -23,-16 -8,-4 -17,-6 -27,-6 -15,0 -29,4 -41,12 -12,8 -21,20 -28,34 -7,15 -10,32 -10,51 0,19 3,36 10,51 7,15 16,26 27,34 12,8 25,12 41,12 12,0 23,-3 33,-8 10,-5 19,-11 27,-18l16 25c-11,10 -23,17 -36,23 -13,6 -27,8 -42,8z"/>
-        <path fill="#F4F1EA" d="M4393 1097c-7,0 -14,-3 -19,-8 -6,-5 -8,-12 -8,-21 0,-9 3,-16 8,-22 6,-5 12,-8 19,-8 8,0 14,3 20,8 5,5 8,13 8,22 0,9 -3,16 -8,21 -5,5 -12,8 -20,8z"/>
-        <polygon fill="#F4F1EA" points="4060,650 4060,630 4330,630 4330,650 "/>
-        <path fill="#F4F1EA" d="M4145 1101c-21,0 -38,-3 -51,-10 -13,-7 -23,-15 -29,-26 -6,-11 -9,-21 -9,-33 0,-5 1,-13 3,-23 2,-10 4,-20 7,-30l122 -451 80 0 -138 502c-1,3 -2,7 -3,12 -1,5 -2,9 -2,14 0,12 10,19 31,19 14,0 28,-3 41,-10 14,-7 26,-17 39,-30 12,-13 24,-29 36,-48 12,-19 22,-41 32,-66l19 6c-14,37 -30,68 -48,94 -18,26 -37,46 -59,59 -22,14 -46,20 -72,20z"/>
-        <polygon fill="#F4F1EA" points="3455,1091 3571,650 3504,650 3504,630 3658,630 3538,1091 "/>
-        <path fill="#F4F1EA" d="M3813 1101c-26,0 -46,-5 -59,-15 -13,-10 -20,-26 -20,-47 0,-7 1,-14 2,-21 2,-7 3,-13 4,-17l69 -219c8,-26 14,-49 17,-69 3,-20 1,-36 -5,-47 -6,-11 -18,-17 -35,-17 -16,0 -34,9 -54,26 -20,17 -41,41 -62,70 -21,30 -40,63 -57,99 -18,37 -32,74 -42,113l-14 0c7,-28 17,-57 30,-88 13,-31 27,-61 44,-90 17,-29 35,-56 54,-80 19,-24 40,-43 61,-57 21,-14 42,-21 64,-21 29,0 51,7 66,21 15,14 24,32 27,55 3,23 0,48 -8,75l-81 268c-1,3 -2,6 -2,9 0,3 -1,6 -1,9 0,5 2,10 4,14 3,4 8,6 15,6 23,0 44,-11 62,-34 18,-23 37,-59 57,-110l19 7c-14,38 -29,70 -43,94 -15,24 -31,42 -49,53 -18,11 -39,17 -64,17z"/>
-        <path fill="#F4F1EA" d="M3150 1101c-32,0 -59,-7 -81,-20 -22,-14 -39,-32 -50,-56 -11,-24 -17,-52 -17,-84 0,-38 7,-77 21,-115 14,-38 34,-72 59,-103 25,-31 55,-56 90,-75 34,-19 71,-28 111,-28 36,0 64,9 84,27 20,18 30,40 30,66 0,27 -9,52 -28,73 -19,22 -44,40 -75,55 -31,15 -66,27 -103,36 -38,9 -76,15 -114,17l0 -17c28,-2 55,-6 80,-11 25,-6 48,-13 68,-22 20,-9 38,-21 52,-35 15,-14 26,-30 34,-48 8,-18 12,-39 12,-62 0,-16 -4,-30 -11,-41 -7,-12 -19,-18 -36,-18 -19,0 -37,5 -54,16 -17,11 -33,25 -48,44 -15,19 -28,40 -40,63 -12,23 -22,48 -31,74 -9,26 -15,52 -20,77 -5,26 -7,50 -7,72 0,33 8,57 23,70 16,13 35,20 58,20 27,0 51,-5 74,-16 22,-11 42,-25 60,-44 18,-19 34,-40 48,-64l18 11c-13,25 -29,49 -49,70 -20,21 -43,38 -69,51 -26,13 -56,19 -88,19z"/>
-        <path fill="#F4F1EA" d="M2709 1101c-48,0 -85,-15 -110,-45 -26,-30 -38,-68 -38,-116 0,-39 7,-77 22,-115 14,-38 34,-72 59,-103 25,-31 53,-56 85,-75 32,-19 66,-28 101,-28 27,0 51,5 70,16 20,11 35,23 45,38 11,15 16,29 16,42 0,18 -5,32 -15,42 -10,10 -22,15 -37,15 -12,0 -24,-4 -34,-12 -10,-8 -16,-21 -16,-38 0,-14 5,-26 14,-35 9,-10 20,-15 33,-15 10,0 19,1 27,4 8,2 15,7 19,13 5,6 7,15 7,27l-19 0c0,-10 -5,-21 -14,-32 -9,-11 -22,-21 -38,-28 -16,-8 -33,-12 -53,-12 -23,0 -44,8 -64,23 -20,15 -39,35 -55,60 -16,25 -31,53 -43,83 -12,30 -21,60 -28,91 -6,31 -10,59 -10,85 0,28 7,51 21,67 14,16 34,24 60,24 27,0 51,-6 73,-16 22,-11 42,-26 60,-44 18,-19 34,-40 48,-64l18 11c-13,25 -30,48 -50,69 -20,21 -43,38 -69,51 -26,13 -55,19 -88,19z"/>
-        <path fill="#F4F1EA" d="M2339 1101c-26,0 -45,-7 -58,-20 -13,-13 -19,-28 -19,-43 0,-4 1,-9 1,-15 1,-6 2,-12 3,-17l95 -376 85 0 -110 408c-1,3 -1,6 -2,9 0,3 -1,6 -1,9 0,13 6,19 19,19 16,0 30,-5 43,-15 13,-10 25,-25 38,-47 12,-21 25,-49 39,-83l19 7c-14,38 -29,70 -43,94 -15,24 -31,42 -48,53 -17,11 -37,17 -60,17z"/>
-        <path fill="#F4F1EA" d="M2083 1101c-32,0 -55,-7 -70,-21 -15,-14 -23,-33 -24,-55 -2,-23 1,-48 8,-75l77 -300 -66 0 0 -20 156 0 -81 308c-7,26 -11,49 -14,69 -3,20 -2,36 4,47 5,12 17,17 35,17 16,0 34,-9 56,-26 21,-18 43,-41 65,-70 22,-29 42,-62 60,-99 18,-37 32,-74 41,-113l15 0c-7,28 -16,57 -29,88 -13,31 -28,61 -45,91 -17,30 -36,56 -57,81 -20,24 -41,43 -63,57 -22,14 -44,21 -66,21z"/>
-        <polygon fill="#F4F1EA" points="1509,359 1509,340 1785,340 1785,359 "/>
-        <path fill="#F4F1EA" d="M1340 1091l0 -20 341 0c52,0 93,-8 123,-25 29,-17 51,-40 66,-71 15,-31 27,-67 37,-110l20 0 -52 226 -535 0z"/>
-        <path fill="#F4F1EA" d="M1579 428l21 -89 95 0 -25 109c-18,-14 -40,-23 -65,-23 -9,0 -17,1 -26,3z"/>
-        <path fill="#F4F1EA" d="M1425 1091l112 -485c18,15 41,25 67,25 8,0 16,-1 23,-3l-107 463 -95 0z"/>
-        <path fill="#F4F1EA" d="M1814 545c63,5 129,9 192,-1 106,-17 171,-68 282,-163 52,-44 89,-56 131,-39 27,11 47,35 53,63 4,17 1,35 -7,50 -1,-2 -3,-3 -5,-4 -9,-6 -20,-8 -30,-6 -11,2 -20,8 -26,17 -6,9 -8,20 -7,30 2,11 8,20 17,26 9,6 20,8 30,7 13,-2 23,-12 30,-19 30,-30 42,-69 34,-108 -8,-40 -37,-75 -75,-90 -70,-28 -127,10 -168,46 -100,86 -159,133 -246,151 52,-23 98,-56 137,-99 64,-69 109,-184 44,-299 -53,-93 -170,-132 -267,-88 -39,18 -69,49 -84,90 -15,40 -14,84 4,123 30,67 108,96 175,67 27,-12 47,-34 58,-61 10,-27 10,-57 -3,-84 -3,-7 -10,-19 -18,-27 -5,-5 -11,-10 -18,-12 -10,-4 -21,-4 -31,1 -10,4 -17,12 -21,22 -8,21 2,44 23,52 12,5 26,3 37,-4 2,13 1,26 -4,39 -7,18 -20,33 -38,40 -48,21 -105,0 -126,-48 -14,-30 -15,-64 -3,-95 12,-31 35,-55 65,-69 79,-36 176,-4 219,73 56,98 17,196 -39,256 -78,84 -184,128 -309,128 -1,0 -2,1 -3,0 -10,0 -18,8 -18,18 0,10 7,18 17,19zm-212 -58c22,0 40,18 40,40 0,22 -18,40 -40,40 -22,0 -40,-18 -40,-40 0,-22 18,-40 40,-40zm0 116c42,0 76,-34 76,-77 0,-42 -34,-77 -76,-77 -42,0 -76,34 -76,77 0,42 34,77 76,77z"/>
-      </svg>
-    </div>
-    <nav>
-      <a href="index.html">HOME</a>
-      <a href="order.html">ORDER</a>
-      <a href="gallery.html">GALLERY</a>
-      <a href="contact.html">CONTACT</a>
-    </nav>
-  </header>
+<header id="site-header" style="background:rgba(255,255,255,0.30);border-radius:10px;padding:20px 32px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 10px 28px -8px rgba(27,39,51,0.28);margin:16px 44px -96px;position:sticky;top:16px;z-index:50;">
+  <a href="./index.html" style="display:block;">
+    <img src="logo.svg" alt="myLucent.co" style="height:26px;width:94px;display:block;">
+  </a>
+  <nav style="display:flex;gap:32px;">
+    <a href="#gallery" class="nav-link">GALLERY</a>
+    <a href="#how" class="nav-link">HOW IT WORKS</a>
+    <a href="./order.html" class="nav-link">ORDER PLAQUE</a>
+    <a href="./contact.html" class="nav-link">CONTACT</a>
+  </nav>
+</header>
 
-  <section class="hero">
-    <div class="hero-content">
-      <span class="eyebrow">CUSTOM ACRYLIC &amp; SILVER STUDIO</span>
-      <h1>Personalized acrylic art, cut and lit to tell your story.</h1>
-      <p>Nameplates, wall art, door plaques, and one-of-a-kind pieces — each one designed around your idea and crafted by hand.</p>
-      <a class="hero-cta" href="order.html">Start Your Order →</a>
+<main>
+  <section style="position:relative;height:100vh;margin-top:-96px;padding-top:96px;display:flex;align-items:center;overflow:hidden;">
+    <img src="assets/hero-interior.jpg" alt="Custom engraved acrylic portrait piece displayed above a sofa" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+    <div style="position:absolute;inset:0;background:linear-gradient(100deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.66) 32%, rgba(255,255,255,0.15) 58%, rgba(255,255,255,0) 78%);"></div>
+    <div style="position:relative;max-width:1080px;margin:0 auto;padding:110px 44px 96px;width:100%;">
+      <div style="max-width:560px;position:relative;z-index:60;">
+        <span style="font-size:11px;letter-spacing:3px;color:#A9784F;margin-bottom:14px;display:block;">CUSTOM ACRYLIC ART</span>
+        <h1 style="font-weight:500;font-size:46px;line-height:1.2;margin:0 0 20px;">Wall art, name plaques &amp; keepsakes, cut and finished by hand.</h1>
+        <p style="font-size:15px;line-height:1.75;color:#1B2733;opacity:0.75;margin:0 0 32px;">From statement pieces for your living room to a nameplate for a favorite book, or a personalized keepsake for a simcha — every piece is designed around you, then cut and finished in acrylic.</p>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;">
+          <a href="./contact.html" class="pop-btn" style="background:transparent;color:#1B2733;border:none;padding:10px 2px;font-size:12px;letter-spacing:1.5px;display:inline-block;white-space:nowrap;">CONTACT US</a>
+        </div>
+      </div>
+    </div>
+    <div style="position:absolute;left:50%;bottom:36px;transform:translateX(-50%);z-index:60;">
+      <div class="arrow-bounce" style="width:44px;height:44px;border-radius:50%;border:1px solid #1B2733;display:flex;align-items:center;justify-content:center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B2733" stroke-width="1.8"><path d="M12 4v14M5 12l7 7 7-7"></path></svg>
+      </div>
     </div>
   </section>
 
-  <section id="process">
+  <section id="gallery" style="background:#FFFFFF;">
     <div class="section-inner">
-      <div class="section-eyebrow reveal"><span>HOW IT WORKS</span></div>
-      <h2 class="section-title reveal">From idea to finished piece.</h2>
+      <div class="rule-label"><div class="rule"></div><span>RECENT WORK</span><div class="rule"></div></div>
+      <h2 style="font-weight:500;font-size:30px;margin:0 0 28px;text-align:center;">A few pieces we've made</h2>
+      <div class="gal-tabs">
+        <button class="gal-tab active" data-filter="all">ALL</button>
+        <button class="gal-tab" data-filter="wall">WALL ART</button>
+        <button class="gal-tab" data-filter="book">BOOK PLAQUES</button>
+        <button class="gal-tab" data-filter="simcha">SIMCHA</button>
+      </div>
+      <div class="reveal gal-grid" id="galGrid"></div>
+    </div>
+  </section>
 
-      <div class="process-grid">
-        <div class="process-card reveal">
-          <div class="process-num">01</div>
-          <h3>You reach out</h3>
-          <p>Contact us with the details of what you're picturing — the occasion, the wording, the vibe. No idea is too rough to start with.</p>
+  <div class="gal-modal-backdrop" id="galModal">
+    <button class="gal-modal-close" id="galModalClose">×</button>
+    <div class="gal-modal">
+      <img id="galModalImg" src="" alt="" style="width:100%;height:420px;object-fit:cover;display:block;">
+      <div style="padding:24px 28px;">
+        <span id="galModalCat" style="font-size:10px;letter-spacing:2px;color:#A9784F;display:block;margin-bottom:6px;"></span>
+        <span id="galModalTitle" style="font-family:'Spectral',serif;font-weight:500;font-size:22px;color:#1B2733;"></span>
+      </div>
+    </div>
+  </div>
+
+  <section id="how" style="background:#FFFFFF;border-top:1px solid rgba(27,39,51,0.08);">
+    <div class="section-inner">
+      <div class="rule-label"><div class="rule"></div><span>HOW IT WORKS</span><div class="rule"></div></div>
+      <h2 class="reveal" style="font-weight:500;font-size:30px;margin:0 0 40px;">Three steps from idea to piece</h2>
+      <div class="reveal hw-row">
+        <div class="hw-panel active" data-panel="1">
+          <span class="hw-num">01</span>
+          <h3>Tell us your idea</h3>
+          <div class="hw-desc"><p>Share the occasion, the image or name, and roughly the size and style you're picturing. A photo or a rough sketch is plenty to start.</p></div>
         </div>
-        <div class="process-card reveal">
-          <div class="process-num">02</div>
-          <h3>We sketch it together</h3>
-          <p>We'll talk it through with you and put together a sketch, refining it until it actually looks like what's in your head.</p>
+        <div class="hw-panel" data-panel="2">
+          <span class="hw-num">02</span>
+          <h3>We send a proof</h3>
+          <div class="hw-desc"><p>You'll see a digital mockup before anything is cut, with room for revisions until the layout is right.</p></div>
         </div>
-        <div class="process-card reveal">
-          <div class="process-num">03</div>
-          <h3>We bring it to life</h3>
-          <p>Once you give the go-ahead, we cut, engrave, and finish your piece by hand — ready for you to pick up.</p>
+        <div class="hw-panel" data-panel="3">
+          <span class="hw-num">03</span>
+          <h3>We cut &amp; ship</h3>
+          <div class="hw-desc">
+            <p>Once approved, your piece is cut, edge-finished by hand, packed and shipped to you.</p>
+            <a href="./contact.html" class="pop-btn" style="margin-top:22px;background:transparent;color:#1B2733;border:none;padding:10px 2px;font-size:12px;letter-spacing:1.5px;display:inline-block;">START A CONVERSATION</a>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section id="gallery-teaser">
-    <a class="teaser-full" href="gallery.html" aria-label="View the full gallery" id="teaserFull">
-      <div class="teaser-rotator" id="teaserRotator"></div>
-      <div class="teaser-overlay">
-        <h3>View the Full Gallery</h3>
-        <span>Click to see our other work →</span>
-      </div>
-    </a>
-  </section>
-
-  <section id="contact-cta">
-    <div class="section-inner reveal">
-      <div class="section-eyebrow"><span>GET IN TOUCH</span></div>
-      <h2>Have an idea? Let's talk it through.</h2>
-      <p>Whether it's a nameplate, a piece of wall art, or something you haven't seen anywhere else — reach out and we'll figure it out together.</p>
-      <a class="contact-cta-btn" href="contact.html">Contact Us →</a>
+  <section style="background:#1B2733;">
+    <div class="reveal section-inner" style="display:flex;flex-direction:column;align-items:flex-start;gap:32px;">
+      <h2 style="font-weight:400;font-size:52px;line-height:1.12;margin:0;max-width:700px;color:#F4F1EA;">Ready to create<br>something custom?</h2>
+      <div style="height:1px;width:100%;background:rgba(244,241,234,0.22);"></div>
+      <a href="./contact.html" class="cta-btn" style="color:#F4F1EA;font-size:12.5px;letter-spacing:1.5px;">START A CONVERSATION &nbsp;<span>→</span></a>
     </div>
   </section>
+</main>
 
-  <footer>
-    <div class="footer-inner">
-      <a href="index.html">Home</a>
-      <a href="order.html">Order</a>
-      <a href="gallery.html">Gallery</a>
-      <a href="contact.html">Contact</a>
-    </div>
-    <p>© myLucent.co — Personalized Acrylic Art &amp; Silver Nameplates</p>
-  </footer>
+<footer style="padding:36px 44px;text-align:center;border-top:1px solid rgba(27,39,51,0.12);background:#FFFFFF;">
+  <span style="font-size:11px;letter-spacing:1px;color:rgba(27,39,51,0.5);">mylucent.co — custom acrylic art</span>
+</footer>
 
 <script src="projects-data.js"></script>
 <script>
-  // Scroll-reveal: fade/slide up sections as they enter the viewport.
+  // Header hide-on-scroll
+  (function(){
+    var header = document.getElementById('site-header');
+    if (!header) return;
+    var lastY = window.scrollY;
+    window.addEventListener('scroll', function(){
+      var y = window.scrollY;
+      var hidden = y > lastY && y > 80;
+      lastY = y;
+      header.classList.toggle('hdr-hidden', hidden);
+    }, { passive: true });
+  })();
+
+  // Scroll reveal
   (function(){
     var targets = document.querySelectorAll('.reveal');
-    if (!('IntersectionObserver' in window) || targets.length === 0){
+    if (!('IntersectionObserver' in window)){
       targets.forEach(function(el){ el.classList.add('in-view'); });
       return;
     }
@@ -363,66 +217,85 @@
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    }, { threshold: 0.15 });
     targets.forEach(function(el){ observer.observe(el); });
   })();
 
-  // Subtle parallax drift on the hero photo as the page scrolls.
+  // Gallery: build cards from projects-data.js, filter tabs, lightbox modal
   (function(){
-    var hero = document.querySelector('.hero');
-    if (!hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var ticking = false;
-    window.addEventListener('scroll', function(){
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(function(){
-        var y = window.scrollY;
-        var shift = Math.min(y * 0.04, 14);
-        hero.style.backgroundPosition = 'center calc(35% + ' + shift + 'px)';
-        ticking = false;
+    var CATEGORY_LABELS = { wall: 'WALL ART', book: 'BOOK PLAQUES', simcha: 'SIMCHA' };
+    var grid = document.getElementById('galGrid');
+    var tabs = document.querySelectorAll('.gal-tab');
+    var modal = document.getElementById('galModal');
+    var modalImg = document.getElementById('galModalImg');
+    var modalCat = document.getElementById('galModalCat');
+    var modalTitle = document.getElementById('galModalTitle');
+    var projects = window.PROJECTS || [];
+
+    if (projects.length === 0){
+      grid.innerHTML = '<div class="gal-empty">More pieces coming soon.</div>';
+    }
+
+    projects.forEach(function(p){
+      var card = document.createElement('div');
+      card.className = 'gal-card';
+      card.dataset.category = p.category || '';
+
+      var imgWrap = document.createElement('div');
+      imgWrap.className = 'gal-img-wrap';
+      var img = document.createElement('img');
+      img.src = p.cover;
+      img.alt = p.title;
+      imgWrap.appendChild(img);
+
+      var caption = document.createElement('div');
+      caption.className = 'gal-caption';
+      caption.innerHTML = '<span class="title">' + p.title + '</span>';
+
+      card.appendChild(imgWrap);
+      card.appendChild(caption);
+
+      card.addEventListener('click', function(){
+        modalImg.src = p.cover;
+        modalImg.alt = p.title;
+        modalCat.textContent = CATEGORY_LABELS[p.category] || p.tag || '';
+        modalTitle.textContent = p.title;
+        modal.classList.add('open');
       });
-    }, { passive: true });
-  })();
-</script>
-<script>
-  // Build the 3-row angled photo wall from every photo across all projects.
-  // Falls back gracefully if only a couple of photos exist yet by repeating them.
-  (function(){
-    var allPhotos = [];
-    (window.PROJECTS || []).forEach(function(p){
-      (p.photos || []).forEach(function(src){ allPhotos.push(src); });
+
+      grid.appendChild(card);
     });
-    if (allPhotos.length === 0) return;
 
-    var rotator = document.getElementById('teaserRotator');
-    var rowDefs = [
-      { dir: 'left',  offset: 0 },
-      { dir: 'right', offset: 1 }
-    ];
-
-    rowDefs.forEach(function(def){
-      var row = document.createElement('div');
-      row.className = 'teaser-row dir-' + def.dir;
-
-      // Build enough images to comfortably fill the row twice over (for the
-      // seamless loop), cycling through available photos starting at a
-      // different offset per row so rows don't look identical.
-      var need = Math.max(allPhotos.length * 2, 10);
-      var seq = [];
-      for (var i = 0; i < need; i++){
-        seq.push(allPhotos[(i + def.offset) % allPhotos.length]);
-      }
-      // Duplicate the whole sequence once more so translateX(-50%) loops seamlessly.
-      seq = seq.concat(seq);
-
-      seq.forEach(function(src){
-        var img = document.createElement('img');
-        img.src = src;
-        img.alt = '';
-        row.appendChild(img);
+    tabs.forEach(function(tab){
+      tab.addEventListener('click', function(){
+        tabs.forEach(function(t){ t.classList.remove('active'); });
+        tab.classList.add('active');
+        var f = tab.dataset.filter;
+        grid.querySelectorAll('.gal-card').forEach(function(card){
+          card.classList.toggle('hidden', f !== 'all' && card.dataset.category !== f);
+        });
       });
+    });
 
-      rotator.appendChild(row);
+    modal.addEventListener('click', function(e){
+      if (e.target === modal) modal.classList.remove('open');
+    });
+    document.getElementById('galModalClose').addEventListener('click', function(){
+      modal.classList.remove('open');
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') modal.classList.remove('open');
+    });
+  })();
+
+  // How it works: hover to expand a panel
+  (function(){
+    var panels = document.querySelectorAll('.hw-panel');
+    panels.forEach(function(p){
+      p.addEventListener('mouseenter', function(){
+        panels.forEach(function(o){ o.classList.remove('active'); });
+        p.classList.add('active');
+      });
     });
   })();
 </script>
