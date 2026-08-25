@@ -35,15 +35,21 @@
 //                              from Stripe Dashboard -> Developers ->
 //                              Webhooks -> your endpoint. Test mode and
 //                              live mode each have their OWN secret.
-//   RESEND_API_KEY            - your API key from resend.com (Railway blocks
-//                              outbound SMTP on the Hobby plan, so
-//                              confirmation emails are sent via Resend's
-//                              HTTPS API instead of Gmail/SMTP).
-//   RESEND_FROM_EMAIL          - the "from" address for confirmation emails,
-//                              e.g. "myLucent.co <orders@mylucent.co>" once
-//                              your domain is verified in Resend, or
-//                              "myLucent.co <onboarding@resend.dev>" for
-//                              testing before you verify a domain.
+//   MAILGUN_API_KEY            - your Private API key from Mailgun (Control
+//                              Panel -> Account Settings -> API Keys).
+//                              Railway blocks outbound SMTP on the Hobby
+//                              plan, so confirmation emails are sent via
+//                              Mailgun's HTTPS API instead of SMTP.
+//   MAILGUN_DOMAIN             - your verified sending domain in Mailgun,
+//                              e.g. "mg.mylucent.co", or the sandbox
+//                              domain Mailgun gives you before you verify
+//                              your own (e.g. "sandboxXXXX.mailgun.org" —
+//                              sandbox domains can only send to a short
+//                              list of authorized recipients you add in
+//                              Mailgun's dashboard).
+//   MAILGUN_FROM_EMAIL          - the "from" address for confirmation
+//                              emails, e.g. "myLucent.co <orders@mg.mylucent.co>"
+//                              — must be an address at MAILGUN_DOMAIN.
 
 const express = require('express');
 const path = require('path');
@@ -182,10 +188,10 @@ async function sendOwnerText(messageBody, reference) {
 }
 
 async function sendCustomerConfirmationEmail(order) {
-  const { RESEND_API_KEY, RESEND_FROM_EMAIL } = process.env;
+  const { MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL } = process.env;
 
-  if (!RESEND_API_KEY || !RESEND_FROM_EMAIL) {
-    throw new Error('Server is missing Resend configuration.');
+  if (!MAILGUN_API_KEY || !MAILGUN_DOMAIN || !MAILGUN_FROM_EMAIL) {
+    throw new Error('Server is missing Mailgun configuration.');
   }
   if (!order.email) {
     throw new Error('No customer email on file for this order.');
@@ -339,24 +345,27 @@ async function sendCustomerConfirmationEmail(order) {
 </html>
   `;
 
-  const response = await fetch('https://api.resend.com/emails', {
+  const formData = new URLSearchParams();
+  formData.append('from', MAILGUN_FROM_EMAIL);
+  formData.append('to', order.email);
+  formData.append('subject', 'Your myLucent.co order is confirmed (' + order.reference + ')');
+  formData.append('text', textBody);
+  formData.append('html', htmlBody);
+
+  const mailgunAuth = 'Basic ' + Buffer.from('api:' + MAILGUN_API_KEY).toString('base64');
+
+  const response = await fetch('https://api.mailgun.net/v3/' + MAILGUN_DOMAIN + '/messages', {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer ' + RESEND_API_KEY,
-      'Content-Type': 'application/json'
+      'Authorization': mailgunAuth,
+      'Content-Type': 'application/x-www-form-urlencoded'
     },
-    body: JSON.stringify({
-      from: RESEND_FROM_EMAIL,
-      to: order.email,
-      subject: 'Your myLucent.co order is confirmed (' + order.reference + ')',
-      text: textBody,
-      html: htmlBody
-    })
+    body: formData.toString()
   });
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw new Error(data.message || 'Resend rejected the request (status ' + response.status + ')');
+    throw new Error(data.message || 'Mailgun rejected the request (status ' + response.status + ')');
   }
 }
 
