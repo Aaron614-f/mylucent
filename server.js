@@ -191,45 +191,152 @@ async function sendCustomerConfirmationEmail(order) {
     throw new Error('No customer email on file for this order.');
   }
 
+  const firstName = (order.name || '').trim().split(/\s+/)[0] || 'there';
+  const designName = (order.design || '').includes(' — ') ? order.design.split(' — ')[1] : order.design;
+  const itemLine = (order.sizeLabel || order.size) + ' ' + order.finish + ' Nameplate (' + designName + ')' +
+    (order.quantity && order.quantity > 1 ? ' × ' + order.quantity : '');
+  const placedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
   const textBody = [
-    'Thanks for your order, ' + order.name + '!',
+    'Thanks, ' + firstName + ' — your order is confirmed.',
     '',
-    'Here\'s what we\'ve got for you:',
-    'Order reference: ' + order.reference,
-    'Size: ' + (order.sizeLabel || order.size),
-    'Quantity: ' + (order.quantity || 1),
-    'Design: ' + order.design,
-    'Language: ' + order.language,
-    'Font: ' + order.font,
-    'Finish: ' + order.finish,
-    'Name / wording: ' + order.name,
+    'ORDER SUMMARY',
+    'Order: ' + order.reference,
+    'Item: ' + itemLine,
+    'Placed: ' + placedDate,
     order.totalPaid ? ('Total paid: $' + order.totalPaid) : null,
     '',
-    'This is a pickup-only order — no delivery. We\'ll contact you at ' + order.phone + ' to confirm the pickup address and timing.',
+    'WHAT\'S NEXT',
+    'Your piece is now in production. Normal turnaround is 7 business days. This is a pickup-only order — we\'ll contact you at ' + order.phone + ' to confirm the pickup address and timing once it\'s ready.',
+    '',
+    'Questions about your order? Reply to this email or visit https://mylucent.co/contact.html',
     '',
     '— myLucent.co'
   ].filter(function(line){ return line !== null; }).join('\n');
 
   const htmlBody = `
-    <div style="font-family:Arial,sans-serif; color:#1B2733; max-width:480px; margin:0 auto;">
-      <h2 style="font-weight:600;">Thanks for your order, ${order.name}!</h2>
-      <p>Here's what we've got for you:</p>
-      <table style="width:100%; border-collapse:collapse; font-size:14px;">
-        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Order reference</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;"><b>${order.reference}</b></td></tr>
-        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Size</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;">${order.sizeLabel || order.size}</td></tr>
-        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Quantity</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;">${order.quantity || 1}</td></tr>
-        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Design</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;">${order.design}</td></tr>
-        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Language</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;">${order.language}</td></tr>
-        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Font</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;">${order.font}</td></tr>
-        <tr><td style="padding:8px 0; color:#666; border-bottom:1px solid #eee;">Finish</td><td style="padding:8px 0; text-align:right; border-bottom:1px solid #eee;">${order.finish}</td></tr>
-        <tr><td style="padding:8px 0; color:#666;">Name / wording</td><td style="padding:8px 0; text-align:right;">${order.name}</td></tr>
-        ${order.totalPaid ? `<tr><td style="padding:8px 0; color:#666;"><b>Total paid</b></td><td style="padding:8px 0; text-align:right;"><b>$${order.totalPaid}</b></td></tr>` : ''}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>myLucent.co — Order Confirmed</title>
+<style>
+  body, table, td { -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
+  table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+  body { margin: 0; padding: 0; width: 100% !important; height: 100% !important; }
+  a { color: #A9784F; }
+  @media only screen and (max-width: 600px) {
+    .full-width { width: 100% !important; }
+    .px-fluid { padding-left: 24px !important; padding-right: 24px !important; }
+    .h1-fluid { font-size: 24px !important; line-height: 1.3 !important; }
+  }
+</style>
+</head>
+<body style="margin:0; padding:0; background-color:#EEF2F6;">
+<div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#EEF2F6;">
+  Your order is confirmed — normal turnaround is 7 business days.
+</div>
+<center style="width:100%; background-color:#EEF2F6;">
+<table role="presentation" class="full-width" width="600" align="center" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; margin:0 auto;">
+
+  <tr>
+    <td class="px-fluid" style="padding:32px 40px 20px 40px; text-align:center;">
+      <span style="font-family:Georgia, 'Times New Roman', serif; font-size:18px; font-weight:500; letter-spacing:0.5px; color:#1B2733;">myLucent.co</span>
+    </td>
+  </tr>
+
+  <tr>
+    <td class="px-fluid" style="padding:0 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FFFFFF; border-radius:14px; overflow:hidden;">
+        <tr>
+          <td style="padding:44px 36px 32px 36px; text-align:center;">
+            <span style="font-family:'Helvetica Neue', Arial, sans-serif; font-size:11px; font-weight:500; letter-spacing:3px; color:#A9784F;">ORDER CONFIRMED</span>
+            <div class="h1-fluid" style="font-family:Georgia, 'Times New Roman', serif; font-size:28px; line-height:1.3; font-weight:500; color:#1B2733; padding-top:14px;">
+              Thanks, ${firstName} — your order is confirmed.
+            </div>
+            <div style="font-family:'Helvetica Neue', Arial, sans-serif; font-size:14.5px; line-height:1.75; color:#4a5763; padding-top:16px; max-width:440px; margin:0 auto;">
+              We've received your order and payment. Your piece is now heading into production.
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:0 36px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td height="1" style="font-size:0; line-height:0; background-color:rgba(27,39,51,0.10);">&nbsp;</td>
+            </tr></table>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:28px 36px 8px 36px;">
+            <span style="font-family:'Helvetica Neue', Arial, sans-serif; font-size:10px; font-weight:500; letter-spacing:2px; color:#8a94a0;">ORDER SUMMARY</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:12px 36px 8px 36px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding:10px 0; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#4a5763;">Order</td>
+                <td style="padding:10px 0; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#1B2733; text-align:right;">${order.reference}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#4a5763; border-top:1px solid rgba(27,39,51,0.08);">Item</td>
+                <td style="padding:10px 0; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#1B2733; text-align:right; border-top:1px solid rgba(27,39,51,0.08);">${itemLine}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#4a5763; border-top:1px solid rgba(27,39,51,0.08);">Placed</td>
+                <td style="padding:10px 0; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#1B2733; text-align:right; border-top:1px solid rgba(27,39,51,0.08);">${placedDate}</td>
+              </tr>
+              ${order.totalPaid ? `<tr>
+                <td style="padding:14px 0 4px; font-family:Georgia, 'Times New Roman', serif; font-size:16px; font-weight:500; color:#1B2733; border-top:1px solid rgba(27,39,51,0.08);">Total paid</td>
+                <td style="padding:14px 0 4px; font-family:Georgia, 'Times New Roman', serif; font-size:16px; font-weight:500; color:#1B2733; text-align:right; border-top:1px solid rgba(27,39,51,0.08);">$${order.totalPaid}</td>
+              </tr>` : ''}
+            </table>
+          </td>
+        </tr>
       </table>
-      <p style="margin-top:20px; padding:14px 16px; background:#fbf3ec; border:1px solid #e6d3c2; border-radius:8px; font-size:13px;">
-        <b>No delivery available.</b> This is a pickup-only order. We'll contact you at ${order.phone} to confirm the pickup address and timing.
-      </p>
-      <p style="margin-top:24px; color:#999; font-size:12px;">— myLucent.co</p>
-    </div>
+    </td>
+  </tr>
+
+  <tr>
+    <td class="px-fluid" style="padding:44px 40px 4px 40px; text-align:center;">
+      <span style="font-family:'Helvetica Neue', Arial, sans-serif; font-size:10px; font-weight:500; letter-spacing:2px; color:#8a94a0;">WHAT'S NEXT</span>
+    </td>
+  </tr>
+  <tr>
+    <td class="px-fluid" style="padding:8px 40px 8px 40px; font-family:Georgia, 'Times New Roman', serif; font-size:20px; font-weight:500; color:#1B2733; text-align:center;">
+      Normal turnaround is 7 business days
+    </td>
+  </tr>
+  <tr>
+    <td class="px-fluid" style="padding:0 40px 24px 40px; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13.5px; line-height:1.7; color:#4a5763; text-align:center;">
+      This is a pickup-only order — no delivery. We'll contact you at ${order.phone} to confirm the pickup address and timing once it's ready.
+    </td>
+  </tr>
+  <tr>
+    <td class="px-fluid" style="padding:0 40px 8px 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding:14px 0; text-align:center;">
+            <a href="https://mylucent.co/contact.html" style="font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#A9784F; text-decoration:none;">Questions about your order? Contact us &#8594;</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td class="px-fluid" style="padding:40px 40px 40px 40px; text-align:center; font-family:'Helvetica Neue', Arial, sans-serif; font-size:11px; line-height:1.7; color:#8a94a0;">
+      myLucent.co — Custom Acrylic Art
+    </td>
+  </tr>
+
+</table>
+</center>
+</body>
+</html>
   `;
 
   const response = await fetch('https://api.resend.com/emails', {
@@ -252,6 +359,7 @@ async function sendCustomerConfirmationEmail(order) {
     throw new Error(data.message || 'Resend rejected the request (status ' + response.status + ')');
   }
 }
+
 
 // --- Stripe webhook: needs the RAW body for signature verification, so
 // this route is registered BEFORE the general express.json() parser below. ---
