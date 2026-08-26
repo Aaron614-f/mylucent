@@ -73,6 +73,25 @@ function cleanupOldOrders() {
 }
 setInterval(cleanupOldOrders, 60 * 60 * 1000);
 
+// In-memory store of PAID orders awaiting the "text ready" trigger, keyed
+// by order reference. This lets the owner text something like
+// "ML-MSX70 ready" to automatically email the customer their pickup
+// notice, without needing to look anything up manually.
+//
+// NOTE: like pendingOrders above, this lives in server memory only — a
+// Railway restart/redeploy will clear it. For a small shop this is a
+// reasonable tradeoff, but if you want it to survive restarts, this is
+// the place to swap in a real database later.
+const completedOrders = new Map();
+
+function cleanupOldCompletedOrders() {
+  const cutoff = Date.now() - 45 * 24 * 60 * 60 * 1000; // 45 days
+  for (const [ref, entry] of completedOrders) {
+    if (entry.completedAt < cutoff) completedOrders.delete(ref);
+  }
+}
+setInterval(cleanupOldCompletedOrders, 60 * 60 * 1000);
+
 function verifyStripeSignature(rawBody, sigHeader, secret) {
   if (!sigHeader) throw new Error('Missing Stripe-Signature header');
   const parts = {};
@@ -130,18 +149,27 @@ function calculatePriceCents(size, quantity) {
 }
 
 function buildOrderMessage(order) {
+  const designShort = (order.design || '').includes(' — ') ? order.design.split(' — ')[0] : order.design;
+  const qtySuffix = order.quantity && order.quantity > 1 ? ' ×' + order.quantity : '';
+
+  const specParts = [order.sizeLabel || order.size, designShort, order.finish];
+  if ((order.language || '').toLowerCase() === 'hebrew') {
+    specParts.push('Hebrew (' + order.font + ')');
+  }
+  const specLine = specParts.filter(Boolean).join(', ') + qtySuffix;
+
   return [
-    order.reference,
-    'Size: ' + (order.sizeLabel || order.size),
-    'Quantity: ' + (order.quantity || 1),
-    'Design: ' + order.design,
-    'Language: ' + order.language,
-    'Font: ' + order.font,
-    'Finish: ' + order.finish,
-    'Name: ' + order.name,
-    'Phone: ' + order.phone,
-    order.totalPaid ? ('Paid: $' + order.totalPaid) : null
+    order.name + ' · ' + order.phone,
+    specLine,
+    order.totalPaid ? ('$' + order.totalPaid + ' paid') : null
   ].filter(Boolean).join('\n');
+}
+
+// The second text sent right after an order confirmation — just the
+// reference + "ready", pre-formatted so it can be forwarded/replied back
+// as-is once the piece is done, with nothing to type or edit.
+function buildReadyTriggerMessage(order) {
+  return order.reference + ' ready';
 }
 
 async function sendOwnerText(messageBody, reference) {
@@ -369,8 +397,179 @@ async function sendCustomerConfirmationEmail(order) {
   }
 }
 
+// Sent when the owner texts "[reference] ready" — lets the customer know
+// their piece is ready and prompts them to arrange pickup.
+async function sendReadyForPickupEmail(order) {
+  const { MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL } = process.env;
 
-// --- Stripe webhook: needs the RAW body for signature verification, so
+  if (!MAILGUN_API_KEY || !MAILGUN_DOMAIN || !MAILGUN_FROM_EMAIL) {
+    throw new Error('Server is missing Mailgun configuration.');
+  }
+  if (!order.email) {
+    throw new Error('No customer email on file for this order.');
+  }
+
+  const firstName = (order.name || '').trim().split(/\s+/)[0] || 'there';
+  const designName = (order.design || '').includes(' — ') ? order.design.split(' — ')[1] : order.design;
+  const itemLine = (order.sizeLabel || order.size) + ' ' + order.finish + ' Nameplate (' + designName + ')' +
+    (order.quantity && order.quantity > 1 ? ' × ' + order.quantity : '');
+
+  const textBody = [
+    'Good news, ' + firstName + ' — your order is ready for pickup!',
+    '',
+    'ORDER SUMMARY',
+    'Order: ' + order.reference,
+    'Item: ' + itemLine,
+    '',
+    'We\'ll be in touch at ' + order.phone + ' to arrange a pickup time and confirm the address.',
+    '',
+    'Questions? Reply to this email or visit https://mylucent.co/contact.html',
+    '',
+    '— myLucent.co'
+  ].join('\n');
+
+  const htmlBody = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>myLucent.co — Ready for Pickup</title>
+<style>
+  body, table, td { -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
+  table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+  body { margin: 0; padding: 0; width: 100% !important; height: 100% !important; }
+  a { color: #A9784F; }
+  @media only screen and (max-width: 600px) {
+    .full-width { width: 100% !important; }
+    .px-fluid { padding-left: 24px !important; padding-right: 24px !important; }
+    .h1-fluid { font-size: 24px !important; line-height: 1.3 !important; }
+  }
+</style>
+</head>
+<body style="margin:0; padding:0; background-color:#EEF2F6;">
+<div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#EEF2F6;">
+  Your order is ready for pickup — we'll be in touch to arrange a time.
+</div>
+<center style="width:100%; background-color:#EEF2F6;">
+<table role="presentation" class="full-width" width="600" align="center" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; margin:0 auto;">
+
+  <tr>
+    <td class="px-fluid" style="padding:32px 40px 20px 40px; text-align:center;">
+      <span style="font-family:Georgia, 'Times New Roman', serif; font-size:18px; font-weight:500; letter-spacing:0.5px; color:#1B2733;">myLucent.co</span>
+    </td>
+  </tr>
+
+  <tr>
+    <td class="px-fluid" style="padding:0 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FFFFFF; border-radius:14px; overflow:hidden;">
+        <tr>
+          <td style="padding:44px 36px 32px 36px; text-align:center;">
+            <span style="font-family:'Helvetica Neue', Arial, sans-serif; font-size:11px; font-weight:500; letter-spacing:3px; color:#A9784F;">READY FOR PICKUP</span>
+            <div class="h1-fluid" style="font-family:Georgia, 'Times New Roman', serif; font-size:28px; line-height:1.3; font-weight:500; color:#1B2733; padding-top:14px;">
+              Good news, ${firstName} — it's ready!
+            </div>
+            <div style="font-family:'Helvetica Neue', Arial, sans-serif; font-size:14.5px; line-height:1.75; color:#4a5763; padding-top:16px; max-width:440px; margin:0 auto;">
+              Your piece has been finished and is ready to pick up.
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:0 36px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td height="1" style="font-size:0; line-height:0; background-color:rgba(27,39,51,0.10);">&nbsp;</td>
+            </tr></table>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:28px 36px 8px 36px;">
+            <span style="font-family:'Helvetica Neue', Arial, sans-serif; font-size:10px; font-weight:500; letter-spacing:2px; color:#8a94a0;">ORDER SUMMARY</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:12px 36px 28px 36px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding:10px 0; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#4a5763;">Order</td>
+                <td style="padding:10px 0; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#1B2733; text-align:right;">${order.reference}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#4a5763; border-top:1px solid rgba(27,39,51,0.08);">Item</td>
+                <td style="padding:10px 0; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#1B2733; text-align:right; border-top:1px solid rgba(27,39,51,0.08);">${itemLine}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td class="px-fluid" style="padding:44px 40px 4px 40px; text-align:center;">
+      <span style="font-family:'Helvetica Neue', Arial, sans-serif; font-size:10px; font-weight:500; letter-spacing:2px; color:#8a94a0;">NEXT STEP</span>
+    </td>
+  </tr>
+  <tr>
+    <td class="px-fluid" style="padding:8px 40px 8px 40px; font-family:Georgia, 'Times New Roman', serif; font-size:20px; font-weight:500; color:#1B2733; text-align:center;">
+      We'll be in touch to arrange pickup
+    </td>
+  </tr>
+  <tr>
+    <td class="px-fluid" style="padding:0 40px 24px 40px; font-family:'Helvetica Neue', Arial, sans-serif; font-size:13.5px; line-height:1.7; color:#4a5763; text-align:center;">
+      We'll contact you at ${order.phone} to confirm the pickup address and a time that works for you.
+    </td>
+  </tr>
+  <tr>
+    <td class="px-fluid" style="padding:0 40px 8px 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding:14px 0; text-align:center;">
+            <a href="https://mylucent.co/contact.html" style="font-family:'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#A9784F; text-decoration:none;">Questions about your order? Contact us &#8594;</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td class="px-fluid" style="padding:40px 40px 40px 40px; text-align:center; font-family:'Helvetica Neue', Arial, sans-serif; font-size:11px; line-height:1.7; color:#8a94a0;">
+      myLucent.co — Custom Acrylic Art
+    </td>
+  </tr>
+
+</table>
+</center>
+</body>
+</html>
+  `;
+
+  const formData = new URLSearchParams();
+  formData.append('from', MAILGUN_FROM_EMAIL);
+  formData.append('to', order.email);
+  formData.append('subject', 'Your myLucent.co order is ready for pickup (' + order.reference + ')');
+  formData.append('text', textBody);
+  formData.append('html', htmlBody);
+
+  const mailgunAuth = 'Basic ' + Buffer.from('api:' + MAILGUN_API_KEY).toString('base64');
+
+  const response = await fetch('https://api.mailgun.net/v3/' + MAILGUN_DOMAIN + '/messages', {
+    method: 'POST',
+    headers: {
+      'Authorization': mailgunAuth,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: formData.toString()
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || 'Mailgun rejected the request (status ' + response.status + ')');
+  }
+}
+
+
 // this route is registered BEFORE the general express.json() parser below. ---
 app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -412,11 +611,20 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
         console.error('Failed to send order text for', reference, err.message);
       }
       try {
+        await sendOwnerText(buildReadyTriggerMessage(stored.order), reference + '-ready-trigger');
+        console.log('Ready-trigger text sent for', reference);
+      } catch (err) {
+        console.error('Failed to send ready-trigger text for', reference, err.message);
+      }
+      try {
         await sendCustomerConfirmationEmail(stored.order);
         console.log('Confirmation email sent for', reference);
       } catch (err) {
         console.error('Failed to send confirmation email for', reference, err.message);
       }
+
+      // Save this paid order so the "text ready" workflow can find it later.
+      completedOrders.set(reference, { order: stored.order, completedAt: Date.now(), readyEmailSent: false });
     } else {
       console.error('Payment completed but no matching order found for reference:', reference);
       try {
@@ -432,6 +640,73 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
 
 app.use(express.json());
 app.use(express.static(__dirname));
+
+// --- Inbound SMS webhook ---
+// Set this URL as your "Inbound Message Webhook" in Mobile Message's
+// dashboard (Settings -> API): https://mylucent.co/api/inbound-sms
+//
+// Texting "[order reference] ready" (e.g. "ML-MSX70 ready") from the
+// OWNER'S phone automatically emails that customer their pickup notice.
+// Any text from a number other than OWNER_PHONE_NUMBER is ignored, so this
+// can't be triggered by anyone else.
+app.post('/api/inbound-sms', async (req, res) => {
+  // Always respond 200 quickly so Mobile Message doesn't retry/queue this.
+  res.status(200).send('ok');
+
+  try {
+    const { OWNER_PHONE_NUMBER } = process.env;
+    const body = req.body || {};
+    const sender = (body.sender || '').replace(/\s+/g, '');
+    const message = (body.message || '').trim();
+
+    if (!OWNER_PHONE_NUMBER) {
+      console.error('Inbound SMS ignored: OWNER_PHONE_NUMBER is not configured.');
+      return;
+    }
+
+    // Normalize both numbers (strip spaces, leading +, leading 0) so
+    // "0412345678" and "61412345678" etc. are treated as the same number.
+    const normalize = (n) => (n || '').replace(/\D/g, '').replace(/^61/, '').replace(/^0/, '');
+    if (normalize(sender) !== normalize(OWNER_PHONE_NUMBER)) {
+      console.log('Inbound SMS ignored (not from owner number):', sender);
+      return;
+    }
+
+    if (!/ready/i.test(message)) {
+      console.log('Inbound SMS from owner ignored (no "ready" keyword):', message);
+      return;
+    }
+
+    const refMatch = message.match(/ML-[A-Z0-9]+/i);
+    if (!refMatch) {
+      await sendOwnerText('Got your text but couldn\'t find an order reference in it. Format: "ML-XXXXXXXX ready"', 'inbound-sms-noref');
+      return;
+    }
+
+    const reference = refMatch[0].toUpperCase();
+    const found = completedOrders.get(reference);
+
+    if (!found) {
+      await sendOwnerText('No paid order found for ' + reference + '. Double-check the reference and try again.', 'inbound-sms-notfound');
+      return;
+    }
+
+    if (found.readyEmailSent) {
+      await sendOwnerText('Heads up: a pickup-ready email was already sent for ' + reference + '. Sent again just now.', 'inbound-sms-resend');
+    }
+
+    await sendReadyForPickupEmail(found.order);
+    found.readyEmailSent = true;
+    console.log('Ready-for-pickup email sent for', reference);
+    await sendOwnerText('✅ Sent pickup-ready email to ' + found.order.name + ' for ' + reference + '.', 'inbound-sms-confirm');
+
+  } catch (err) {
+    console.error('Error handling inbound SMS:', err.message);
+    try {
+      await sendOwnerText('Something went wrong processing your "ready" text — check Railway logs.', 'inbound-sms-error');
+    } catch (e) { /* give up quietly */ }
+  }
+});
 
 // Called from the site when a customer reaches checkout, before paying.
 app.post('/api/register-order', (req, res) => {
