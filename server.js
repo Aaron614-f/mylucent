@@ -778,6 +778,7 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
 });
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Mailgun forwards inbound emails as form-encoded
 app.use(express.static(__dirname));
 
 // --- Inbound SMS webhook ---
@@ -874,6 +875,75 @@ app.post('/api/inbound-sms', async (req, res) => {
     try {
       await sendOwnerText('Something went wrong processing your text — check Railway logs.', 'inbound-sms-error');
     } catch (e) { /* give up quietly */ }
+  }
+});
+
+// --- Inbound EMAIL webhook (the email equivalent of the SMS one above) ---
+// Set this up as a Mailgun "Route" (Receiving -> Routes -> Create Route):
+//   Filter:  match_recipient(".*@YOUR_MAILGUN_DOMAIN")
+//   Action:  forward("https://mylucent.co/api/inbound-email")
+// This means replying to ANY email from your MAILGUN_DOMAIN (including
+// just hitting "Reply" on the inquiry notification email you were sent)
+// gets forwarded here. Only emails from OWNER_EMAIL are acted on.
+//
+// Works the same way as the SMS version: reply with the inquiry
+// reference somewhere in the subject or body (replying keeps "Re: ..."
+// with the reference intact automatically) and your reply email's
+// content — Mailgun strips out the quoted thread/signature for us —
+// gets sent straight to that customer.
+app.post('/api/inbound-email', async (req, res) => {
+  // Respond fast so Mailgun doesn't retry/queue this.
+  res.status(200).send('ok');
+
+  try {
+    const ownerEmail = (process.env.OWNER_EMAIL || 'yefaiart@gmail.com').toLowerCase();
+    const body = req.body || {};
+
+    // "sender" is usually just the address; be tolerant of a "Name <addr>" format too.
+    const rawSender = (body.sender || body.from || '').toLowerCase();
+    const senderMatch = rawSender.match(/<([^>]+)>/);
+    const senderEmail = (senderMatch ? senderMatch[1] : rawSender).trim();
+
+    if (senderEmail !== ownerEmail) {
+      console.log('Inbound email ignored (not from owner email):', senderEmail);
+      return;
+    }
+
+    const subject = body.subject || '';
+    // Mailgun's stripped-text is the reply content with quoted history and
+    // signature blocks already removed — exactly what we want.
+    const replyRaw = (body['stripped-text'] || body['body-plain'] || '').trim();
+
+    const refMatch = (subject + ' ' + replyRaw).match(/INQ-[A-Z0-9]+/i);
+    if (!refMatch) {
+      console.log('Inbound email from owner ignored (no inquiry reference found).');
+      return;
+    }
+
+    const reference = refMatch[0].toUpperCase();
+    const inquiry = inquiries.get(reference);
+
+    if (!inquiry) {
+      await sendOwnerText('Got your email reply but no inquiry found for ' + reference + '.', 'inbound-email-notfound');
+      return;
+    }
+
+    // Strip the reference itself out of the reply body, in case it was
+    // typed inline rather than just sitting in the subject line.
+    let replyText = replyRaw.replace(new RegExp(reference, 'gi'), '').trim();
+    replyText = replyText.replace(/^[:\-–—,]+\s*/, '');
+
+    if (!replyText) {
+      await sendOwnerText('Got your email for ' + reference + ' but couldn\'t find any reply text in it.', 'inbound-email-noreply');
+      return;
+    }
+
+    await sendReplyToInquirer(inquiry, replyText);
+    console.log('Reply email sent for inquiry', reference, '(via email)');
+    await sendOwnerText('✅ Reply sent to ' + inquiry.name + ' (' + inquiry.email + ') for ' + reference + ' — via email.', 'inbound-email-confirm');
+
+  } catch (err) {
+    console.error('Error handling inbound email:', err.message);
   }
 });
 
