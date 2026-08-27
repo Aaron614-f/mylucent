@@ -24,7 +24,12 @@
 //   MOBILEMESSAGE_USERNAME  - your Mobile Message API username
 //   MOBILEMESSAGE_PASSWORD  - your Mobile Message API password
 //   MOBILEMESSAGE_SENDER    - your approved Sender ID (e.g. 61XXXXXXXXX)
-//   OWNER_PHONE_NUMBER      - the owner's mobile to receive order texts
+//   OWNER_PHONE_NUMBER      - the owner's mobile to receive order/inquiry
+//                              texts, and the ONLY number allowed to
+//                              trigger "ready" and reply-to-inquiry texts.
+//   OWNER_EMAIL              - (optional) where Contact page inquiry
+//                              notifications are emailed. Defaults to
+//                              yefaiart@gmail.com if not set.
 //   STRIPE_SECRET_KEY       - your Stripe SECRET key (starts with sk_test_...
 //                              or sk_live_...). Get this from Stripe
 //                              Dashboard -> Developers -> API keys. This is
@@ -91,6 +96,24 @@ function cleanupOldCompletedOrders() {
   }
 }
 setInterval(cleanupOldCompletedOrders, 60 * 60 * 1000);
+
+// In-memory store of Contact page inquiries, keyed by a short reference
+// (e.g. "INQ-MSX8A2B1"). Lets the owner text "[reference] their reply"
+// from their phone to automatically email that specific person back —
+// the reference is what confirms exactly which person is being replied to.
+const inquiries = new Map();
+
+function cleanupOldInquiries() {
+  const cutoff = Date.now() - 45 * 24 * 60 * 60 * 1000; // 45 days
+  for (const [ref, entry] of inquiries) {
+    if (entry.receivedAt < cutoff) inquiries.delete(ref);
+  }
+}
+setInterval(cleanupOldInquiries, 60 * 60 * 1000);
+
+function generateInquiryReference() {
+  return 'INQ-' + Date.now().toString(36).toUpperCase();
+}
 
 function verifyStripeSignature(rawBody, sigHeader, secret) {
   if (!sigHeader) throw new Error('Missing Stripe-Signature header');
@@ -569,7 +592,123 @@ async function sendReadyForPickupEmail(order) {
   }
 }
 
+// A simple shared helper for the two "internal" emails below — sends a
+// plain, branded notification. Not fancy, just consistent with the rest
+// of the site's look.
+async function sendSimpleBrandedEmail(to, subject, heading, bodyLines, textBody) {
+  const { MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL } = process.env;
+  if (!MAILGUN_API_KEY || !MAILGUN_DOMAIN || !MAILGUN_FROM_EMAIL) {
+    throw new Error('Server is missing Mailgun configuration.');
+  }
 
+  const htmlBody = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${heading}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#EEF2F6;">
+<center style="width:100%; background-color:#EEF2F6;">
+<table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; margin:0 auto;">
+  <tr>
+    <td style="padding:32px 40px 20px 40px; text-align:center;">
+      <span style="font-family:Georgia, 'Times New Roman', serif; font-size:18px; font-weight:500; color:#1B2733;">myLucent.co</span>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:0 40px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FFFFFF; border-radius:14px; overflow:hidden;">
+        <tr>
+          <td style="padding:36px 36px 8px 36px;">
+            <div style="font-family:Georgia, 'Times New Roman', serif; font-size:22px; font-weight:500; color:#1B2733;">${heading}</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:12px 36px 36px 36px; font-family:'Helvetica Neue', Arial, sans-serif; font-size:14px; line-height:1.8; color:#1B2733; white-space:pre-line;">${bodyLines}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:32px 40px 40px 40px; text-align:center; font-family:'Helvetica Neue', Arial, sans-serif; font-size:11px; color:#8a94a0;">
+      myLucent.co — Custom Acrylic Art
+    </td>
+  </tr>
+</table>
+</center>
+</body>
+</html>
+  `;
+
+  const formData = new URLSearchParams();
+  formData.append('from', MAILGUN_FROM_EMAIL);
+  formData.append('to', to);
+  formData.append('subject', subject);
+  formData.append('text', textBody);
+  formData.append('html', htmlBody);
+
+  const mailgunAuth = 'Basic ' + Buffer.from('api:' + MAILGUN_API_KEY).toString('base64');
+  const response = await fetch('https://api.mailgun.net/v3/' + MAILGUN_DOMAIN + '/messages', {
+    method: 'POST',
+    headers: {
+      'Authorization': mailgunAuth,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: formData.toString()
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || 'Mailgun rejected the request (status ' + response.status + ')');
+  }
+}
+
+// Notifies the owner's own inbox about a new Contact page inquiry —
+// sent alongside (not instead of) the SMS notification.
+async function sendOwnerInquiryEmail(inquiry) {
+  const ownerEmail = process.env.OWNER_EMAIL || 'yefaiart@gmail.com';
+  const bodyText = [
+    'Reference: ' + inquiry.reference,
+    'From: ' + inquiry.name + ' <' + inquiry.email + '>',
+    '',
+    inquiry.message,
+    '',
+    'To reply, text "' + inquiry.reference + ' your reply message" to your Mobile Message number — it\'ll email them back automatically.'
+  ].join('\n');
+
+  await sendSimpleBrandedEmail(
+    ownerEmail,
+    'New website inquiry — ' + inquiry.reference,
+    'New inquiry: ' + inquiry.reference,
+    bodyText.replace(/\n/g, '<br>'),
+    bodyText
+  );
+}
+
+// Sends the owner's SMS reply to the person who submitted the Contact form.
+async function sendReplyToInquirer(inquiry, replyText) {
+  const bodyText = [
+    'Hi ' + (inquiry.name.trim().split(/\s+/)[0] || 'there') + ',',
+    '',
+    replyText,
+    '',
+    '— myLucent.co',
+    '',
+    'Your original message: "' + inquiry.message + '"'
+  ].join('\n');
+
+  await sendSimpleBrandedEmail(
+    inquiry.email,
+    'Re: your inquiry to myLucent.co',
+    'A reply from myLucent.co',
+    bodyText.replace(/\n/g, '<br>'),
+    bodyText
+  );
+}
+
+// --- Stripe webhook: needs the RAW body for signature verification, so
 // this route is registered BEFORE the general express.json() parser below. ---
 app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -645,10 +784,14 @@ app.use(express.static(__dirname));
 // Set this URL as your "Inbound Message Webhook" in Mobile Message's
 // dashboard (Settings -> API): https://mylucent.co/api/inbound-sms
 //
-// Texting "[order reference] ready" (e.g. "ML-MSX70 ready") from the
-// OWNER'S phone automatically emails that customer their pickup notice.
-// Any text from a number other than OWNER_PHONE_NUMBER is ignored, so this
-// can't be triggered by anyone else.
+// Two things this responds to, both from the OWNER'S phone only:
+//   1. "[order reference] ready" (e.g. "ML-MSX70 ready") — emails that
+//      customer their pickup notice.
+//   2. "[inquiry reference] your reply text" (e.g. "INQ-MSX8A2B1 Yes we
+//      can do that size, how about Tuesday?") — emails that reply
+//      straight to the person who submitted the Contact form.
+// Any text from a number other than OWNER_PHONE_NUMBER is ignored, so
+// neither of these can be triggered by anyone else.
 app.post('/api/inbound-sms', async (req, res) => {
   // Always respond 200 quickly so Mobile Message doesn't retry/queue this.
   res.status(200).send('ok');
@@ -672,8 +815,34 @@ app.post('/api/inbound-sms', async (req, res) => {
       return;
     }
 
+    // --- Branch 1: reply to a Contact page inquiry ("INQ-XXXX ...") ---
+    const inqMatch = message.match(/INQ-[A-Z0-9]+/i);
+    if (inqMatch) {
+      const reference = inqMatch[0].toUpperCase();
+      const inquiry = inquiries.get(reference);
+
+      if (!inquiry) {
+        await sendOwnerText('No inquiry found for ' + reference + '. Double-check the reference and try again.', 'inbound-sms-inq-notfound');
+        return;
+      }
+
+      let replyText = message.slice(inqMatch.index + inqMatch[0].length).trim();
+      replyText = replyText.replace(/^[:\-–—,]+\s*/, '');
+
+      if (!replyText) {
+        await sendOwnerText('Got the reference but no reply text after it. Format: "' + reference + ' your reply message"', 'inbound-sms-inq-noreply');
+        return;
+      }
+
+      await sendReplyToInquirer(inquiry, replyText);
+      console.log('Reply email sent for inquiry', reference);
+      await sendOwnerText('✅ Reply sent to ' + inquiry.name + ' (' + inquiry.email + ') for ' + reference + '.', 'inbound-sms-inq-confirm');
+      return;
+    }
+
+    // --- Branch 2: mark an order ready for pickup ("ML-XXXX ready") ---
     if (!/ready/i.test(message)) {
-      console.log('Inbound SMS from owner ignored (no "ready" keyword):', message);
+      console.log('Inbound SMS from owner ignored (no reference or "ready" keyword):', message);
       return;
     }
 
@@ -703,9 +872,71 @@ app.post('/api/inbound-sms', async (req, res) => {
   } catch (err) {
     console.error('Error handling inbound SMS:', err.message);
     try {
-      await sendOwnerText('Something went wrong processing your "ready" text — check Railway logs.', 'inbound-sms-error');
+      await sendOwnerText('Something went wrong processing your text — check Railway logs.', 'inbound-sms-error');
     } catch (e) { /* give up quietly */ }
   }
+});
+
+
+// Contact page submissions — sent straight to the owner's phone via SMS,
+// so there's no dependency on the visitor having an email app configured.
+app.post('/api/contact-form', async (req, res) => {
+  const { name, email, message } = req.body || {};
+
+  if (!name || !name.trim() || !email || !email.trim() || !message || !message.trim()) {
+    return res.status(400).json({ success: false, error: 'Please fill in your name, email, and message.' });
+  }
+
+  let trimmedMessage = message.trim();
+  if (trimmedMessage.length > 500) {
+    trimmedMessage = trimmedMessage.slice(0, 500) + '…';
+  }
+
+  const reference = generateInquiryReference();
+  const inquiry = { reference, name: name.trim(), email: email.trim(), message: trimmedMessage, receivedAt: Date.now() };
+  inquiries.set(reference, inquiry);
+
+  const smsBody = [
+    'New website inquiry [' + reference + ']:',
+    inquiry.name,
+    inquiry.email,
+    inquiry.message
+  ].join('\n');
+
+  let smsOk = true;
+  try {
+    await sendOwnerText(smsBody, reference);
+  } catch (err) {
+    smsOk = false;
+    console.error('Failed to send contact form SMS for', reference, err.message);
+  }
+
+  // Second text: the reference + a starter greeting, ready to forward
+  // back as your reply. Edit or delete any part of it before sending —
+  // whatever text follows the reference becomes the email verbatim, so
+  // deleting the greeting here means it won't appear in the email either.
+  try {
+    await sendOwnerText(reference + ' Thanks for reaching out to myLucent.co!', reference + '-inq-ref');
+  } catch (err) {
+    console.error('Failed to send inquiry reference text for', reference, err.message);
+  }
+
+  let emailOk = true;
+  try {
+    await sendOwnerInquiryEmail(inquiry);
+  } catch (err) {
+    emailOk = false;
+    console.error('Failed to send contact form owner email for', reference, err.message);
+  }
+
+  if (!smsOk && !emailOk) {
+    return res.status(500).json({ success: false, error: 'Something went wrong sending your message. Please try again, or email yefaiart@gmail.com directly.' });
+  }
+
+  // As long as at least one notification (SMS or email) got through, the
+  // inquiry was successfully captured — don't fail the visitor's request
+  // just because one of the two channels had an issue.
+  res.status(200).json({ success: true });
 });
 
 // Called from the site when a customer reaches checkout, before paying.

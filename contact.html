@@ -45,6 +45,8 @@
 
   #confirmMsg{display:none;padding:14px 16px;border:1px solid rgba(169,120,79,0.5);background:rgba(169,120,79,0.08);border-radius:10px;font-size:12.5px;color:#1B2733;text-align:center;}
   #confirmMsg.show{display:block;}
+  #errorMsg{display:none;padding:14px 16px;border:1px solid rgba(200,60,60,0.4);background:rgba(200,60,60,0.06);border-radius:10px;font-size:12.5px;color:#1B2733;text-align:center;}
+  #errorMsg.show{display:block;}
 
   footer{padding:36px 44px;text-align:center;border-top:1px solid rgba(27,39,51,0.12);background:#FFFFFF;}
   .footer-inner{display:flex;justify-content:center;gap:24px;margin-bottom:14px;}
@@ -95,8 +97,9 @@
         <label for="cfMessage">MESSAGE</label>
         <textarea id="cfMessage" rows="5" placeholder="Tell us about the piece you have in mind..." required></textarea>
       </div>
-      <button type="submit" class="send-btn" style="background:#1B2733;color:#F4F1EA;border:none;padding:15px 24px;font-size:12px;letter-spacing:1.5px;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;">SEND MESSAGE</button>
-      <div id="confirmMsg">Thanks — your email app should now be open with your message. Just hit send and we'll be in touch shortly.</div>
+      <button type="submit" class="send-btn" id="cfSubmitBtn" style="background:#1B2733;color:#F4F1EA;border:none;padding:15px 24px;font-size:12px;letter-spacing:1.5px;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;">SEND MESSAGE</button>
+      <div id="confirmMsg">Thanks — your message has been sent. We'll be in touch shortly.</div>
+      <div id="errorMsg"></div>
     </form>
   </div>
 </main>
@@ -147,11 +150,37 @@
     var email = document.getElementById('cfEmail').value.trim();
     var message = document.getElementById('cfMessage').value.trim();
 
-    var subject = 'New inquiry from ' + (name || 'website contact form');
-    var body = 'Name: ' + name + '\nEmail: ' + email + '\n\n' + message;
+    var btn = document.getElementById('cfSubmitBtn');
+    var confirmMsg = document.getElementById('confirmMsg');
+    var errorMsg = document.getElementById('errorMsg');
+    confirmMsg.classList.remove('show');
+    errorMsg.classList.remove('show');
 
-    window.location.href = 'mailto:yefaiart@gmail.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-    document.getElementById('confirmMsg').classList.add('show');
+    var originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'SENDING…';
+
+    fetch('/api/contact-form', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, email: email, message: message })
+    })
+      .then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+      .then(function(result){
+        if (!result.ok || !result.data.success){
+          throw new Error(result.data.error || 'Something went wrong sending your message.');
+        }
+        confirmMsg.classList.add('show');
+        document.getElementById('contactForm').reset();
+        btn.textContent = originalText;
+        btn.disabled = false;
+      })
+      .catch(function(err){
+        errorMsg.textContent = err.message;
+        errorMsg.classList.add('show');
+        btn.textContent = originalText;
+        btn.disabled = false;
+      });
   });
 </script>
 </body>
