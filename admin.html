@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>myLucent — Inbox</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap');
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Inter',sans-serif;background:#EDEAE2;color:#1B2733;}
+  a{color:inherit;text-decoration:none;}
+
+  /* Login screen */
+  #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .login-card{background:#fff;border-radius:14px;padding:40px 36px;max-width:360px;width:100%;box-shadow:0 24px 48px -28px rgba(27,39,51,0.25);}
+  .login-card h1{font-family:'Spectral',serif;font-size:20px;font-weight:500;margin:0 0 6px;text-align:center;}
+  .login-card p{font-size:12.5px;color:rgba(27,39,51,0.55);text-align:center;margin:0 0 24px;}
+  .login-card input{width:100%;padding:12px 14px;border:1px solid rgba(27,39,51,0.18);border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:14px;}
+  .login-card input:focus{outline:none;border-color:#A9784F;}
+  .login-error{font-size:12.5px;color:#b23b3b;text-align:center;margin:-6px 0 14px;display:none;}
+  .login-error.show{display:block;}
+
+  /* Inbox */
+  .msg-card{background:#fff;border-radius:12px;padding:16px;cursor:pointer;transition:box-shadow .25s,opacity .25s;}
+  .msg-card:hover{box-shadow:0 8px 20px -8px rgba(27,39,51,0.18);}
+  .msg-card.waiting{box-shadow:0 10px 26px -8px rgba(27,39,51,0.45);}
+  .msg-card.waiting:hover{box-shadow:0 14px 30px -8px rgba(27,39,51,0.55);}
+  .msg-card.hidden-by-search{display:none;}
+  .name-row{display:flex;justify-content:space-between;gap:6px;white-space:nowrap;}
+  .name-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:13.5px;color:#1B2733;}
+  .prev-txt{font-size:12.5px;color:rgba(27,39,51,0.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;}
+  .btn-solid{background:#1B2733;color:#F4F1EA;border:none;border-radius:8px;padding:10px 22px;font-size:12.5px;letter-spacing:0.5px;cursor:pointer;font-family:'Inter',sans-serif;transition:background .3s;white-space:nowrap;width:fit-content;}
+  .btn-solid:hover{background:#A9784F;}
+  .btn-solid:disabled{opacity:0.5;cursor:default;}
+  .attach-zone{border:1.5px dashed rgba(27,39,51,0.22);border-radius:10px;padding:18px;text-align:center;font-size:12.5px;color:rgba(27,39,51,0.5);cursor:pointer;transition:border-color .25s,background .25s;}
+  .attach-zone:hover, .attach-zone.drag{border-color:#A9784F;background:rgba(169,120,79,0.05);color:#A9784F;}
+  .attach-chip{display:inline-flex;align-items:center;gap:8px;background:#F4F1EA;border-radius:8px;padding:6px 10px 6px 12px;font-size:12px;color:#1B2733;}
+  .attach-chip button{border:none;background:none;color:rgba(27,39,51,0.5);cursor:pointer;font-size:14px;line-height:1;padding:0;}
+  .attach-chip button:hover{color:#A9784F;}
+  .empty-state{padding:60px 20px;text-align:center;color:rgba(27,39,51,0.4);font-size:13.5px;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>myLucent — Inbox</h1>
+    <p>Enter your admin key to continue.</p>
+    <div class="login-error" id="loginError">Incorrect key. Try again.</div>
+    <input type="password" id="keyInput" placeholder="Admin key" autocomplete="off">
+    <button class="btn-solid" id="loginBtn" style="width:100%;text-align:center;">Enter</button>
+  </div>
+</div>
+
+<div id="inboxScreen" style="display:none;min-height:100vh;padding:32px;">
+  <div style="max-width:1160px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-family:'Spectral',serif;font-size:19px;">myLucent <span style="color:#A9784F;">— Inbox</span></div>
+    <div style="font-size:10.5px;letter-spacing:1.5px;color:rgba(27,39,51,0.45);">PRIVATE — NOT LINKED IN SITE NAV</div>
+  </div>
+
+  <div style="max-width:1160px;margin:0 auto;display:flex;min-height:600px;background:#FBFAF7;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px -20px rgba(27,39,51,0.18);">
+
+    <div style="width:340px;border-right:1px solid rgba(27,39,51,0.08);padding:24px;flex-shrink:0;">
+      <div style="font-family:'Spectral',serif;font-size:17px;margin-bottom:18px;">
+        Messages <span id="unreadBadge" style="background:#A9784F;color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:6px;"></span>
+      </div>
+      <input id="searchBox" placeholder="Search messages…" style="width:100%;background:#fff;border:1px solid rgba(27,39,51,0.1);border-radius:10px;padding:10px 14px;font-size:13px;color:#1B2733;margin-bottom:18px;font-family:'Inter',sans-serif;">
+      <div id="msgList" style="display:flex;flex-direction:column;gap:10px;max-height:70vh;overflow-y:auto;"></div>
+    </div>
+
+    <div id="detailPane" style="flex:1;padding:36px 40px;">
+      <div class="empty-state">Select a message to view it.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  var ADMIN_KEY_STORAGE = 'mylucent_admin_key';
+  var messages = [];
+  var activeReference = null;
+  var pendingFiles = [];
+
+  var loginScreen = document.getElementById('loginScreen');
+  var inboxScreen = document.getElementById('inboxScreen');
+  var keyInput = document.getElementById('keyInput');
+  var loginBtn = document.getElementById('loginBtn');
+  var loginError = document.getElementById('loginError');
+  var msgList = document.getElementById('msgList');
+  var detailPane = document.getElementById('detailPane');
+  var unreadBadge = document.getElementById('unreadBadge');
+  var searchBox = document.getElementById('searchBox');
+
+  function getKey(){ return sessionStorage.getItem(ADMIN_KEY_STORAGE) || ''; }
+
+  function apiFetch(url, options){
+    options = options || {};
+    options.headers = options.headers || {};
+    options.headers['X-Admin-Key'] = getKey();
+    return fetch(url, options);
+  }
+
+  function tryLogin(key){
+    sessionStorage.setItem(ADMIN_KEY_STORAGE, key);
+    loadMessages(function(ok){
+      if (ok){
+        loginScreen.style.display = 'none';
+        inboxScreen.style.display = 'block';
+      } else {
+        sessionStorage.removeItem(ADMIN_KEY_STORAGE);
+        loginError.classList.add('show');
+      }
+    });
+  }
+
+  loginBtn.addEventListener('click', function(){
+    loginError.classList.remove('show');
+    var key = keyInput.value.trim();
+    if (!key) return;
+    tryLogin(key);
+  });
+  keyInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') loginBtn.click(); });
+
+  function formatTime(ts){
+    var d = new Date(ts);
+    var now = new Date();
+    var sameDay = d.toDateString() === now.toDateString();
+    if (sameDay) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function initials(name){
+    var parts = name.trim().split(/\s+/);
+    return ((parts[0] || '')[0] || '').toUpperCase() + ((parts[1] || '')[0] || '').toUpperCase();
+  }
+
+  function loadMessages(callback, silent){
+    apiFetch('/api/inbox/messages')
+      .then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+      .then(function(result){
+        if (!result.ok){
+          if (callback) callback(false);
+          return;
+        }
+        messages = result.data.messages;
+        renderList();
+        if (activeReference) renderDetail(activeReference);
+        if (callback) callback(true);
+      })
+      .catch(function(){ if (callback && !silent) callback(false); });
+  }
+
+  function renderList(){
+    var filter = searchBox.value.trim().toLowerCase();
+    var unreadCount = messages.filter(function(m){ return m.status === 'unread'; }).length;
+    unreadBadge.textContent = unreadCount + ' new';
+    unreadBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+
+    msgList.innerHTML = '';
+    if (messages.length === 0){
+      msgList.innerHTML = '<div class="empty-state" style="padding:30px 10px;">No messages yet.</div>';
+      return;
+    }
+
+    messages.forEach(function(m){
+      var matches = !filter || (m.name + ' ' + m.email + ' ' + m.message).toLowerCase().indexOf(filter) !== -1;
+      var card = document.createElement('div');
+      card.className = 'msg-card' + (m.status !== 'replied' ? ' waiting' : '') + (matches ? '' : ' hidden-by-search');
+      var isActive = m.reference === activeReference;
+      var avatarBg = m.status === 'unread' ? '#1B2733' : 'rgba(27,39,51,0.1)';
+      var avatarFg = m.status === 'unread' ? '#F4F1EA' : '#1B2733';
+      var weight = m.status === 'unread' ? 600 : 500;
+      card.style.borderLeft = isActive ? '3px solid #A9784F' : '3px solid transparent';
+      card.style.opacity = m.status === 'replied' ? '0.7' : '1';
+
+      var statusLabel = m.status === 'replied' ? '<span style="font-size:11px;color:#8FA98F;">✓ Replied</span>' : '<span style="font-size:11px;color:rgba(27,39,51,0.4);">' + formatTime(m.receivedAt) + '</span>';
+
+      card.innerHTML =
+        '<div style="display:flex;gap:12px;align-items:flex-start;">' +
+          '<div style="width:38px;height:38px;border-radius:50%;background:' + avatarBg + ';color:' + avatarFg + ';display:flex;align-items:center;justify-content:center;font-size:13px;font-family:\'Spectral\',serif;flex-shrink:0;">' + initials(m.name) + '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div class="name-row"><span class="name-txt" style="font-weight:' + weight + ';">' + m.name + '</span>' + statusLabel + '</div>' +
+            '<div class="prev-txt">' + m.message + '</div>' +
+          '</div>' +
+        '</div>';
+
+      card.addEventListener('click', function(){ selectMessage(m.reference); });
+      msgList.appendChild(card);
+    });
+  }
+
+  function selectMessage(reference){
+    activeReference = reference;
+    pendingFiles = [];
+    var m = messages.find(function(x){ return x.reference === reference; });
+    if (m && m.status === 'unread'){
+      apiFetch('/api/inbox/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: reference })
+      }).then(function(){
+        m.status = 'read';
+        renderList();
+      });
+    } else {
+      renderList();
+    }
+    renderDetail(reference);
+  }
+
+  function renderDetail(reference){
+    var m = messages.find(function(x){ return x.reference === reference; });
+    if (!m) return;
+
+    detailPane.innerHTML =
+      '<div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">' +
+        '<div style="width:46px;height:46px;border-radius:50%;background:#1B2733;color:#F4F1EA;display:flex;align-items:center;justify-content:center;font-size:15px;font-family:\'Spectral\',serif;">' + initials(m.name) + '</div>' +
+        '<div><div style="font-family:\'Spectral\',serif;font-size:20px;">' + m.name + '</div><div style="font-size:12.5px;color:rgba(27,39,51,0.5);">' + m.email + '</div></div>' +
+      '</div>' +
+      '<p style="font-size:14.5px;line-height:1.8;max-width:460px;margin:0 0 28px;">' + m.message + '</p>' +
+      '<div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 14px -6px rgba(27,39,51,0.1);max-width:460px;">' +
+        '<textarea id="replyText" placeholder="Type your reply…" style="width:100%;border:none;outline:none;font-family:\'Inter\',sans-serif;font-size:14px;min-height:70px;resize:vertical;color:#1B2733;"></textarea>' +
+        '<div class="attach-zone" id="attachZone">📎 Drop files here, or click to attach</div>' +
+        '<input type="file" id="fileInput" multiple style="display:none;">' +
+        '<div id="attachChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;"></div>' +
+        '<div style="margin-top:16px;display:flex;align-items:center;gap:16px;">' +
+          '<button class="btn-solid" id="sendReplyBtn">Send Reply</button>' +
+          '<span id="sentLabel" style="font-size:12px;color:#A9784F;opacity:0;transition:opacity .3s;">Sent ✓</span>' +
+          '<span id="errorLabel" style="font-size:12px;color:#b23b3b;"></span>' +
+        '</div>' +
+      '</div>';
+
+    var attachZone = document.getElementById('attachZone');
+    var fileInput = document.getElementById('fileInput');
+    var attachChips = document.getElementById('attachChips');
+    var sendBtn = document.getElementById('sendReplyBtn');
+    var sentLabel = document.getElementById('sentLabel');
+    var errorLabel = document.getElementById('errorLabel');
+    var replyTextEl = document.getElementById('replyText');
+
+    function renderChips(){
+      attachChips.innerHTML = '';
+      pendingFiles.forEach(function(f, idx){
+        var chip = document.createElement('div');
+        chip.className = 'attach-chip';
+        chip.innerHTML = f.name + ' <button type="button">×</button>';
+        chip.querySelector('button').addEventListener('click', function(){
+          pendingFiles.splice(idx, 1);
+          renderChips();
+        });
+        attachChips.appendChild(chip);
+      });
+    }
+
+    attachZone.addEventListener('click', function(){ fileInput.click(); });
+    fileInput.addEventListener('change', function(e){
+      if (e.target.files.length){
+        pendingFiles = pendingFiles.concat(Array.from(e.target.files));
+        renderChips();
+      }
+      e.target.value = '';
+    });
+    attachZone.addEventListener('dragover', function(e){ e.preventDefault(); attachZone.classList.add('drag'); });
+    attachZone.addEventListener('dragleave', function(){ attachZone.classList.remove('drag'); });
+    attachZone.addEventListener('drop', function(e){
+      e.preventDefault();
+      attachZone.classList.remove('drag');
+      if (e.dataTransfer.files.length){
+        pendingFiles = pendingFiles.concat(Array.from(e.dataTransfer.files));
+        renderChips();
+      }
+    });
+
+    sendBtn.addEventListener('click', function(){
+      var text = replyTextEl.value.trim();
+      if (!text) return;
+      errorLabel.textContent = '';
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending…';
+
+      var form = new FormData();
+      form.append('reference', m.reference);
+      form.append('replyText', text);
+      pendingFiles.forEach(function(f){ form.append('attachments', f); });
+
+      apiFetch('/api/inbox/reply', { method: 'POST', body: form })
+        .then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+        .then(function(result){
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Send Reply';
+          if (!result.ok || !result.data.success){
+            throw new Error(result.data.error || 'Something went wrong.');
+          }
+          m.status = 'replied';
+          pendingFiles = [];
+          replyTextEl.value = '';
+          renderChips();
+          renderList();
+          sentLabel.style.opacity = '1';
+          setTimeout(function(){ sentLabel.style.opacity = '0'; }, 2500);
+        })
+        .catch(function(err){
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Send Reply';
+          errorLabel.textContent = err.message;
+        });
+    });
+  }
+
+  searchBox.addEventListener('input', renderList);
+
+  // Auto-login if a key is already saved this session.
+  if (getKey()){
+    loadMessages(function(ok){
+      if (ok){
+        loginScreen.style.display = 'none';
+        inboxScreen.style.display = 'block';
+      }
+    });
+  }
+
+  // Poll for new messages every 25s while the inbox is open.
+  setInterval(function(){
+    if (inboxScreen.style.display === 'block') loadMessages(null, true);
+  }, 25000);
+</script>
+</body>
+</html>

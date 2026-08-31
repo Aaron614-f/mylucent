@@ -30,6 +30,11 @@
 //   OWNER_EMAIL              - (optional) where Contact page inquiry
 //                              notifications are emailed. Defaults to
 //                              yefaiart@gmail.com if not set.
+//   ADMIN_KEY                 - a password you make up yourself, used to
+//                              log into the private Inbox page (admin.html).
+//                              Pick anything reasonably long/random —
+//                              this is the only thing protecting that
+//                              page, so don't reuse a real password.
 //   STRIPE_SECRET_KEY       - your Stripe SECRET key (starts with sk_test_...
 //                              or sk_live_...). Get this from Stripe
 //                              Dashboard -> Developers -> API keys. This is
@@ -60,7 +65,10 @@ const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
 const Stripe = require('stripe');
+const multer = require('multer');
 const PRICING = require('./pricing.js');
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB per file
 
 const app = express();
 app.set('trust proxy', true); // so req.protocol reflects Railway's HTTPS, not internal HTTP
@@ -595,7 +603,7 @@ async function sendReadyForPickupEmail(order) {
 // A simple shared helper for the two "internal" emails below — sends a
 // plain, branded notification. Not fancy, just consistent with the rest
 // of the site's look.
-async function sendSimpleBrandedEmail(to, subject, heading, bodyLines, textBody) {
+async function sendSimpleBrandedEmail(to, subject, heading, bodyLines, textBody, attachments) {
   const { MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL } = process.env;
   if (!MAILGUN_API_KEY || !MAILGUN_DOMAIN || !MAILGUN_FROM_EMAIL) {
     throw new Error('Server is missing Mailgun configuration.');
@@ -642,22 +650,45 @@ async function sendSimpleBrandedEmail(to, subject, heading, bodyLines, textBody)
 </html>
   `;
 
-  const formData = new URLSearchParams();
-  formData.append('from', MAILGUN_FROM_EMAIL);
-  formData.append('to', to);
-  formData.append('subject', subject);
-  formData.append('text', textBody);
-  formData.append('html', htmlBody);
-
   const mailgunAuth = 'Basic ' + Buffer.from('api:' + MAILGUN_API_KEY).toString('base64');
-  const response = await fetch('https://api.mailgun.net/v3/' + MAILGUN_DOMAIN + '/messages', {
-    method: 'POST',
-    headers: {
-      'Authorization': mailgunAuth,
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: formData.toString()
-  });
+  let response;
+
+  if (attachments && attachments.length > 0) {
+    // Attachments require multipart/form-data — Node's built-in FormData
+    // handles this automatically (don't set Content-Type manually, fetch
+    // sets the correct multipart boundary header itself).
+    const form = new FormData();
+    form.append('from', MAILGUN_FROM_EMAIL);
+    form.append('to', to);
+    form.append('subject', subject);
+    form.append('text', textBody);
+    form.append('html', htmlBody);
+    attachments.forEach((att) => {
+      form.append('attachment', new Blob([att.buffer], { type: att.mimetype || 'application/octet-stream' }), att.originalname);
+    });
+
+    response = await fetch('https://api.mailgun.net/v3/' + MAILGUN_DOMAIN + '/messages', {
+      method: 'POST',
+      headers: { 'Authorization': mailgunAuth },
+      body: form
+    });
+  } else {
+    const formData = new URLSearchParams();
+    formData.append('from', MAILGUN_FROM_EMAIL);
+    formData.append('to', to);
+    formData.append('subject', subject);
+    formData.append('text', textBody);
+    formData.append('html', htmlBody);
+
+    response = await fetch('https://api.mailgun.net/v3/' + MAILGUN_DOMAIN + '/messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': mailgunAuth,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: formData.toString()
+    });
+  }
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -687,8 +718,10 @@ async function sendOwnerInquiryEmail(inquiry) {
   );
 }
 
-// Sends the owner's SMS reply to the person who submitted the Contact form.
-async function sendReplyToInquirer(inquiry, replyText) {
+// Sends the owner's reply (from SMS, email, or the Inbox page) to the
+// person who submitted the Contact form. attachments is optional — an
+// array of { buffer, originalname, mimetype } (what multer gives us).
+async function sendReplyToInquirer(inquiry, replyText, attachments) {
   const bodyText = [
     'Hi ' + (inquiry.name.trim().split(/\s+/)[0] || 'there') + ',',
     '',
@@ -704,7 +737,8 @@ async function sendReplyToInquirer(inquiry, replyText) {
     'Re: your inquiry to myLucent.co',
     'A reply from myLucent.co',
     bodyText.replace(/\n/g, '<br>'),
-    bodyText
+    bodyText,
+    attachments
   );
 }
 
@@ -836,6 +870,7 @@ app.post('/api/inbound-sms', async (req, res) => {
       }
 
       await sendReplyToInquirer(inquiry, replyText);
+      inquiry.status = 'replied';
       console.log('Reply email sent for inquiry', reference);
       await sendOwnerText('✅ Reply sent to ' + inquiry.name + ' (' + inquiry.email + ') for ' + reference + '.', 'inbound-sms-inq-confirm');
       return;
@@ -939,6 +974,7 @@ app.post('/api/inbound-email', async (req, res) => {
     }
 
     await sendReplyToInquirer(inquiry, replyText);
+    inquiry.status = 'replied';
     console.log('Reply email sent for inquiry', reference, '(via email)');
     await sendOwnerText('✅ Reply sent to ' + inquiry.name + ' (' + inquiry.email + ') for ' + reference + ' — via email.', 'inbound-email-confirm');
 
@@ -963,7 +999,7 @@ app.post('/api/contact-form', async (req, res) => {
   }
 
   const reference = generateInquiryReference();
-  const inquiry = { reference, name: name.trim(), email: email.trim(), message: trimmedMessage, receivedAt: Date.now() };
+  const inquiry = { reference, name: name.trim(), email: email.trim(), message: trimmedMessage, receivedAt: Date.now(), status: 'unread' };
   inquiries.set(reference, inquiry);
 
   const smsBody = [
@@ -1091,6 +1127,67 @@ app.post('/api/create-checkout-session', async (req, res) => {
   } catch (err) {
     console.error('Failed to create Stripe Checkout Session for', reference, err.message);
     res.status(500).json({ success: false, error: 'Could not start checkout. Please try again.' });
+  }
+});
+
+// --- Private Inbox page API ---
+// Powers admin.html, a hidden (not linked in nav) page where the owner
+// can view Contact page inquiries and reply to them without needing
+// email or SMS. Every route here requires the ADMIN_KEY env var to be
+// sent as an "X-Admin-Key" header — set that key in Railway, and use the
+// same value when the Inbox page asks you to log in.
+function requireAdminKey(req, res, next) {
+  const configured = process.env.ADMIN_KEY;
+  if (!configured) {
+    return res.status(500).json({ success: false, error: 'Server is missing ADMIN_KEY configuration.' });
+  }
+  const provided = req.headers['x-admin-key'];
+  if (!provided || provided !== configured) {
+    return res.status(401).json({ success: false, error: 'Incorrect key.' });
+  }
+  next();
+}
+
+// Returns every inquiry, most recent first. Also doubles as the "is my
+// key correct?" check the Inbox page's login screen uses.
+app.get('/api/inbox/messages', requireAdminKey, (req, res) => {
+  const list = Array.from(inquiries.values()).sort((a, b) => b.receivedAt - a.receivedAt);
+  res.status(200).json({ success: true, messages: list });
+});
+
+// Marks a message as read (only affects it if it was still "unread" —
+// won't un-mark a message that's already been replied to).
+app.post('/api/inbox/mark-read', requireAdminKey, (req, res) => {
+  const { reference } = req.body || {};
+  const inquiry = reference && inquiries.get(reference);
+  if (!inquiry) {
+    return res.status(404).json({ success: false, error: 'Message not found.' });
+  }
+  if (inquiry.status === 'unread') inquiry.status = 'read';
+  res.status(200).json({ success: true });
+});
+
+// Sends a reply from the Inbox page — same underlying email as the
+// SMS/email reply methods, just triggered from the website instead.
+// Accepts multipart/form-data so file attachments work.
+app.post('/api/inbox/reply', requireAdminKey, upload.array('attachments', 5), async (req, res) => {
+  const { reference, replyText } = req.body || {};
+  const inquiry = reference && inquiries.get(reference);
+
+  if (!inquiry) {
+    return res.status(404).json({ success: false, error: 'Message not found.' });
+  }
+  if (!replyText || !replyText.trim()) {
+    return res.status(400).json({ success: false, error: 'Reply text is required.' });
+  }
+
+  try {
+    await sendReplyToInquirer(inquiry, replyText.trim(), req.files);
+    inquiry.status = 'replied';
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('Failed to send Inbox page reply for', reference, err.message);
+    res.status(500).json({ success: false, error: 'Could not send the reply. ' + err.message });
   }
 });
 
