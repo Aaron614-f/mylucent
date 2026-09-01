@@ -123,6 +123,51 @@ function generateInquiryReference() {
   return 'INQ-' + Date.now().toString(36).toUpperCase();
 }
 
+// Shared by both the Contact page form AND a customer emailing the
+// business directly (e.g. orders@mylucent.co) — creates the inquiry
+// record and sends the same two owner texts + owner email either way.
+async function createInquiryAndNotifyOwner(name, email, message) {
+  let trimmedMessage = message.trim();
+  if (trimmedMessage.length > 500) {
+    trimmedMessage = trimmedMessage.slice(0, 500) + '…';
+  }
+
+  const reference = generateInquiryReference();
+  const inquiry = { reference, name: name.trim(), email: email.trim(), message: trimmedMessage, receivedAt: Date.now(), status: 'unread', replies: [] };
+  inquiries.set(reference, inquiry);
+
+  const smsBody = [
+    'New website inquiry [' + reference + ']:',
+    inquiry.name,
+    inquiry.email,
+    inquiry.message
+  ].join('\n');
+
+  try {
+    await sendOwnerText(smsBody, reference);
+  } catch (err) {
+    console.error('Failed to send inquiry SMS for', reference, err.message);
+  }
+
+  // Second text: the reference + a starter greeting, ready to forward
+  // back as your reply. Edit or delete any part of it before sending —
+  // whatever text follows the reference becomes the email verbatim, so
+  // deleting the greeting here means it won't appear in the email either.
+  try {
+    await sendOwnerText(reference + ' Thanks for reaching out to myLucent.co!', reference + '-inq-ref');
+  } catch (err) {
+    console.error('Failed to send inquiry reference text for', reference, err.message);
+  }
+
+  try {
+    await sendOwnerInquiryEmail(inquiry);
+  } catch (err) {
+    console.error('Failed to send owner inquiry email for', reference, err.message);
+  }
+
+  return inquiry;
+}
+
 function verifyStripeSignature(rawBody, sigHeader, secret) {
   if (!sigHeader) throw new Error('Missing Stripe-Signature header');
   const parts = {};
@@ -929,13 +974,19 @@ app.post('/api/inbound-sms', async (req, res) => {
 //   Action:  forward("https://mylucent.co/api/inbound-email")
 // This means replying to ANY email from your MAILGUN_DOMAIN (including
 // just hitting "Reply" on the inquiry notification email you were sent)
-// gets forwarded here. Only emails from OWNER_EMAIL are acted on.
+// gets forwarded here.
 //
-// Works the same way as the SMS version: reply with the inquiry
-// reference somewhere in the subject or body (replying keeps "Re: ..."
-// with the reference intact automatically) and your reply email's
-// content — Mailgun strips out the quoted thread/signature for us —
-// gets sent straight to that customer.
+// Two things this responds to:
+//   1. An email FROM YOU (OWNER_EMAIL) containing an inquiry reference —
+//      treated as your reply, same as the SMS version: reply with the
+//      reference somewhere in the subject or body (replying keeps
+//      "Re: ..." with the reference intact automatically), and your
+//      reply content — Mailgun strips the quoted thread/signature for
+//      us — gets sent straight to that customer.
+//   2. An email from anyone ELSE (a customer emailing e.g.
+//      orders@mylucent.co directly, not through the Contact form) —
+//      captured exactly like a Contact form submission: saved to the
+//      Inbox page, and you get the same two texts + owner email.
 app.post('/api/inbound-email', async (req, res) => {
   // Respond fast so Mailgun doesn't retry/queue this.
   res.status(200).send('ok');
@@ -945,21 +996,39 @@ app.post('/api/inbound-email', async (req, res) => {
     const body = req.body || {};
 
     // "sender" is usually just the address; be tolerant of a "Name <addr>" format too.
-    const rawSender = (body.sender || body.from || '').toLowerCase();
-    const senderMatch = rawSender.match(/<([^>]+)>/);
-    const senderEmail = (senderMatch ? senderMatch[1] : rawSender).trim();
+    const rawSender = body.sender || body.from || '';
+    const senderMatch = rawSender.toLowerCase().match(/<([^>]+)>/);
+    const senderEmail = (senderMatch ? senderMatch[1] : rawSender.toLowerCase()).trim();
+
+    const subject = body.subject || '';
+    // Mailgun's stripped-text is the message content with quoted history
+    // and signature blocks already removed — exactly what we want.
+    const bodyRaw = (body['stripped-text'] || body['body-plain'] || '').trim();
 
     if (senderEmail !== ownerEmail) {
-      console.log('Inbound email ignored (not from owner email):', senderEmail);
+      // --- Branch: a customer emailing the business directly ---
+      if (!bodyRaw) {
+        console.log('Inbound email from non-owner ignored (empty body):', senderEmail);
+        return;
+      }
+      if (!senderEmail){
+        console.log('Inbound email ignored (no sender address found).');
+        return;
+      }
+
+      // Prefer the display name from "Name <email>" if present, otherwise
+      // fall back to the part of the address before the @.
+      const nameMatch = rawSender.match(/^"?([^"<]*)"?\s*<[^>]+>/);
+      let senderName = nameMatch ? nameMatch[1].trim() : '';
+      if (!senderName) senderName = senderEmail.split('@')[0];
+
+      const inquiry = await createInquiryAndNotifyOwner(senderName, senderEmail, bodyRaw);
+      console.log('New inquiry captured from direct email:', inquiry.reference, senderEmail);
       return;
     }
 
-    const subject = body.subject || '';
-    // Mailgun's stripped-text is the reply content with quoted history and
-    // signature blocks already removed — exactly what we want.
-    const replyRaw = (body['stripped-text'] || body['body-plain'] || '').trim();
-
-    const refMatch = (subject + ' ' + replyRaw).match(/INQ-[A-Z0-9]+/i);
+    // --- Branch: you replying to an existing inquiry ---
+    const refMatch = (subject + ' ' + bodyRaw).match(/INQ-[A-Z0-9]+/i);
     if (!refMatch) {
       console.log('Inbound email from owner ignored (no inquiry reference found).');
       return;
@@ -975,7 +1044,7 @@ app.post('/api/inbound-email', async (req, res) => {
 
     // Strip the reference itself out of the reply body, in case it was
     // typed inline rather than just sitting in the subject line.
-    let replyText = replyRaw.replace(new RegExp(reference, 'gi'), '').trim();
+    let replyText = bodyRaw.replace(new RegExp(reference, 'gi'), '').trim();
     replyText = replyText.replace(/^[:\-–—,]+\s*/, '');
 
     if (!replyText) {
@@ -994,8 +1063,10 @@ app.post('/api/inbound-email', async (req, res) => {
 });
 
 
-// Contact page submissions — sent straight to the owner's phone via SMS,
-// so there's no dependency on the visitor having an email app configured.
+// Contact page submissions — sent straight to the owner's phone via SMS
+// and email, so there's no dependency on the visitor having an email
+// app configured. Also viewable any time in the Inbox page (admin.html),
+// even if both notifications below happen to fail.
 app.post('/api/contact-form', async (req, res) => {
   const { name, email, message } = req.body || {};
 
@@ -1003,55 +1074,7 @@ app.post('/api/contact-form', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Please fill in your name, email, and message.' });
   }
 
-  let trimmedMessage = message.trim();
-  if (trimmedMessage.length > 500) {
-    trimmedMessage = trimmedMessage.slice(0, 500) + '…';
-  }
-
-  const reference = generateInquiryReference();
-  const inquiry = { reference, name: name.trim(), email: email.trim(), message: trimmedMessage, receivedAt: Date.now(), status: 'unread', replies: [] };
-  inquiries.set(reference, inquiry);
-
-  const smsBody = [
-    'New website inquiry [' + reference + ']:',
-    inquiry.name,
-    inquiry.email,
-    inquiry.message
-  ].join('\n');
-
-  let smsOk = true;
-  try {
-    await sendOwnerText(smsBody, reference);
-  } catch (err) {
-    smsOk = false;
-    console.error('Failed to send contact form SMS for', reference, err.message);
-  }
-
-  // Second text: the reference + a starter greeting, ready to forward
-  // back as your reply. Edit or delete any part of it before sending —
-  // whatever text follows the reference becomes the email verbatim, so
-  // deleting the greeting here means it won't appear in the email either.
-  try {
-    await sendOwnerText(reference + ' Thanks for reaching out to myLucent.co!', reference + '-inq-ref');
-  } catch (err) {
-    console.error('Failed to send inquiry reference text for', reference, err.message);
-  }
-
-  let emailOk = true;
-  try {
-    await sendOwnerInquiryEmail(inquiry);
-  } catch (err) {
-    emailOk = false;
-    console.error('Failed to send contact form owner email for', reference, err.message);
-  }
-
-  if (!smsOk && !emailOk) {
-    return res.status(500).json({ success: false, error: 'Something went wrong sending your message. Please try again, or email yefaiart@gmail.com directly.' });
-  }
-
-  // As long as at least one notification (SMS or email) got through, the
-  // inquiry was successfully captured — don't fail the visitor's request
-  // just because one of the two channels had an issue.
+  await createInquiryAndNotifyOwner(name, email, message);
   res.status(200).json({ success: true });
 });
 
