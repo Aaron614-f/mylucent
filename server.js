@@ -740,6 +740,16 @@ async function sendReplyToInquirer(inquiry, replyText, attachments) {
     bodyText,
     attachments
   );
+
+  // Record this reply so the full conversation is visible in the Inbox
+  // page, regardless of which channel (text, email, or the page itself)
+  // was used to send it.
+  if (!inquiry.replies) inquiry.replies = [];
+  inquiry.replies.push({
+    text: replyText,
+    sentAt: Date.now(),
+    attachmentNames: (attachments || []).map((a) => a.originalname)
+  });
 }
 
 // --- Stripe webhook: needs the RAW body for signature verification, so
@@ -999,7 +1009,7 @@ app.post('/api/contact-form', async (req, res) => {
   }
 
   const reference = generateInquiryReference();
-  const inquiry = { reference, name: name.trim(), email: email.trim(), message: trimmedMessage, receivedAt: Date.now(), status: 'unread' };
+  const inquiry = { reference, name: name.trim(), email: email.trim(), message: trimmedMessage, receivedAt: Date.now(), status: 'unread', replies: [] };
   inquiries.set(reference, inquiry);
 
   const smsBody = [
