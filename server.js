@@ -105,16 +105,26 @@ function cleanupOldCompletedOrders() {
 }
 setInterval(cleanupOldCompletedOrders, 60 * 60 * 1000);
 
-// In-memory store of Contact page inquiries, keyed by a short reference
-// (e.g. "INQ-MSX8A2B1"). Lets the owner text "[reference] their reply"
-// from their phone to automatically email that specific person back —
-// the reference is what confirms exactly which person is being replied to.
+// In-memory store of Contact page conversations, keyed by the customer's
+// EMAIL (lowercased) — so every message from the same person, whether
+// from the Contact form or a direct email, lands in one thread instead
+// of creating a separate card each time. Each conversation keeps its own
+// short reference (e.g. "INQ-MSX8A2B1"), assigned once and reused for
+// every message in that thread — texting "[reference] their reply" from
+// your phone always finds the right person's conversation.
 const inquiries = new Map();
+
+// Reverse lookup so a bare reference (from a text or the Inbox page) can
+// find which conversation it belongs to.
+const referenceToEmail = new Map();
 
 function cleanupOldInquiries() {
   const cutoff = Date.now() - 45 * 24 * 60 * 60 * 1000; // 45 days
-  for (const [ref, entry] of inquiries) {
-    if (entry.receivedAt < cutoff) inquiries.delete(ref);
+  for (const [emailKey, convo] of inquiries) {
+    if (convo.lastActivityAt < cutoff) {
+      referenceToEmail.delete(convo.reference);
+      inquiries.delete(emailKey);
+    }
   }
 }
 setInterval(cleanupOldInquiries, 60 * 60 * 1000);
@@ -123,30 +133,47 @@ function generateInquiryReference() {
   return 'INQ-' + Date.now().toString(36).toUpperCase();
 }
 
+function getConversationByReference(reference) {
+  const emailKey = referenceToEmail.get(reference);
+  return emailKey ? inquiries.get(emailKey) : null;
+}
+
 // Shared by both the Contact page form AND a customer emailing the
-// business directly (e.g. orders@mylucent.co) — creates the inquiry
-// record and sends the same two owner texts + owner email either way.
-async function createInquiryAndNotifyOwner(name, email, message) {
+// business directly (e.g. orders@mylucent.co). If this email has
+// contacted before, the new message is added to their existing
+// conversation instead of starting a new one; otherwise a fresh
+// conversation (with a new reference) is created.
+async function createInquiryAndNotifyOwner(name, email, message, messageId, originalSubject) {
+  const emailKey = email.trim().toLowerCase();
   let trimmedMessage = message.trim();
   if (trimmedMessage.length > 500) {
     trimmedMessage = trimmedMessage.slice(0, 500) + '…';
   }
 
-  const reference = generateInquiryReference();
-  const inquiry = { reference, name: name.trim(), email: email.trim(), message: trimmedMessage, receivedAt: Date.now(), status: 'unread', replies: [] };
-  inquiries.set(reference, inquiry);
+  let convo = inquiries.get(emailKey);
+  if (!convo) {
+    const reference = generateInquiryReference();
+    convo = { reference, name: name.trim(), email: email.trim(), messages: [], replies: [], status: 'unread', receivedAt: Date.now() };
+    inquiries.set(emailKey, convo);
+    referenceToEmail.set(reference, emailKey);
+  } else {
+    convo.status = 'unread'; // a new message needs attention again
+  }
 
-  const smsBody = [
-    'New website inquiry [' + reference + ']:',
-    inquiry.name,
-    inquiry.email,
-    inquiry.message
-  ].join('\n');
+  // messageId and originalSubject (only present for a direct email, not
+  // the Contact form) let a later reply thread properly in their inbox.
+  convo.messages.push({ text: trimmedMessage, receivedAt: Date.now(), messageId: messageId || null, subject: originalSubject || null });
+  convo.lastActivityAt = Date.now();
+
+  // Short SMS: just enough to recognize what it's about at a glance.
+  const words = trimmedMessage.split(/\s+/).filter(Boolean);
+  const preview = words.slice(0, 5).join(' ') + (words.length > 5 ? '…' : '');
+  const smsBody = 'myLucent message: ' + preview;
 
   try {
-    await sendOwnerText(smsBody, reference);
+    await sendOwnerText(smsBody, convo.reference);
   } catch (err) {
-    console.error('Failed to send inquiry SMS for', reference, err.message);
+    console.error('Failed to send inquiry SMS for', convo.reference, err.message);
   }
 
   // Second text: the reference + a starter greeting, ready to forward
@@ -154,18 +181,18 @@ async function createInquiryAndNotifyOwner(name, email, message) {
   // whatever text follows the reference becomes the email verbatim, so
   // deleting the greeting here means it won't appear in the email either.
   try {
-    await sendOwnerText(reference + ' Thanks for reaching out to myLucent.co!', reference + '-inq-ref');
+    await sendOwnerText(convo.reference + ' Thanks for reaching out to myLucent.co!', convo.reference + '-inq-ref');
   } catch (err) {
-    console.error('Failed to send inquiry reference text for', reference, err.message);
+    console.error('Failed to send inquiry reference text for', convo.reference, err.message);
   }
 
   try {
-    await sendOwnerInquiryEmail(inquiry);
+    await sendOwnerInquiryEmail(convo);
   } catch (err) {
-    console.error('Failed to send owner inquiry email for', reference, err.message);
+    console.error('Failed to send owner inquiry email for', convo.reference, err.message);
   }
 
-  return inquiry;
+  return convo;
 }
 
 function verifyStripeSignature(rawBody, sigHeader, secret) {
@@ -648,7 +675,7 @@ async function sendReadyForPickupEmail(order) {
 // A simple shared helper for the two "internal" emails below — sends a
 // plain, branded notification. Not fancy, just consistent with the rest
 // of the site's look.
-async function sendSimpleBrandedEmail(to, subject, heading, bodyLines, textBody, attachments) {
+async function sendSimpleBrandedEmail(to, subject, heading, bodyLines, textBody, attachments, inReplyToMessageId) {
   const { MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL } = process.env;
   if (!MAILGUN_API_KEY || !MAILGUN_DOMAIN || !MAILGUN_FROM_EMAIL) {
     throw new Error('Server is missing Mailgun configuration.');
@@ -698,6 +725,13 @@ async function sendSimpleBrandedEmail(to, subject, heading, bodyLines, textBody,
   const mailgunAuth = 'Basic ' + Buffer.from('api:' + MAILGUN_API_KEY).toString('base64');
   let response;
 
+  // Setting these two headers is what makes a reply nest into the same
+  // thread as the original email in Gmail/Outlook/etc., instead of
+  // showing up as a brand new, unrelated message.
+  const threadingHeaders = inReplyToMessageId
+    ? { 'h:In-Reply-To': inReplyToMessageId, 'h:References': inReplyToMessageId }
+    : null;
+
   if (attachments && attachments.length > 0) {
     // Attachments require multipart/form-data — Node's built-in FormData
     // handles this automatically (don't set Content-Type manually, fetch
@@ -708,6 +742,10 @@ async function sendSimpleBrandedEmail(to, subject, heading, bodyLines, textBody,
     form.append('subject', subject);
     form.append('text', textBody);
     form.append('html', htmlBody);
+    if (threadingHeaders) {
+      form.append('h:In-Reply-To', threadingHeaders['h:In-Reply-To']);
+      form.append('h:References', threadingHeaders['h:References']);
+    }
     attachments.forEach((att) => {
       form.append('attachment', new Blob([att.buffer], { type: att.mimetype || 'application/octet-stream' }), att.originalname);
     });
@@ -724,6 +762,10 @@ async function sendSimpleBrandedEmail(to, subject, heading, bodyLines, textBody,
     formData.append('subject', subject);
     formData.append('text', textBody);
     formData.append('html', htmlBody);
+    if (threadingHeaders) {
+      formData.append('h:In-Reply-To', threadingHeaders['h:In-Reply-To']);
+      formData.append('h:References', threadingHeaders['h:References']);
+    }
 
     response = await fetch('https://api.mailgun.net/v3/' + MAILGUN_DOMAIN + '/messages', {
       method: 'POST',
@@ -749,7 +791,7 @@ async function sendOwnerInquiryEmail(inquiry) {
     'Reference: ' + inquiry.reference,
     'From: ' + inquiry.name + ' <' + inquiry.email + '>',
     '',
-    inquiry.message,
+    inquiry.messages[inquiry.messages.length - 1].text,
     '',
     'To reply, text "' + inquiry.reference + ' your reply message" to your Mobile Message number — it\'ll email them back automatically.'
   ].join('\n');
@@ -763,27 +805,45 @@ async function sendOwnerInquiryEmail(inquiry) {
   );
 }
 
-// Sends the owner's reply (from SMS, email, or the Inbox page) to the
-// person who submitted the Contact form. attachments is optional — an
-// array of { buffer, originalname, mimetype } (what multer gives us).
+// Sends the owner's reply (from SMS or the Inbox page) to the person who
+// submitted the Contact form. attachments is optional — an array of
+// { buffer, originalname, mimetype } (what multer gives us).
 async function sendReplyToInquirer(inquiry, replyText, attachments) {
   const bodyText = [
     'Hi ' + (inquiry.name.trim().split(/\s+/)[0] || 'there') + ',',
     '',
     replyText,
     '',
-    '— myLucent.co',
-    '',
-    'Your original message: "' + inquiry.message + '"'
+    '— myLucent.co'
   ].join('\n');
+
+  // If they ever emailed us directly, find the most recent one that has
+  // a real Message-ID — replying with matching threading headers (and,
+  // where we have it, a matching subject) makes this nest as a proper
+  // reply in their inbox instead of showing up as a new email. Contact
+  // form-only conversations have no such message, so this stays null and
+  // the reply just sends as a normal new email (nothing to thread under).
+  let threadMessageId = null;
+  let threadSubject = null;
+  for (let i = inquiry.messages.length - 1; i >= 0; i--) {
+    if (inquiry.messages[i].messageId) {
+      threadMessageId = inquiry.messages[i].messageId;
+      threadSubject = inquiry.messages[i].subject;
+      break;
+    }
+  }
+  const subject = threadSubject
+    ? (/^re:/i.test(threadSubject) ? threadSubject : 'Re: ' + threadSubject)
+    : 'Re: your inquiry to myLucent.co';
 
   await sendSimpleBrandedEmail(
     inquiry.email,
-    'Re: your inquiry to myLucent.co',
+    subject,
     'A reply from myLucent.co',
     bodyText.replace(/\n/g, '<br>'),
     bodyText,
-    attachments
+    attachments,
+    threadMessageId
   );
 
   // Record this reply so the full conversation is visible in the Inbox
@@ -909,7 +969,7 @@ app.post('/api/inbound-sms', async (req, res) => {
     const inqMatch = message.match(/INQ-[A-Z0-9]+/i);
     if (inqMatch) {
       const reference = inqMatch[0].toUpperCase();
-      const inquiry = inquiries.get(reference);
+      const inquiry = getConversationByReference(reference);
 
       if (!inquiry) {
         await sendOwnerText('No inquiry found for ' + reference + '. Double-check the reference and try again.', 'inbound-sms-inq-notfound');
@@ -970,92 +1030,47 @@ app.post('/api/inbound-sms', async (req, res) => {
 
 // --- Inbound EMAIL webhook (the email equivalent of the SMS one above) ---
 // Set this up as a Mailgun "Route" (Receiving -> Routes -> Create Route):
+// --- Inbound EMAIL webhook ---
+// Set this up as a Mailgun "Route" (Receiving -> Routes -> Create Route):
 //   Filter:  match_recipient(".*@YOUR_MAILGUN_DOMAIN")
 //   Action:  forward("https://mylucent.co/api/inbound-email")
-// This means replying to ANY email from your MAILGUN_DOMAIN (including
-// just hitting "Reply" on the inquiry notification email you were sent)
-// gets forwarded here.
 //
-// Two things this responds to:
-//   1. An email FROM YOU (OWNER_EMAIL) containing an inquiry reference —
-//      treated as your reply, same as the SMS version: reply with the
-//      reference somewhere in the subject or body (replying keeps
-//      "Re: ..." with the reference intact automatically), and your
-//      reply content — Mailgun strips the quoted thread/signature for
-//      us — gets sent straight to that customer.
-//   2. An email from anyone ELSE (a customer emailing e.g.
-//      orders@mylucent.co directly, not through the Contact form) —
-//      captured exactly like a Contact form submission: saved to the
-//      Inbox page, and you get the same two texts + owner email.
+// Every email that lands here (regardless of sender) is captured exactly
+// like a Contact form submission — added to that person's conversation
+// (grouped by their email address), and you get the same two texts +
+// owner email. Replying by email is no longer supported — reply by
+// texting the reference back, or from the Inbox page.
 app.post('/api/inbound-email', async (req, res) => {
   // Respond fast so Mailgun doesn't retry/queue this.
   res.status(200).send('ok');
 
   try {
-    const ownerEmail = (process.env.OWNER_EMAIL || 'yefaiart@gmail.com').toLowerCase();
     const body = req.body || {};
-
-    // "sender" is usually just the address; be tolerant of a "Name <addr>" format too.
     const rawSender = body.sender || body.from || '';
     const senderMatch = rawSender.toLowerCase().match(/<([^>]+)>/);
     const senderEmail = (senderMatch ? senderMatch[1] : rawSender.toLowerCase()).trim();
 
-    const subject = body.subject || '';
     // Mailgun's stripped-text is the message content with quoted history
     // and signature blocks already removed — exactly what we want.
     const bodyRaw = (body['stripped-text'] || body['body-plain'] || '').trim();
 
-    if (senderEmail !== ownerEmail) {
-      // --- Branch: a customer emailing the business directly ---
-      if (!bodyRaw) {
-        console.log('Inbound email from non-owner ignored (empty body):', senderEmail);
-        return;
-      }
-      if (!senderEmail){
-        console.log('Inbound email ignored (no sender address found).');
-        return;
-      }
-
-      // Prefer the display name from "Name <email>" if present, otherwise
-      // fall back to the part of the address before the @.
-      const nameMatch = rawSender.match(/^"?([^"<]*)"?\s*<[^>]+>/);
-      let senderName = nameMatch ? nameMatch[1].trim() : '';
-      if (!senderName) senderName = senderEmail.split('@')[0];
-
-      const inquiry = await createInquiryAndNotifyOwner(senderName, senderEmail, bodyRaw);
-      console.log('New inquiry captured from direct email:', inquiry.reference, senderEmail);
+    if (!senderEmail) {
+      console.log('Inbound email ignored (no sender address found).');
+      return;
+    }
+    if (!bodyRaw) {
+      console.log('Inbound email ignored (empty body):', senderEmail);
       return;
     }
 
-    // --- Branch: you replying to an existing inquiry ---
-    const refMatch = (subject + ' ' + bodyRaw).match(/INQ-[A-Z0-9]+/i);
-    if (!refMatch) {
-      console.log('Inbound email from owner ignored (no inquiry reference found).');
-      return;
-    }
+    // Prefer the display name from "Name <email>" if present, otherwise
+    // fall back to the part of the address before the @.
+    const nameMatch = rawSender.match(/^"?([^"<]*)"?\s*<[^>]+>/);
+    let senderName = nameMatch ? nameMatch[1].trim() : '';
+    if (!senderName) senderName = senderEmail.split('@')[0];
 
-    const reference = refMatch[0].toUpperCase();
-    const inquiry = inquiries.get(reference);
-
-    if (!inquiry) {
-      await sendOwnerText('Got your email reply but no inquiry found for ' + reference + '.', 'inbound-email-notfound');
-      return;
-    }
-
-    // Strip the reference itself out of the reply body, in case it was
-    // typed inline rather than just sitting in the subject line.
-    let replyText = bodyRaw.replace(new RegExp(reference, 'gi'), '').trim();
-    replyText = replyText.replace(/^[:\-–—,]+\s*/, '');
-
-    if (!replyText) {
-      await sendOwnerText('Got your email for ' + reference + ' but couldn\'t find any reply text in it.', 'inbound-email-noreply');
-      return;
-    }
-
-    await sendReplyToInquirer(inquiry, replyText);
-    inquiry.status = 'replied';
-    console.log('Reply email sent for inquiry', reference, '(via email)');
-    await sendOwnerText('✅ Reply sent to ' + inquiry.name + ' (' + inquiry.email + ') for ' + reference + ' — via email.', 'inbound-email-confirm');
+    const convo = await createInquiryAndNotifyOwner(senderName, senderEmail, bodyRaw, body['Message-Id'], body.subject);
+    console.log('Inbound email added to conversation:', convo.reference, senderEmail);
 
   } catch (err) {
     console.error('Error handling inbound email:', err.message);
@@ -1184,7 +1199,7 @@ function requireAdminKey(req, res, next) {
 // Returns every inquiry, most recent first. Also doubles as the "is my
 // key correct?" check the Inbox page's login screen uses.
 app.get('/api/inbox/messages', requireAdminKey, (req, res) => {
-  const list = Array.from(inquiries.values()).sort((a, b) => b.receivedAt - a.receivedAt);
+  const list = Array.from(inquiries.values()).sort((a, b) => b.lastActivityAt - a.lastActivityAt);
   res.status(200).json({ success: true, messages: list });
 });
 
@@ -1192,7 +1207,7 @@ app.get('/api/inbox/messages', requireAdminKey, (req, res) => {
 // won't un-mark a message that's already been replied to).
 app.post('/api/inbox/mark-read', requireAdminKey, (req, res) => {
   const { reference } = req.body || {};
-  const inquiry = reference && inquiries.get(reference);
+  const inquiry = reference && getConversationByReference(reference);
   if (!inquiry) {
     return res.status(404).json({ success: false, error: 'Message not found.' });
   }
@@ -1200,23 +1215,25 @@ app.post('/api/inbox/mark-read', requireAdminKey, (req, res) => {
   res.status(200).json({ success: true });
 });
 
-// Permanently deletes an inquiry — for clearing out spam/junk messages
-// that come in through the Contact form or a direct email.
+// Permanently deletes a conversation — for clearing out spam/junk
+// messages that come in through the Contact form or a direct email.
 app.post('/api/inbox/delete', requireAdminKey, (req, res) => {
   const { reference } = req.body || {};
-  if (!reference || !inquiries.has(reference)) {
+  const emailKey = reference && referenceToEmail.get(reference);
+  if (!emailKey || !inquiries.has(emailKey)) {
     return res.status(404).json({ success: false, error: 'Message not found.' });
   }
-  inquiries.delete(reference);
+  inquiries.delete(emailKey);
+  referenceToEmail.delete(reference);
   res.status(200).json({ success: true });
 });
 
-// Sends a reply from the Inbox page — same underlying email as the
-// SMS/email reply methods, just triggered from the website instead.
-// Accepts multipart/form-data so file attachments work.
+// Sends a reply from the Inbox page — same underlying email as the SMS
+// reply method, just triggered from the website instead. Accepts
+// multipart/form-data so file attachments work.
 app.post('/api/inbox/reply', requireAdminKey, upload.array('attachments', 5), async (req, res) => {
   const { reference, replyText } = req.body || {};
-  const inquiry = reference && inquiries.get(reference);
+  const inquiry = reference && getConversationByReference(reference);
 
   if (!inquiry) {
     return res.status(404).json({ success: false, error: 'Message not found.' });
