@@ -39,6 +39,25 @@
   .attach-chip button{border:none;background:none;color:rgba(27,39,51,0.5);cursor:pointer;font-size:14px;line-height:1;padding:0;}
   .attach-chip button:hover{color:#A9784F;}
   .empty-state{padding:60px 20px;text-align:center;color:rgba(27,39,51,0.4);font-size:13.5px;}
+
+  /* Explicit, defensive wrapping rules for the reply box — guarantees
+     text always wraps within the box rather than overflowing, on any
+     browser/device. */
+  #replyText{
+    box-sizing:border-box;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+    overflow-x:hidden;
+  }
+
+  @media (max-width:820px){
+    .inbox-outer{ padding:16px !important; }
+    .inbox-shell{ flex-direction:column !important; min-height:0 !important; }
+    .inbox-sidebar{ width:100% !important; border-right:none !important; border-bottom:1px solid rgba(27,39,51,0.08); }
+    #msgList{ max-height:none !important; }
+    .inbox-detail{ padding:24px 20px !important; }
+  }
 </style>
 </head>
 <body>
@@ -53,15 +72,15 @@
   </div>
 </div>
 
-<div id="inboxScreen" style="display:none;min-height:100vh;padding:32px;">
+<div id="inboxScreen" style="display:none;min-height:100vh;padding:32px;" class="inbox-outer">
   <div style="max-width:1160px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;">
     <div style="font-family:'Spectral',serif;font-size:19px;">myLucent <span style="color:#A9784F;">— Inbox</span></div>
     <div style="font-size:10.5px;letter-spacing:1.5px;color:rgba(27,39,51,0.45);">PRIVATE — NOT LINKED IN SITE NAV</div>
   </div>
 
-  <div style="max-width:1160px;margin:0 auto;display:flex;min-height:600px;background:#FBFAF7;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px -20px rgba(27,39,51,0.18);">
+  <div class="inbox-shell" style="max-width:1160px;margin:0 auto;display:flex;min-height:600px;background:#FBFAF7;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px -20px rgba(27,39,51,0.18);">
 
-    <div style="width:340px;border-right:1px solid rgba(27,39,51,0.08);padding:24px;flex-shrink:0;">
+    <div class="inbox-sidebar" style="width:340px;border-right:1px solid rgba(27,39,51,0.08);padding:24px;flex-shrink:0;">
       <div style="font-family:'Spectral',serif;font-size:17px;margin-bottom:18px;">
         Messages <span id="unreadBadge" style="background:#A9784F;color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:6px;"></span>
       </div>
@@ -69,7 +88,7 @@
       <div id="msgList" style="display:flex;flex-direction:column;gap:10px;max-height:70vh;overflow-y:auto;"></div>
     </div>
 
-    <div id="detailPane" style="flex:1;padding:36px 40px;">
+    <div id="detailPane" class="inbox-detail" style="flex:1;padding:36px 40px;min-width:0;">
       <div class="empty-state">Select a message to view it.</div>
     </div>
 
@@ -246,9 +265,12 @@
     if (!m) return;
 
     detailPane.innerHTML =
-      '<div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">' +
-        '<div style="width:46px;height:46px;border-radius:50%;background:#1B2733;color:#F4F1EA;display:flex;align-items:center;justify-content:center;font-size:15px;font-family:\'Spectral\',serif;">' + initials(m.name) + '</div>' +
-        '<div><div style="font-family:\'Spectral\',serif;font-size:20px;">' + m.name + '</div><div style="font-size:12.5px;color:rgba(27,39,51,0.5);">' + m.email + '</div></div>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px;">' +
+        '<div style="display:flex;align-items:center;gap:14px;">' +
+          '<div style="width:46px;height:46px;border-radius:50%;background:#1B2733;color:#F4F1EA;display:flex;align-items:center;justify-content:center;font-size:15px;font-family:\'Spectral\',serif;">' + initials(m.name) + '</div>' +
+          '<div><div style="font-family:\'Spectral\',serif;font-size:20px;">' + m.name + '</div><div style="font-size:12.5px;color:rgba(27,39,51,0.5);">' + m.email + '</div></div>' +
+        '</div>' +
+        '<button id="deleteMsgBtn" style="background:none;border:1px solid rgba(178,59,59,0.35);color:#b23b3b;font-size:12px;padding:8px 14px;border-radius:8px;cursor:pointer;font-family:\'Inter\',sans-serif;white-space:nowrap;">Delete</button>' +
       '</div>' +
       buildThreadHtml(m) +
       '<div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 14px -6px rgba(27,39,51,0.1);max-width:460px;">' +
@@ -262,6 +284,23 @@
           '<span id="errorLabel" style="font-size:12px;color:#b23b3b;"></span>' +
         '</div>' +
       '</div>';
+
+    document.getElementById('deleteMsgBtn').addEventListener('click', function(){
+      if (!confirm('Delete this message from ' + m.name + '? This can\'t be undone.')) return;
+      apiFetch('/api/inbox/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: m.reference })
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if (!data.success) return;
+          messages = messages.filter(function(x){ return x.reference !== m.reference; });
+          activeReference = null;
+          renderList();
+          detailPane.innerHTML = '<div class="empty-state">Select a message to view it.</div>';
+        });
+    });
 
     var attachZone = document.getElementById('attachZone');
     var fileInput = document.getElementById('fileInput');

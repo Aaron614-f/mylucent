@@ -1200,6 +1200,17 @@ app.post('/api/inbox/mark-read', requireAdminKey, (req, res) => {
   res.status(200).json({ success: true });
 });
 
+// Permanently deletes an inquiry — for clearing out spam/junk messages
+// that come in through the Contact form or a direct email.
+app.post('/api/inbox/delete', requireAdminKey, (req, res) => {
+  const { reference } = req.body || {};
+  if (!reference || !inquiries.has(reference)) {
+    return res.status(404).json({ success: false, error: 'Message not found.' });
+  }
+  inquiries.delete(reference);
+  res.status(200).json({ success: true });
+});
+
 // Sends a reply from the Inbox page — same underlying email as the
 // SMS/email reply methods, just triggered from the website instead.
 // Accepts multipart/form-data so file attachments work.
