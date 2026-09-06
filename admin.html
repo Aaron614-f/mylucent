@@ -291,6 +291,36 @@
         '<div class="attach-zone" id="attachZone">📎 Drop files here, or click to attach</div>' +
         '<input type="file" id="fileInput" multiple style="display:none;">' +
         '<div id="attachChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;"></div>' +
+
+        '<div style="margin-top:14px;">' +
+          '<button type="button" id="toggleInvoiceBtn" style="background:none;border:none;color:#A9784F;font-size:12.5px;cursor:pointer;font-family:\'Inter\',sans-serif;padding:0;">📄 Add Invoice</button>' +
+        '</div>' +
+
+        '<div id="invoicePanel" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(27,39,51,0.08);">' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
+            '<input id="invBillToName" placeholder="Bill to (name)" value="' + m.name + '" style="grid-column:1/3;padding:9px 11px;border:1px solid rgba(27,39,51,0.15);border-radius:7px;font-size:13px;font-family:\'Inter\',sans-serif;">' +
+            '<textarea id="invBillToAddress" placeholder="Billing address (optional)" style="grid-column:1/3;padding:9px 11px;border:1px solid rgba(27,39,51,0.15);border-radius:7px;font-size:13px;font-family:\'Inter\',sans-serif;min-height:44px;resize:vertical;"></textarea>' +
+            '<input id="invOrderDesc" placeholder="Order description" style="padding:9px 11px;border:1px solid rgba(27,39,51,0.15);border-radius:7px;font-size:13px;font-family:\'Inter\',sans-serif;">' +
+            '<input id="invDueDate" placeholder="Due date (optional)" style="padding:9px 11px;border:1px solid rgba(27,39,51,0.15);border-radius:7px;font-size:13px;font-family:\'Inter\',sans-serif;">' +
+          '</div>' +
+
+          '<div id="invItemsHeader" style="display:grid;grid-template-columns:1fr 50px 80px 80px 24px;gap:8px;font-size:10px;letter-spacing:1px;color:rgba(27,39,51,0.4);margin-bottom:6px;">' +
+            '<span>DESCRIPTION</span><span>QTY</span><span>PRICE</span><span style="text-align:right;">AMOUNT</span><span></span>' +
+          '</div>' +
+          '<div id="invItemsContainer"></div>' +
+          '<button type="button" id="addInvItemBtn" style="background:none;border:1px dashed rgba(27,39,51,0.25);color:rgba(27,39,51,0.6);font-size:12px;padding:8px 12px;border-radius:7px;cursor:pointer;font-family:\'Inter\',sans-serif;width:100%;margin-top:4px;">+ Add Line Item</button>' +
+
+          '<div style="display:flex;align-items:center;gap:8px;margin-top:14px;">' +
+            '<label style="font-size:12px;color:rgba(27,39,51,0.6);">Tax rate</label>' +
+            '<input id="invTaxRate" type="number" step="0.001" placeholder="0" style="width:70px;padding:6px 8px;border:1px solid rgba(27,39,51,0.15);border-radius:6px;font-size:12.5px;font-family:\'Inter\',sans-serif;">' +
+            '<span style="font-size:12px;color:rgba(27,39,51,0.5);">%</span>' +
+          '</div>' +
+
+          '<div id="invTotals" style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(27,39,51,0.08);font-size:13px;"></div>' +
+
+          '<button type="button" id="removeInvoiceBtn" style="background:none;border:none;color:#b23b3b;font-size:11.5px;cursor:pointer;font-family:\'Inter\',sans-serif;padding:0;margin-top:12px;">Remove invoice</button>' +
+        '</div>' +
+
         '<div style="margin-top:16px;display:flex;align-items:center;gap:16px;">' +
           '<button class="btn-solid" id="sendReplyBtn">Send Reply</button>' +
           '<span id="sentLabel" style="font-size:12px;color:#A9784F;opacity:0;transition:opacity .3s;">Sent ✓</span>' +
@@ -356,6 +386,92 @@
       }
     });
 
+    // --- Invoice panel ---
+    var toggleInvoiceBtn = document.getElementById('toggleInvoiceBtn');
+    var invoicePanel = document.getElementById('invoicePanel');
+    var invItemsContainer = document.getElementById('invItemsContainer');
+    var addInvItemBtn = document.getElementById('addInvItemBtn');
+    var invTotals = document.getElementById('invTotals');
+    var invTaxRate = document.getElementById('invTaxRate');
+    var removeInvoiceBtn = document.getElementById('removeInvoiceBtn');
+
+    function addInvoiceRow(){
+      var row = document.createElement('div');
+      row.className = 'inv-item-row';
+      row.style.cssText = 'display:grid;grid-template-columns:1fr 50px 80px 80px 24px;gap:8px;margin-bottom:8px;align-items:center;';
+      row.innerHTML =
+        '<input class="inv-desc" placeholder="Description" style="padding:8px 9px;border:1px solid rgba(27,39,51,0.15);border-radius:6px;font-size:12.5px;font-family:\'Inter\',sans-serif;">' +
+        '<input class="inv-qty" type="number" value="1" min="0" style="padding:8px 6px;border:1px solid rgba(27,39,51,0.15);border-radius:6px;font-size:12.5px;font-family:\'Inter\',sans-serif;">' +
+        '<input class="inv-price" type="number" step="0.01" placeholder="0.00" style="padding:8px 6px;border:1px solid rgba(27,39,51,0.15);border-radius:6px;font-size:12.5px;font-family:\'Inter\',sans-serif;">' +
+        '<span class="inv-amount" style="font-size:12.5px;color:#1B2733;text-align:right;">$0.00</span>' +
+        '<button type="button" class="inv-remove-row" style="background:none;border:none;color:rgba(27,39,51,0.4);font-size:15px;cursor:pointer;padding:0;">×</button>';
+
+      row.querySelectorAll('.inv-qty, .inv-price').forEach(function(el){
+        el.addEventListener('input', recalcInvoice);
+      });
+      row.querySelector('.inv-remove-row').addEventListener('click', function(){
+        row.remove();
+        recalcInvoice();
+      });
+
+      invItemsContainer.appendChild(row);
+      recalcInvoice();
+    }
+
+    function recalcInvoice(){
+      var subtotal = 0;
+      invItemsContainer.querySelectorAll('.inv-item-row').forEach(function(row){
+        var qty = parseFloat(row.querySelector('.inv-qty').value) || 0;
+        var price = parseFloat(row.querySelector('.inv-price').value) || 0;
+        var amount = qty * price;
+        row.querySelector('.inv-amount').textContent = '$' + amount.toFixed(2);
+        subtotal += amount;
+      });
+      var taxRate = parseFloat(invTaxRate.value) || 0;
+      var taxAmount = subtotal * (taxRate / 100);
+      var total = subtotal + taxAmount;
+
+      invTotals.innerHTML =
+        '<div style="display:flex;justify-content:space-between;color:rgba(27,39,51,0.6);margin-bottom:4px;"><span>Subtotal</span><span>$' + subtotal.toFixed(2) + '</span></div>' +
+        (taxRate > 0 ? '<div style="display:flex;justify-content:space-between;color:rgba(27,39,51,0.6);margin-bottom:4px;"><span>Tax (' + taxRate + '%)</span><span>$' + taxAmount.toFixed(2) + '</span></div>' : '') +
+        '<div style="display:flex;justify-content:space-between;font-weight:600;color:#1B2733;margin-top:6px;"><span>Total</span><span>$' + total.toFixed(2) + '</span></div>';
+    }
+
+    function collectInvoiceData(){
+      if (invoicePanel.style.display === 'none') return null;
+      var items = [];
+      invItemsContainer.querySelectorAll('.inv-item-row').forEach(function(row){
+        var description = row.querySelector('.inv-desc').value.trim();
+        var qty = parseFloat(row.querySelector('.inv-qty').value) || 0;
+        var unitPrice = parseFloat(row.querySelector('.inv-price').value) || 0;
+        if (description) items.push({ description: description, qty: qty, unitPrice: unitPrice });
+      });
+      if (items.length === 0) return null;
+
+      return {
+        billToName: document.getElementById('invBillToName').value.trim() || m.name,
+        billToAddress: document.getElementById('invBillToAddress').value.trim(),
+        orderDescription: document.getElementById('invOrderDesc').value.trim(),
+        dueDate: document.getElementById('invDueDate').value.trim(),
+        taxRate: parseFloat(invTaxRate.value) || 0,
+        items: items
+      };
+    }
+
+    toggleInvoiceBtn.addEventListener('click', function(){
+      var showing = invoicePanel.style.display !== 'none';
+      invoicePanel.style.display = showing ? 'none' : 'block';
+      toggleInvoiceBtn.style.display = showing ? 'inline-block' : 'none';
+      if (!showing && invItemsContainer.children.length === 0) addInvoiceRow();
+    });
+    removeInvoiceBtn.addEventListener('click', function(){
+      invoicePanel.style.display = 'none';
+      toggleInvoiceBtn.style.display = 'inline-block';
+      invItemsContainer.innerHTML = '';
+    });
+    addInvItemBtn.addEventListener('click', addInvoiceRow);
+    invTaxRate.addEventListener('input', recalcInvoice);
+
     sendBtn.addEventListener('click', function(){
       var text = replyTextEl.value.trim();
       if (!text) return;
@@ -367,6 +483,9 @@
       form.append('reference', m.reference);
       form.append('replyText', text);
       pendingFiles.forEach(function(f){ form.append('attachments', f); });
+
+      var invoiceData = collectInvoiceData();
+      if (invoiceData) form.append('invoiceData', JSON.stringify(invoiceData));
 
       apiFetch('/api/inbox/reply', { method: 'POST', body: form })
         .then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })

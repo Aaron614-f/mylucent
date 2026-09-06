@@ -66,6 +66,7 @@ const path = require('path');
 const crypto = require('crypto');
 const Stripe = require('stripe');
 const multer = require('multer');
+const PDFDocument = require('pdfkit');
 const PRICING = require('./pricing.js');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB per file
@@ -672,6 +673,163 @@ async function sendReadyForPickupEmail(order) {
   }
 }
 
+// Builds an invoice PDF (in memory, no disk writes) matching the brand's
+// layout: header, bill-to/order details, a line-items table, totals, and
+// a payment-terms footer. Returns a Buffer, ready to attach to an email.
+//
+// data = {
+//   billToName, billToAddress,      // strings, billToAddress optional
+//   orderDescription,               // string, optional
+//   invoiceNumber, invoiceDate, dueDate,  // strings, auto-filled if omitted
+//   items: [ { description, qty, unitPrice } ],
+//   taxRate                         // number, percent e.g. 6.625 (optional, default 0)
+// }
+function generateInvoicePdf(data) {
+  return new Promise((resolve, reject) => {
+    try {
+      const NAVY = '#1B2733';
+      const MUTED = '#8a94a0';
+      const SECONDARY = '#4a5763';
+      const BRASS = '#A9784F';
+      const LINE = '#d7dce2';
+
+      const doc = new PDFDocument({ size: 'LETTER', margin: 0 });
+      const chunks = [];
+      doc.on('data', (c) => chunks.push(c));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      const pageW = doc.page.width;
+      const marginX = 64;
+      const contentW = pageW - marginX * 2;
+
+      // Full-page background tint, matching the site's palette.
+      doc.rect(0, 0, pageW, doc.page.height).fill('#EEF2F6');
+
+      let y = 56;
+
+      // --- Header: brand mark (left), invoice meta (right) ---
+      doc.font('Helvetica-Bold').fontSize(15).fillColor(BRASS).text('myLucent', marginX, y, { continued: true });
+      doc.font('Helvetica').fillColor(NAVY).text('.co');
+
+      const contactEmail = (process.env.MAILGUN_FROM_EMAIL || '').match(/<([^>]+)>/);
+      const contactLine = contactEmail ? contactEmail[1] : 'orders@mylucent.co';
+      doc.font('Helvetica').fontSize(10).fillColor(SECONDARY).text(contactLine, marginX, y + 22);
+
+      const invoiceNumber = data.invoiceNumber || ('INV-' + Date.now().toString(36).toUpperCase());
+      const invoiceDate = data.invoiceDate || new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const dueDate = data.dueDate || (() => {
+        const d = new Date();
+        d.setDate(d.getDate() + 14);
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      })();
+
+      doc.font('Times-Bold').fontSize(24).fillColor(NAVY).text('INVOICE', marginX, y, { width: contentW, align: 'right' });
+      doc.font('Helvetica').fontSize(10).fillColor(SECONDARY);
+      const metaY = y + 32;
+      doc.text('Invoice #   ' + invoiceNumber, marginX, metaY, { width: contentW, align: 'right' });
+      doc.text('Date        ' + invoiceDate, marginX, metaY + 15, { width: contentW, align: 'right' });
+      doc.text('Due         ' + dueDate, marginX, metaY + 30, { width: contentW, align: 'right' });
+
+      y = metaY + 60;
+      doc.moveTo(marginX, y).lineTo(pageW - marginX, y).strokeColor(LINE).lineWidth(1).stroke();
+      y += 32;
+
+      // --- Bill To / Order details ---
+      const colW = contentW / 2;
+
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(MUTED).text('BILL TO', marginX, y);
+      doc.font('Helvetica').fontSize(12).fillColor(NAVY).text(
+        data.billToName + (data.billToAddress ? '\n' + data.billToAddress : ''),
+        marginX, y + 16, { width: colW - 20 }
+      );
+
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(MUTED).text('ORDER', marginX + colW, y, { width: colW, align: 'right' });
+      doc.font('Helvetica').fontSize(12).fillColor(NAVY).text(
+        (data.orderDescription || 'Custom order') + '\nPlaced ' + (data.orderPlacedDate || invoiceDate),
+        marginX + colW, y + 16, { width: colW, align: 'right' }
+      );
+
+      y += 100;
+
+      // --- Line items table ---
+      const col = {
+        item: marginX,
+        qty: marginX + contentW * 0.55,
+        unit: marginX + contentW * 0.68,
+        amount: marginX + contentW * 0.84
+      };
+      const amountColW = pageW - marginX - col.amount;
+
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(MUTED);
+      doc.text('ITEM', col.item, y);
+      doc.text('QTY', col.qty, y);
+      doc.text('UNIT PRICE', col.unit, y);
+      doc.text('AMOUNT', col.amount, y, { width: amountColW, align: 'right' });
+      y += 14;
+      doc.moveTo(marginX, y).lineTo(pageW - marginX, y).strokeColor(LINE).lineWidth(1).stroke();
+      y += 14;
+
+      let subtotal = 0;
+      (data.items || []).forEach((item) => {
+        const qty = Number(item.qty) || 0;
+        const unitPrice = Number(item.unitPrice) || 0;
+        const amount = qty * unitPrice;
+        subtotal += amount;
+
+        const rowTop = y;
+        doc.font('Helvetica').fontSize(11).fillColor(NAVY).text(item.description || '', col.item, y, { width: col.qty - col.item - 10 });
+        doc.text(String(qty), col.qty, rowTop);
+        doc.text('$' + unitPrice.toFixed(2), col.unit, rowTop);
+        doc.text('$' + amount.toFixed(2), col.amount, rowTop, { width: amountColW, align: 'right' });
+
+        const textHeight = doc.heightOfString(item.description || '', { width: col.qty - col.item - 10 });
+        y = rowTop + Math.max(textHeight, 14) + 12;
+        doc.moveTo(marginX, y - 6).lineTo(pageW - marginX, y - 6).strokeColor('#e8ebee').lineWidth(1).stroke();
+      });
+
+      y += 8;
+
+      // --- Totals ---
+      const taxRate = Number(data.taxRate) || 0;
+      const taxAmount = subtotal * (taxRate / 100);
+      const total = subtotal + taxAmount;
+      const totalsW = 220;
+      const totalsX = pageW - marginX - totalsW;
+
+      doc.font('Helvetica').fontSize(11).fillColor(SECONDARY);
+      doc.text('Subtotal', totalsX, y, { width: totalsW - 90 });
+      doc.text('$' + subtotal.toFixed(2), totalsX + totalsW - 90, y, { width: 90, align: 'right' });
+      y += 20;
+
+      if (taxRate > 0) {
+        doc.text('Tax (' + taxRate + '%)', totalsX, y, { width: totalsW - 90 });
+        doc.text('$' + taxAmount.toFixed(2), totalsX + totalsW - 90, y, { width: 90, align: 'right' });
+        y += 20;
+      }
+
+      doc.moveTo(totalsX, y).lineTo(pageW - marginX, y).strokeColor(LINE).lineWidth(1).stroke();
+      y += 12;
+      doc.font('Times-Bold').fontSize(17).fillColor(NAVY);
+      doc.text('Total', totalsX, y, { width: totalsW - 90 });
+      doc.text('$' + total.toFixed(2), totalsX + totalsW - 90, y, { width: 90, align: 'right' });
+
+      // --- Footer ---
+      const footerY = doc.page.height - 100;
+      doc.moveTo(marginX, footerY).lineTo(pageW - marginX, footerY).strokeColor(LINE).lineWidth(1).stroke();
+      doc.font('Helvetica').fontSize(10).fillColor(SECONDARY).text(
+        'Payment due within 14 days by card or bank transfer. Thank you for supporting handmade work.',
+        marginX, footerY + 18, { width: contentW - 120 }
+      );
+      doc.fontSize(9).fillColor(MUTED).text('mylucent.co', marginX, footerY + 18, { width: contentW, align: 'right' });
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
 // A simple shared helper for the two "internal" emails below — sends a
 // plain, branded notification. Not fancy, just consistent with the rest
 // of the site's look.
@@ -1232,7 +1390,7 @@ app.post('/api/inbox/delete', requireAdminKey, (req, res) => {
 // reply method, just triggered from the website instead. Accepts
 // multipart/form-data so file attachments work.
 app.post('/api/inbox/reply', requireAdminKey, upload.array('attachments', 5), async (req, res) => {
-  const { reference, replyText } = req.body || {};
+  const { reference, replyText, invoiceData } = req.body || {};
   const inquiry = reference && getConversationByReference(reference);
 
   if (!inquiry) {
@@ -1243,7 +1401,29 @@ app.post('/api/inbox/reply', requireAdminKey, upload.array('attachments', 5), as
   }
 
   try {
-    await sendReplyToInquirer(inquiry, replyText.trim(), req.files);
+    let attachments = req.files || [];
+
+    // If an invoice was filled in, generate the PDF and add it as an
+    // extra attachment alongside anything else that was uploaded.
+    if (invoiceData) {
+      let parsed;
+      try {
+        parsed = JSON.parse(invoiceData);
+      } catch (e) {
+        return res.status(400).json({ success: false, error: 'Invoice data was not valid.' });
+      }
+      if (!parsed.items || parsed.items.length === 0) {
+        return res.status(400).json({ success: false, error: 'Add at least one line item to the invoice.' });
+      }
+      const pdfBuffer = await generateInvoicePdf(parsed);
+      attachments = attachments.concat([{
+        buffer: pdfBuffer,
+        originalname: (parsed.invoiceNumber || 'invoice') + '.pdf',
+        mimetype: 'application/pdf'
+      }]);
+    }
+
+    await sendReplyToInquirer(inquiry, replyText.trim(), attachments);
     inquiry.status = 'replied';
     res.status(200).json({ success: true });
   } catch (err) {
