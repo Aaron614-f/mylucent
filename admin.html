@@ -192,9 +192,36 @@
           if (callback) callback(false);
           return;
         }
+        // Signature of the open conversation before/after, so the background
+        // refresh only redraws the reply area when something actually changed
+        // (a new message or reply). Otherwise it left alone — redrawing
+        // every 25 seconds was wiping whatever was being typed.
+        function sig(list){
+          var c = list.find(function(x){ return x.reference === activeReference; });
+          return c ? c.messages.length + '|' + c.replies.length + '|' + c.status + '|' + (c.textMode ? 1 : 0) : '';
+        }
+        var before = sig(messages);
         messages = result.data.messages;
         renderList();
-        if (activeReference) renderDetail(activeReference);
+        var changed = before !== sig(messages);
+        if (activeReference){
+          var wrap = document.getElementById('threadWrap');
+          if (!silent || !wrap){
+            renderDetail(activeReference);
+          } else if (changed){
+            // Background refresh: update only the conversation thread, so
+            // the reply box, attachments and invoice/quote panel are left
+            // exactly as they are.
+            var cur = messages.find(function(x){ return x.reference === activeReference; });
+            if (cur){
+              wrap.innerHTML = buildThreadHtml(cur);
+              var tm = document.getElementById('textModeToggle');
+              if (tm) tm.checked = !!cur.textMode;
+              var tn = document.getElementById('textModeNote');
+              if (tn) tn.style.display = cur.textMode ? 'block' : 'none';
+            }
+          }
+        }
         if (callback) callback(true);
       })
       .catch(function(){ if (callback && !silent) callback(false); });
@@ -315,7 +342,7 @@
         '</div>' +
         '<button id="deleteMsgBtn" style="background:none;border:1px solid rgba(178,59,59,0.35);color:#b23b3b;font-size:12px;padding:8px 14px;border-radius:8px;cursor:pointer;font-family:\'Inter\',sans-serif;white-space:nowrap;">Delete</button>' +
       '</div>' +
-      buildThreadHtml(m) +
+      '<div id="threadWrap">' + buildThreadHtml(m) + '</div>' +
       '<div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 14px -6px rgba(27,39,51,0.1);max-width:460px;">' +
         '<div class="reply-textwrap">' +
           '<textarea id="replyText" placeholder="Type your reply…" style="width:100%;border:none;outline:none;font-family:\'Inter\',sans-serif;font-size:14px;min-height:70px;resize:vertical;color:#1B2733;"></textarea>' +
