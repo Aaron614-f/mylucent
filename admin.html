@@ -705,6 +705,14 @@
       var text = replyTextEl.value.trim();
       if (!text) return;
       errorLabel.textContent = '';
+
+      // If the invoice/quote panel is open but has no usable line item,
+      // stop instead of silently sending the email without the PDF.
+      if (invoicePanel.style.display !== 'none' && !collectInvoiceData()){
+        errorLabel.textContent = 'Add a line item with a description, or click Remove ' + (docType === 'quote' ? 'quote' : 'invoice') + ' — nothing was sent.';
+        return;
+      }
+
       sendBtn.disabled = true;
       sendBtn.textContent = 'Sending…';
 
