@@ -68,6 +68,14 @@
     box-shadow:0 0 0 4px rgba(178,59,59,0.18);
     animation:micPulse 1.4s ease-in-out infinite;
   }
+  .switch{position:relative;width:36px;height:20px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;position:absolute;}
+  .switch .slider{position:absolute;inset:0;background:rgba(27,39,51,0.2);border-radius:20px;transition:background .25s;}
+  .switch .slider::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .25s;}
+  .switch input:checked + .slider{background:#A9784F;}
+  .switch input:checked + .slider::before{transform:translateX(16px);}
+  .doctype-btn{border:none;background:#fff;color:#1B2733;font-size:12.5px;padding:7px 18px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .doctype-btn.active{background:#1B2733;color:#F4F1EA;}
   @keyframes micPulse{
     0%,100%{ box-shadow:0 0 0 4px rgba(178,59,59,0.18); }
     50%{ box-shadow:0 0 0 8px rgba(178,59,59,0.10); }
@@ -222,7 +230,7 @@
         '<div style="display:flex;gap:12px;align-items:flex-start;">' +
           '<div style="width:38px;height:38px;border-radius:50%;background:' + avatarBg + ';color:' + avatarFg + ';display:flex;align-items:center;justify-content:center;font-size:13px;font-family:\'Spectral\',serif;flex-shrink:0;">' + initials(m.name) + '</div>' +
           '<div style="flex:1;min-width:0;">' +
-            '<div class="name-row"><span class="name-txt" style="font-weight:' + weight + ';">' + m.name + (m.messages.length > 1 ? ' <span style="font-weight:400;color:rgba(27,39,51,0.4);">(' + m.messages.length + ')</span>' : '') + '</span>' + statusLabel + '</div>' +
+            '<div class="name-row"><span class="name-txt" style="font-weight:' + weight + ';">' + m.name + (m.messages.length > 1 ? ' <span style="font-weight:400;color:rgba(27,39,51,0.4);">(' + m.messages.length + ')</span>' : '') + (m.textMode ? ' <span title="Text replies on">📱</span>' : '') + '</span>' + statusLabel + '</div>' +
             '<div class="prev-txt">' + lastMsg + '</div>' +
           '</div>' +
         '</div>';
@@ -314,15 +322,25 @@
           '<button type="button" id="micBtn" title="Dictate reply" style="display:none;">🎤</button>' +
         '</div>' +
         '<div id="micStatus" style="font-size:11.5px;color:rgba(27,39,51,0.45);margin-top:4px;display:none;">Listening… tap the mic again to stop</div>' +
+        '<div style="display:flex;align-items:center;gap:12px;margin:6px 0 10px;">' +
+          '<button type="button" id="polishBtn" style="background:none;border:1px solid rgba(27,39,51,0.2);color:#1B2733;font-size:12px;padding:5px 12px;border-radius:7px;cursor:pointer;font-family:\'Inter\',sans-serif;">✨ Polish</button>' +
+          '<button type="button" id="undoPolishBtn" style="display:none;background:none;border:none;color:#A9784F;font-size:12px;cursor:pointer;font-family:\'Inter\',sans-serif;padding:0;">↩ Undo</button>' +
+          '<span id="polishMsg" style="font-size:11.5px;color:#b23b3b;"></span>' +
+        '</div>' +
         '<div class="attach-zone" id="attachZone">📎 Drop files here, or click to attach</div>' +
         '<input type="file" id="fileInput" multiple style="display:none;">' +
         '<div id="attachChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;"></div>' +
 
         '<div style="margin-top:14px;">' +
-          '<button type="button" id="toggleInvoiceBtn" style="background:none;border:none;color:#A9784F;font-size:12.5px;cursor:pointer;font-family:\'Inter\',sans-serif;padding:0;">📄 Add Invoice</button>' +
+          '<button type="button" id="toggleInvoiceBtn" style="background:none;border:none;color:#A9784F;font-size:12.5px;cursor:pointer;font-family:\'Inter\',sans-serif;padding:0;">📄 Add Invoice / Quote</button>' +
         '</div>' +
 
         '<div id="invoicePanel" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(27,39,51,0.08);">' +
+          '<div id="docTypeToggle" style="display:inline-flex;border:1px solid rgba(27,39,51,0.2);border-radius:8px;overflow:hidden;margin-bottom:14px;">' +
+            '<button type="button" id="docTypeInvoice" class="doctype-btn active">Invoice</button>' +
+            '<button type="button" id="docTypeQuote" class="doctype-btn">Quote</button>' +
+          '</div>' +
+          '<div id="quoteNotice" style="display:none;font-size:12px;line-height:1.5;color:#1B2733;background:#F4EDE4;border:1px solid #A9784F;border-radius:8px;padding:10px 12px;margin-bottom:12px;">This is an approximate quote only. Final pricing may increase by up to 15% depending on design complexity, materials, and any changes requested.</div>' +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
             '<input id="invBillToName" placeholder="Bill to (name)" value="' + m.name + '" style="grid-column:1/3;padding:9px 11px;border:1px solid rgba(27,39,51,0.15);border-radius:7px;font-size:13px;font-family:\'Inter\',sans-serif;">' +
             '<textarea id="invBillToAddress" placeholder="Billing address (optional)" style="grid-column:1/3;padding:9px 11px;border:1px solid rgba(27,39,51,0.15);border-radius:7px;font-size:13px;font-family:\'Inter\',sans-serif;min-height:44px;resize:vertical;"></textarea>' +
@@ -345,6 +363,14 @@
           '<div id="invTotals" style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(27,39,51,0.08);font-size:13px;"></div>' +
 
           '<button type="button" id="removeInvoiceBtn" style="background:none;border:none;color:#b23b3b;font-size:11.5px;cursor:pointer;font-family:\'Inter\',sans-serif;padding:0;margin-top:12px;">Remove invoice</button>' +
+        '</div>' +
+
+        '<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(27,39,51,0.08);">' +
+          '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12.5px;color:#1B2733;">' +
+            '<span class="switch"><input type="checkbox" id="textModeToggle"' + (m.textMode ? ' checked' : '') + '><span class="slider"></span></span>' +
+            '<span>📱 Reply by text — your texts go straight to this customer</span>' +
+          '</label>' +
+          '<div id="textModeNote" style="font-size:11.5px;color:rgba(27,39,51,0.5);margin:6px 0 0 46px;' + (m.textMode ? '' : 'display:none;') + '">On: texts from your phone are emailed to ' + m.name + ' with no code. Stays on until you switch it off.</div>' +
         '</div>' +
 
         '<div style="margin-top:16px;display:flex;align-items:center;gap:16px;">' +
@@ -480,6 +506,69 @@
       }
     });
 
+    // --- Polish (AI proofread: punctuation + light flow only) ---
+    var polishBtn = document.getElementById('polishBtn');
+    var undoPolishBtn = document.getElementById('undoPolishBtn');
+    var polishMsg = document.getElementById('polishMsg');
+    var beforePolish = null;
+    polishBtn.addEventListener('click', function(){
+      var text = replyTextEl.value.trim();
+      if (!text) return;
+      polishMsg.textContent = '';
+      polishBtn.disabled = true;
+      polishBtn.textContent = 'Polishing…';
+      apiFetch('/api/inbox/polish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          polishBtn.disabled = false;
+          polishBtn.textContent = '✨ Polish';
+          if (!data.success) { polishMsg.textContent = data.error || 'Polish failed.'; return; }
+          beforePolish = replyTextEl.value;
+          replyTextEl.value = data.text;
+          undoPolishBtn.style.display = 'inline';
+        })
+        .catch(function(){
+          polishBtn.disabled = false;
+          polishBtn.textContent = '✨ Polish';
+          polishMsg.textContent = 'Polish failed. Try again.';
+        });
+    });
+    undoPolishBtn.addEventListener('click', function(){
+      if (beforePolish !== null) replyTextEl.value = beforePolish;
+      beforePolish = null;
+      undoPolishBtn.style.display = 'none';
+    });
+
+    // --- Text-mode toggle ---
+    var textModeToggle = document.getElementById('textModeToggle');
+    var textModeNote = document.getElementById('textModeNote');
+    textModeToggle.addEventListener('change', function(){
+      var wanted = textModeToggle.checked;
+      textModeToggle.disabled = true;
+      apiFetch('/api/inbox/text-mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: m.reference, enabled: wanted })
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          textModeToggle.disabled = false;
+          if (!data.success) { textModeToggle.checked = !wanted; return; }
+          // Only one conversation can be on at a time.
+          messages.forEach(function(x){ x.textMode = (wanted && x.reference === m.reference); });
+          textModeNote.style.display = wanted ? 'block' : 'none';
+          renderList();
+        })
+        .catch(function(){
+          textModeToggle.disabled = false;
+          textModeToggle.checked = !wanted;
+        });
+    });
+
     // --- Invoice panel ---
     var toggleInvoiceBtn = document.getElementById('toggleInvoiceBtn');
     var invoicePanel = document.getElementById('invoicePanel');
@@ -531,6 +620,23 @@
         '<div style="display:flex;justify-content:space-between;font-weight:600;color:#1B2733;margin-top:6px;"><span>Total</span><span>$' + total.toFixed(2) + '</span></div>';
     }
 
+    var docType = 'invoice';
+    var docTypeInvoiceBtn = document.getElementById('docTypeInvoice');
+    var docTypeQuoteBtn = document.getElementById('docTypeQuote');
+    var quoteNotice = document.getElementById('quoteNotice');
+    var invDueDateEl = document.getElementById('invDueDate');
+    function setDocType(type){
+      docType = type;
+      var q = type === 'quote';
+      docTypeInvoiceBtn.classList.toggle('active', !q);
+      docTypeQuoteBtn.classList.toggle('active', q);
+      quoteNotice.style.display = q ? 'block' : 'none';
+      invDueDateEl.style.display = q ? 'none' : '';
+      removeInvoiceBtn.textContent = q ? 'Remove quote' : 'Remove invoice';
+    }
+    docTypeInvoiceBtn.addEventListener('click', function(){ setDocType('invoice'); });
+    docTypeQuoteBtn.addEventListener('click', function(){ setDocType('quote'); });
+
     function collectInvoiceData(){
       if (invoicePanel.style.display === 'none') return null;
       var items = [];
@@ -546,7 +652,8 @@
         billToName: document.getElementById('invBillToName').value.trim() || m.name,
         billToAddress: document.getElementById('invBillToAddress').value.trim(),
         orderDescription: document.getElementById('invOrderDesc').value.trim(),
-        dueDate: document.getElementById('invDueDate').value.trim(),
+        docType: docType,
+        dueDate: docType === 'quote' ? '' : document.getElementById('invDueDate').value.trim(),
         taxRate: parseFloat(invTaxRate.value) || 0,
         items: items
       };
@@ -562,6 +669,7 @@
       invoicePanel.style.display = 'none';
       toggleInvoiceBtn.style.display = 'inline-block';
       invItemsContainer.innerHTML = '';
+      setDocType('invoice');
     });
     addInvItemBtn.addEventListener('click', addInvoiceRow);
     invTaxRate.addEventListener('input', recalcInvoice);
