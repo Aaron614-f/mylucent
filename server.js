@@ -157,8 +157,8 @@ function getConversationByReference(reference) {
 async function createInquiryAndNotifyOwner(name, email, message, messageId, originalSubject) {
   const emailKey = email.trim().toLowerCase();
   let trimmedMessage = message.trim();
-  if (trimmedMessage.length > 500) {
-    trimmedMessage = trimmedMessage.slice(0, 500) + '…';
+  if (trimmedMessage.length > 1000) {
+    trimmedMessage = trimmedMessage.slice(0, 1000) + '…';
   }
 
   let convo = inquiries.get(emailKey);
@@ -176,33 +176,15 @@ async function createInquiryAndNotifyOwner(name, email, message, messageId, orig
   convo.messages.push({ text: trimmedMessage, receivedAt: Date.now(), messageId: messageId || null, subject: originalSubject || null });
   convo.lastActivityAt = Date.now();
 
-  const isTextMode = textModeEmailKey === emailKey;
-
-  // Short SMS: just enough to recognize what it's about at a glance.
-  // (In text mode the whole message is texted instead — see below.)
-  const words = trimmedMessage.split(/\s+/).filter(Boolean);
-  const preview = words.slice(0, 5).join(' ') + (words.length > 5 ? '…' : '');
-  const smsBody = isTextMode
-    ? convo.name + ': ' + trimmedMessage
-    : 'myLucent message: ' + preview;
+  // One text to the owner: the sender's name and their ENTIRE message.
+  // No reference code — replies go out by switching on "Reply by text" for
+  // this conversation in the Inbox page, or by typing a reply there.
+  const smsBody = convo.name + ': ' + trimmedMessage;
 
   try {
     await sendOwnerText(smsBody, convo.reference);
   } catch (err) {
     console.error('Failed to send inquiry SMS for', convo.reference, err.message);
-  }
-
-  // Second text: the reference + a starter greeting, ready to forward
-  // back as your reply. Edit or delete any part of it before sending —
-  // whatever text follows the reference becomes the email verbatim, so
-  // deleting the greeting here means it won't appear in the email either.
-  // Skipped in text mode: no code is needed, just text back.
-  if (!isTextMode) {
-    try {
-      await sendOwnerText(convo.reference + ' Thanks for reaching out to myLucent.co!', convo.reference + '-inq-ref');
-    } catch (err) {
-      console.error('Failed to send inquiry reference text for', convo.reference, err.message);
-    }
   }
 
   try {
@@ -980,7 +962,7 @@ async function sendOwnerInquiryEmail(inquiry) {
     '',
     inquiry.messages[inquiry.messages.length - 1].text,
     '',
-    'To reply, text "' + inquiry.reference + ' your reply message" to your Mobile Message number — it\'ll email them back automatically.'
+    'To reply, open your Inbox page and either type a reply or switch on "Reply by text" for this conversation.'
   ].join('\n');
 
   await sendSimpleBrandedEmail(
@@ -1199,7 +1181,8 @@ app.post('/api/inbound-sms', async (req, res) => {
 
     // --- Branch 2: mark an order ready for pickup ("ML-XXXX ready") ---
     if (!/ready/i.test(message)) {
-      console.log('Inbound SMS from owner ignored (no reference or "ready" keyword):', message);
+      console.log('Inbound SMS from owner ignored (no reference, "ready" keyword or text mode):', message);
+      await sendOwnerText('Not sent — "Reply by text" is off. Switch it on for a conversation in your Inbox page, then text again.', 'inbound-sms-textmode-off');
       return;
     }
 
