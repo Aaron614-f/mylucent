@@ -134,7 +134,7 @@ function cleanupOldInquiries() {
 setInterval(cleanupOldInquiries, 60 * 60 * 1000);
 
 // "Text mode": when a conversation is switched on from the Inbox page,
-// every text from the owner's phone (that isn't an INQ-/ML- command) is
+// every text from the owner's phone (that isn't an ML- "ready" command) is
 // emailed straight to that customer — no reference code needed. Only one
 // conversation can be on at a time; it stays on until switched off.
 // Stored by email key. In memory, so a server restart resets it to off.
@@ -185,12 +185,6 @@ async function createInquiryAndNotifyOwner(name, email, message, messageId, orig
     await sendOwnerText(smsBody, convo.reference);
   } catch (err) {
     console.error('Failed to send inquiry SMS for', convo.reference, err.message);
-  }
-
-  try {
-    await sendOwnerInquiryEmail(convo);
-  } catch (err) {
-    console.error('Failed to send owner inquiry email for', convo.reference, err.message);
   }
 
   return convo;
@@ -1106,11 +1100,11 @@ app.use(express.static(__dirname));
 // Two things this responds to, both from the OWNER'S phone only:
 //   1. "[order reference] ready" (e.g. "ML-MSX70 ready") — emails that
 //      customer their pickup notice.
-//   2. "[inquiry reference] your reply text" (e.g. "INQ-MSX8A2B1 Yes we
-//      can do that size, how about Tuesday?") — emails that reply
-//      straight to the person who submitted the Contact form.
+//   2. Any other text, while "Reply by text" is switched on for a
+//      conversation in the Inbox page — emailed to that customer as
+//      your reply (no code needed, no confirmation text sent back).
 // Any text from a number other than OWNER_PHONE_NUMBER is ignored, so
-// neither of these can be triggered by anyone else.
+// none of this can be triggered by anyone else.
 app.post('/api/inbound-sms', async (req, res) => {
   // Always respond 200 quickly so Mobile Message doesn't retry/queue this.
   res.status(200).send('ok');
@@ -1134,36 +1128,10 @@ app.post('/api/inbound-sms', async (req, res) => {
       return;
     }
 
-    // --- Branch 1: reply to a Contact page inquiry ("INQ-XXXX ...") ---
-    const inqMatch = message.match(/INQ-[A-Z0-9]+/i);
-    if (inqMatch) {
-      const reference = inqMatch[0].toUpperCase();
-      const inquiry = getConversationByReference(reference);
-
-      if (!inquiry) {
-        await sendOwnerText('No inquiry found for ' + reference + '. Double-check the reference and try again.', 'inbound-sms-inq-notfound');
-        return;
-      }
-
-      let replyText = message.slice(inqMatch.index + inqMatch[0].length).trim();
-      replyText = replyText.replace(/^[:\-–—,]+\s*/, '');
-
-      if (!replyText) {
-        await sendOwnerText('Got the reference but no reply text after it. Format: "' + reference + ' your reply message"', 'inbound-sms-inq-noreply');
-        return;
-      }
-
-      await sendReplyToInquirer(inquiry, replyText);
-      inquiry.status = 'replied';
-      console.log('Reply email sent for inquiry', reference);
-      await sendOwnerText('✅ Reply sent to ' + inquiry.name + ' (' + inquiry.email + ') for ' + reference + '.', 'inbound-sms-inq-confirm');
-      return;
-    }
-
-    // --- Branch 1b: text mode — no code needed ---
-    // If a conversation is switched on in the Inbox page, any other text
-    // from the owner (i.e. not an INQ- reply or an "ML-XXXX ready"
-    // command) is emailed to that customer as the reply.
+    // --- Branch 1: text mode — no code needed ---
+    // If a conversation is switched on in the Inbox page, any text from
+    // the owner that isn't an "ML-XXXX ready" command is emailed to that
+    // customer as the reply. No confirmation text is sent back.
     const isReadyCommand = /ML-[A-Z0-9]+/i.test(message) && /ready/i.test(message);
     if (textModeEmailKey && !isReadyCommand) {
       const convo = inquiries.get(textModeEmailKey);
@@ -1175,7 +1143,6 @@ app.post('/api/inbound-sms', async (req, res) => {
       await sendReplyToInquirer(convo, message);
       convo.status = 'replied';
       console.log('Text-mode reply email sent for', convo.reference);
-      await sendOwnerText('✅ Sent to ' + convo.name + '.', 'inbound-sms-textmode-confirm');
       return;
     }
 
