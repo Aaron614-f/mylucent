@@ -176,15 +176,15 @@ async function createInquiryAndNotifyOwner(name, email, message, messageId, orig
   convo.messages.push({ text: trimmedMessage, receivedAt: Date.now(), messageId: messageId || null, subject: originalSubject || null });
   convo.lastActivityAt = Date.now();
 
-  // One text to the owner: the sender's name and their ENTIRE message.
-  // No reference code — replies go out by switching on "Reply by text" for
-  // this conversation in the Inbox page, or by typing a reply there.
-  const smsBody = convo.name + ': ' + trimmedMessage;
-
-  try {
-    await sendOwnerText(smsBody, convo.reference);
-  } catch (err) {
-    console.error('Failed to send inquiry SMS for', convo.reference, err.message);
+  // Only text the owner when "Reply by text" is switched on for THIS
+  // conversation: the sender's name and their ENTIRE message, no code.
+  // Every other new message just lands in the Inbox page, no text.
+  if (textModeEmailKey === emailKey) {
+    try {
+      await sendOwnerText(convo.name + ': ' + trimmedMessage, convo.reference);
+    } catch (err) {
+      console.error('Failed to send inquiry SMS for', convo.reference, err.message);
+    }
   }
 
   return convo;
@@ -1174,7 +1174,6 @@ app.post('/api/inbound-sms', async (req, res) => {
     await sendReadyForPickupEmail(found.order);
     found.readyEmailSent = true;
     console.log('Ready-for-pickup email sent for', reference);
-    await sendOwnerText('✅ Sent pickup-ready email to ' + found.order.name + ' for ' + reference + '.', 'inbound-sms-confirm');
 
   } catch (err) {
     console.error('Error handling inbound SMS:', err.message);
