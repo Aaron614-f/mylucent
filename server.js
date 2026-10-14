@@ -35,6 +35,10 @@
 //                              Pick anything reasonably long/random —
 //                              this is the only thing protecting that
 //                              page, so don't reuse a real password.
+//   DATA_DIR                  - (optional) folder where conversations and orders
+//                              are saved so they survive redeploys. Defaults
+//                              to /data if a Railway Volume is mounted there,
+//                              otherwise ./data (which is wiped on redeploy).
 //   ANTHROPIC_API_KEY         - (optional) powers the "Polish" button on the Inbox
 //                              page. Get one at console.anthropic.com.
 //   STRIPE_SECRET_KEY       - your Stripe SECRET key (starts with sk_test_...
@@ -65,6 +69,7 @@
 
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const crypto = require('crypto');
 const Stripe = require('stripe');
 const multer = require('multer');
@@ -139,6 +144,116 @@ setInterval(cleanupOldInquiries, 60 * 60 * 1000);
 // conversation can be on at a time; it stays on until switched off.
 // Stored by email key. In memory, so a server restart resets it to off.
 let textModeEmailKey = null;
+
+// ---------------------------------------------------------------------
+// SAVING + BACKUPS
+// Everything above lives in memory, so it is also saved to a JSON file
+// (every 15 seconds if anything changed, and when the server is told to
+// shut down for a redeploy) and loaded again on startup. For that file to
+// survive a redeploy, attach a Railway Volume mounted at /data.
+// On top of that: a daily backup is emailed to the owner, the Inbox page
+// has Download / Restore backup buttons, and Restore only ADDS anything
+// that is missing — it never overwrites what is already there.
+// ---------------------------------------------------------------------
+const DATA_DIR = process.env.DATA_DIR || (fs.existsSync('/data') ? '/data' : path.join(__dirname, 'data'));
+const DATA_FILE = path.join(DATA_DIR, 'mylucent-data.json');
+let lastBackupEmailAt = 0;
+let lastSavedJson = '';
+
+function buildSnapshot() {
+  return {
+    version: 1,
+    savedAt: Date.now(),
+    lastBackupEmailAt,
+    textModeEmailKey,
+    pendingOrders: Array.from(pendingOrders.entries()),
+    completedOrders: Array.from(completedOrders.entries()),
+    inquiries: Array.from(inquiries.entries())
+  };
+}
+
+function isValidSnapshot(snap) {
+  if (!snap || snap.version !== 1) return false;
+  const okEntries = (list) => Array.isArray(list) && list.every((e) =>
+    Array.isArray(e) && e.length === 2 && typeof e[0] === 'string' && e[1] && typeof e[1] === 'object');
+  if (!okEntries(snap.pendingOrders) || !okEntries(snap.completedOrders) || !okEntries(snap.inquiries)) return false;
+  return snap.inquiries.every((e) => typeof e[1].reference === 'string' && Array.isArray(e[1].messages) && Array.isArray(e[1].replies));
+}
+
+// merge=false replaces everything (startup); merge=true only adds what's missing (restore).
+function applySnapshot(snap, merge) {
+  const counts = { inquiries: 0, completedOrders: 0, pendingOrders: 0 };
+  const load = (map, entries, name) => {
+    for (const [key, value] of entries) {
+      if (merge && map.has(key)) continue;
+      map.set(key, value);
+      counts[name]++;
+    }
+  };
+  load(pendingOrders, snap.pendingOrders, 'pendingOrders');
+  load(completedOrders, snap.completedOrders, 'completedOrders');
+  load(inquiries, snap.inquiries, 'inquiries');
+  referenceToEmail.clear();
+  for (const [key, convo] of inquiries) referenceToEmail.set(convo.reference, key);
+  if (!merge) {
+    textModeEmailKey = snap.textModeEmailKey && inquiries.has(snap.textModeEmailKey) ? snap.textModeEmailKey : null;
+    lastBackupEmailAt = Number(snap.lastBackupEmailAt) || 0;
+  }
+  return counts;
+}
+
+function saveToDisk() {
+  try {
+    const compare = JSON.stringify(Object.assign(buildSnapshot(), { savedAt: 0 }));
+    if (compare === lastSavedJson) return; // nothing changed
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tmp = DATA_FILE + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(buildSnapshot()));
+    fs.renameSync(tmp, DATA_FILE);
+    lastSavedJson = compare;
+  } catch (err) {
+    console.error('Could not save data to disk:', err.message);
+  }
+}
+
+function loadFromDisk() {
+  if (!fs.existsSync(DATA_FILE)) {
+    console.log('No saved data found at', DATA_FILE, '- starting empty.');
+    return;
+  }
+  try {
+    const snap = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    if (!isValidSnapshot(snap)) throw new Error('file is not a valid backup');
+    const counts = applySnapshot(snap, false);
+    lastSavedJson = JSON.stringify(Object.assign(buildSnapshot(), { savedAt: 0 }));
+    console.log('Loaded saved data:', JSON.stringify(counts));
+  } catch (err) {
+    console.error('Saved data could not be read (' + err.message + '). Keeping a copy and starting empty.');
+    try { fs.copyFileSync(DATA_FILE, DATA_FILE + '.corrupt-' + Date.now()); } catch (e) { /* ignore */ }
+  }
+}
+loadFromDisk();
+setInterval(saveToDisk, 15 * 1000);
+['SIGTERM', 'SIGINT'].forEach((sig) => process.on(sig, () => { saveToDisk(); process.exit(0); }));
+
+async function emailBackup() {
+  if (inquiries.size === 0 && completedOrders.size === 0) return;
+  const ownerEmail = process.env.OWNER_EMAIL || 'yefaiart@gmail.com';
+  const day = new Date().toISOString().slice(0, 10);
+  const buffer = Buffer.from(JSON.stringify(buildSnapshot(), null, 2), 'utf8');
+  const text = 'Attached is a backup of your conversations and paid orders. Keep it somewhere safe — it contains customer names, emails and messages. To restore it, use "Restore backup" on your Inbox page.';
+  await sendSimpleBrandedEmail(
+    ownerEmail, 'myLucent backup ' + day, 'Daily backup', text, text,
+    [{ buffer, originalname: 'mylucent-backup-' + day + '.json', mimetype: 'application/json' }]
+  );
+  lastBackupEmailAt = Date.now();
+  saveToDisk();
+}
+setInterval(() => {
+  if (Date.now() - lastBackupEmailAt > 24 * 60 * 60 * 1000) {
+    emailBackup().catch((err) => console.error('Backup email failed:', err.message));
+  }
+}, 60 * 60 * 1000);
 
 function generateInquiryReference() {
   return 'INQ-' + Date.now().toString(36).toUpperCase();
@@ -1415,6 +1530,32 @@ app.post('/api/inbox/polish', requireAdminKey, async (req, res) => {
     console.error('Polish error:', err.message);
     res.status(500).json({ success: false, error: 'Polish failed. Try again.' });
   }
+});
+
+// Download a full backup (conversations + paid orders) as a file.
+app.get('/api/inbox/export', requireAdminKey, (req, res) => {
+  const day = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', 'attachment; filename="mylucent-backup-' + day + '.json"');
+  res.status(200).send(JSON.stringify(buildSnapshot(), null, 2));
+});
+
+// Restore from a backup file. Only ADDS what's missing — anything already
+// on the server is kept exactly as it is.
+app.post('/api/inbox/import', requireAdminKey, upload.single('backup'), (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, error: 'Choose a backup file first.' });
+  let snap;
+  try {
+    snap = JSON.parse(req.file.buffer.toString('utf8'));
+  } catch (e) {
+    return res.status(400).json({ success: false, error: 'That file is not a valid backup.' });
+  }
+  if (!isValidSnapshot(snap)) {
+    return res.status(400).json({ success: false, error: 'That file is not a myLucent backup.' });
+  }
+  const counts = applySnapshot(snap, true);
+  saveToDisk();
+  res.status(200).json({ success: true, added: counts });
 });
 
 // Switch text mode on/off for one conversation. Turning it on for one
