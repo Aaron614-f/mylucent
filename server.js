@@ -702,8 +702,16 @@ function generateInvoicePdf(data) {
 
       // Full-page background tint, matching the site's palette.
       doc.rect(0, 0, pageW, doc.page.height).fill('#EEF2F6');
+      doc.on('pageAdded', () => { doc.rect(0, 0, pageW, doc.page.height).fill('#EEF2F6'); });
 
       let y = 56;
+      // Long content flows onto a new page instead of overlapping.
+      const ensureSpace = (needed) => {
+        if (y + needed > doc.page.height - 120) {
+          doc.addPage();
+          y = 56;
+        }
+      };
 
       // --- Header: brand mark (left), invoice meta (right) ---
       doc.font('Helvetica-Bold').fontSize(15).fillColor(BRASS).text('myLucent', marginX, y, { continued: true });
@@ -733,21 +741,26 @@ function generateInvoicePdf(data) {
       y += 32;
 
       // --- Bill To / Order details ---
-      const colW = contentW / 2;
+      // The order description can be long, so the right column is wider
+      // and the block grows to fit whatever is written in it.
+      const leftW = contentW * 0.36;
+      const rightW = contentW * 0.58;
+      const rightX = marginX + contentW - rightW;
+
+      const billText = data.billToName + (data.billToAddress ? '\n' + data.billToAddress : '');
+      const orderText = (data.orderDescription || 'Custom order') + (isQuote ? '' : '\nPlaced ' + (data.orderPlacedDate || invoiceDate));
+
+      doc.font('Helvetica').fontSize(12);
+      const billH = doc.heightOfString(billText, { width: leftW });
+      const orderH = doc.heightOfString(orderText, { width: rightW, align: 'right' });
 
       doc.font('Helvetica-Bold').fontSize(9).fillColor(MUTED).text(isQuote ? 'PREPARED FOR' : 'BILL TO', marginX, y);
-      doc.font('Helvetica').fontSize(12).fillColor(NAVY).text(
-        data.billToName + (data.billToAddress ? '\n' + data.billToAddress : ''),
-        marginX, y + 16, { width: colW - 20 }
-      );
+      doc.font('Helvetica').fontSize(12).fillColor(NAVY).text(billText, marginX, y + 16, { width: leftW });
 
-      doc.font('Helvetica-Bold').fontSize(9).fillColor(MUTED).text('ORDER', marginX + colW, y, { width: colW, align: 'right' });
-      doc.font('Helvetica').fontSize(12).fillColor(NAVY).text(
-        (data.orderDescription || 'Custom order') + (isQuote ? '' : '\nPlaced ' + (data.orderPlacedDate || invoiceDate)),
-        marginX + colW, y + 16, { width: colW, align: 'right' }
-      );
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(MUTED).text('ORDER', rightX, y, { width: rightW, align: 'right' });
+      doc.font('Helvetica').fontSize(12).fillColor(NAVY).text(orderText, rightX, y + 16, { width: rightW, align: 'right' });
 
-      y += 100;
+      y += 16 + Math.max(billH, orderH) + 40;
 
       // --- Line items table ---
       const col = {
@@ -774,6 +787,8 @@ function generateInvoicePdf(data) {
         const amount = qty * unitPrice;
         subtotal += amount;
 
+        doc.font('Helvetica').fontSize(11);
+        ensureSpace(doc.heightOfString(item.description || '', { width: col.qty - col.item - 10 }) + 30);
         const rowTop = y;
         doc.font('Helvetica').fontSize(11).fillColor(NAVY).text(item.description || '', col.item, y, { width: col.qty - col.item - 10 });
         doc.text(String(qty), col.qty, rowTop);
@@ -788,6 +803,7 @@ function generateInvoicePdf(data) {
       y += 8;
 
       // --- Totals ---
+      ensureSpace(110);
       const taxRate = Number(data.taxRate) || 0;
       const taxAmount = subtotal * (taxRate / 100);
       const total = subtotal + taxAmount;
@@ -815,11 +831,13 @@ function generateInvoicePdf(data) {
         // Prominent approximate-quote notice directly under the total.
         y += 44;
         const noteH = doc.font('Helvetica-Bold').fontSize(11).heightOfString(QUOTE_DISCLAIMER, { width: contentW - 32 }) + 24;
+        ensureSpace(noteH);
         doc.roundedRect(marginX, y, contentW, noteH, 6).fillAndStroke('#F4EDE4', BRASS);
         doc.font('Helvetica-Bold').fontSize(11).fillColor(NAVY).text(QUOTE_DISCLAIMER, marginX + 16, y + 12, { width: contentW - 32 });
       }
 
       // --- Footer ---
+      if (y > doc.page.height - 130) { doc.addPage(); y = 56; }
       const footerY = doc.page.height - 100;
       doc.moveTo(marginX, footerY).lineTo(pageW - marginX, footerY).strokeColor(LINE).lineWidth(1).stroke();
       doc.font('Helvetica').fontSize(10).fillColor(SECONDARY).text(
