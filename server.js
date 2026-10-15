@@ -157,6 +157,7 @@ let textModeEmailKey = null;
 // ---------------------------------------------------------------------
 const DATA_DIR = process.env.DATA_DIR || (fs.existsSync('/data') ? '/data' : path.join(__dirname, 'data'));
 const DATA_FILE = path.join(DATA_DIR, 'mylucent-data.json');
+const FILES_DIR = path.join(DATA_DIR, 'files'); // project files (attachments), one folder per conversation
 let lastBackupEmailAt = 0;
 let lastSavedJson = '';
 
@@ -257,6 +258,56 @@ setInterval(() => {
 
 function generateInquiryReference() {
   return 'INQ-' + Date.now().toString(36).toUpperCase();
+}
+
+
+// ---------------------------------------------------------------------
+// WORK FOLDERS + PROJECT FILES
+// Every attachment sent or received is saved on disk under FILES_DIR (so it
+// needs the Railway Volume at /data to survive a redeploy) and listed in
+// convo.files. A conversation can be turned into a "work folder" which adds
+// convo.folder = { name, startedAt, quoted, expenses[], time[] }.
+// File names/lists are in the saved data file + backups; the files
+// themselves are not (they're too big to email).
+// ---------------------------------------------------------------------
+function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function safeFileName(n) { return String(n || 'file').replace(/[^\w.\- ()]/g, '_').slice(0, 120) || 'file'; }
+function convoDir(convo) { return path.join(FILES_DIR, String(convo.reference).replace(/[^\w-]/g, '_')); }
+
+// Saves one uploaded/received file to disk and lists it on the conversation.
+// Never throws — a problem saving a file must never stop an email being sent.
+function saveConvoFile(convo, file, from, extra) {
+  try {
+    if (!file || !file.buffer) return null;
+    const id = newId();
+    const dir = convoDir(convo);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, id), file.buffer);
+    const entry = Object.assign({
+      id, name: safeFileName(file.originalname), from, at: Date.now(),
+      mime: file.mimetype || 'application/octet-stream', size: file.buffer.length
+    }, extra || {});
+    if (!Array.isArray(convo.files)) convo.files = [];
+    convo.files.push(entry);
+    return entry;
+  } catch (err) {
+    console.error('Could not save project file:', err.message);
+    return null;
+  }
+}
+
+
+function ensureFolder(convo) {
+  if (!convo.folder) {
+    const first = convo.messages[0] && convo.messages[0].receivedAt;
+    convo.folder = { name: convo.name + ' project', startedAt: first || convo.receivedAt || Date.now(), quoted: null, expenses: [], time: [] };
+  }
+  if (!Array.isArray(convo.folder.payments)) convo.folder.payments = [];
+  return convo.folder;
+}
+
+function removeConvoFiles(convo) {
+  try { fs.rmSync(convoDir(convo), { recursive: true, force: true }); } catch (e) { /* ignore */ }
 }
 
 function getConversationByReference(reference) {
@@ -1328,7 +1379,17 @@ app.post('/api/inbound-sms', async (req, res) => {
 // (grouped by their email address), and you get the same two texts +
 // owner email. Replying by email is no longer supported — reply by
 // texting the reference back, or from the Inbox page.
-app.post('/api/inbound-email', async (req, res) => {
+// Mailgun sends emails WITH attachments as multipart/form-data (plain emails
+// arrive form-encoded as before). A parse problem (e.g. a huge file) must not
+// stop the message itself being handled, so errors just fall through.
+const inboundUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024, files: 10 } });
+function parseInboundAttachments(req, res, next) {
+  inboundUpload.any()(req, res, (err) => {
+    if (err) console.error('Inbound email attachments could not be read:', err.message);
+    next();
+  });
+}
+app.post('/api/inbound-email', parseInboundAttachments, async (req, res) => {
   // Respond fast so Mailgun doesn't retry/queue this.
   res.status(200).send('ok');
 
@@ -1359,6 +1420,7 @@ app.post('/api/inbound-email', async (req, res) => {
 
     const convo = await createInquiryAndNotifyOwner(senderName, senderEmail, bodyRaw, body['Message-Id'], body.subject);
     console.log('Inbound email added to conversation:', convo.reference, senderEmail);
+    (req.files || []).forEach((f) => saveConvoFile(convo, f, 'customer'));
 
   } catch (err) {
     console.error('Error handling inbound email:', err.message);
@@ -1594,6 +1656,7 @@ app.post('/api/inbox/delete', requireAdminKey, (req, res) => {
   if (!emailKey || !inquiries.has(emailKey)) {
     return res.status(404).json({ success: false, error: 'Message not found.' });
   }
+  removeConvoFiles(inquiries.get(emailKey));
   inquiries.delete(emailKey);
   referenceToEmail.delete(reference);
   if (textModeEmailKey === emailKey) textModeEmailKey = null;
@@ -1616,6 +1679,21 @@ app.post('/api/inbox/reply', requireAdminKey, upload.array('attachments', 5), as
 
   try {
     let attachments = req.files || [];
+    let invoiceMeta = null;
+    let invoicePdfFile = null;
+    let invoiceDueText = '';
+    let invoiceDueAtMs = 0;
+    const uploadedByAdmin = attachments.slice();
+    // Reminder emails can re-attach an invoice that was already sent.
+    let reattachIds = [];
+    try { reattachIds = JSON.parse(req.body.reattach || '[]'); } catch (e) { reattachIds = []; }
+    (Array.isArray(reattachIds) ? reattachIds : []).slice(0, 3).forEach((fid) => {
+      const entry = (inquiry.files || []).find((f) => f.id === fid);
+      const full = entry && path.join(convoDir(inquiry), entry.id);
+      if (entry && fs.existsSync(full)) {
+        attachments = attachments.concat([{ buffer: fs.readFileSync(full), originalname: entry.name, mimetype: entry.mime || 'application/pdf' }]);
+      }
+    });
 
     // If an invoice was filled in, generate the PDF and add it as an
     // extra attachment alongside anything else that was uploaded.
@@ -1629,7 +1707,13 @@ app.post('/api/inbox/reply', requireAdminKey, upload.array('attachments', 5), as
       if (!parsed.items || parsed.items.length === 0) {
         return res.status(400).json({ success: false, error: 'Add at least one line item to the invoice.' });
       }
+      parsed.invoiceNumber = parsed.invoiceNumber || ((parsed.docType === 'quote' ? 'QUO-' : 'INV-') + Date.now().toString(36).toUpperCase());
       const pdfBuffer = await generateInvoicePdf(parsed);
+      const subtotal = (parsed.items || []).reduce((t, it) => t + (Number(it.qty) || 0) * (Number(it.unitPrice) || 0), 0);
+      invoiceMeta = { docType: parsed.docType === 'quote' ? 'quote' : 'invoice', number: parsed.invoiceNumber, total: Math.round(subtotal * (1 + (Number(parsed.taxRate) || 0) / 100) * 100) / 100 };
+      invoiceDueText = parsed.dueDate || '';
+      invoiceDueAtMs = Number(parsed.dueAtMs) || 0;
+      invoicePdfFile = { buffer: pdfBuffer, originalname: (parsed.invoiceNumber || (parsed.docType === 'quote' ? 'quote' : 'invoice')) + '.pdf', mimetype: 'application/pdf' };
       attachments = attachments.concat([{
         buffer: pdfBuffer,
         originalname: (parsed.invoiceNumber || (parsed.docType === 'quote' ? 'quote' : 'invoice')) + '.pdf',
@@ -1639,11 +1723,160 @@ app.post('/api/inbox/reply', requireAdminKey, upload.array('attachments', 5), as
 
     await sendReplyToInquirer(inquiry, replyText.trim(), attachments);
     inquiry.status = 'replied';
+    // Keep a copy of everything that was sent in the project's files.
+    uploadedByAdmin.forEach((f) => saveConvoFile(inquiry, f, 'me'));
+    if (inquiry.folder && Array.isArray(inquiry.folder.payments)) {
+      inquiry.folder.payments.forEach((pay) => { if (!pay.paid && pay.fileId && reattachIds.indexOf(pay.fileId) !== -1) pay.remindedAt = Date.now(); });
+    }
+    if (invoiceMeta) {
+      const saved = saveConvoFile(inquiry, invoicePdfFile, 'me', invoiceMeta);
+      // Sending an INVOICE starts payment tracking: the conversation becomes a
+      // work folder (if it isn't one) with an "awaiting payment" entry. Due
+      // date = the date typed on the invoice, otherwise 14 days from now.
+      if (invoiceMeta.docType === 'invoice') {
+        const folder = ensureFolder(inquiry);
+        const typed = invoiceDueAtMs || Date.parse(invoiceDueText || '');
+        const dueAt = !isNaN(typed) && typed > 0 ? typed : Date.now() + 14 * 24 * 60 * 60 * 1000;
+        folder.payments.push({
+          id: newId(), number: invoiceMeta.number, fileId: saved ? saved.id : null,
+          total: invoiceMeta.total, sentAt: Date.now(), dueAt, paid: false, paidAt: null
+        });
+      }
+    }
     res.status(200).json({ success: true });
   } catch (err) {
     console.error('Failed to send Inbox page reply for', reference, err.message);
     res.status(500).json({ success: false, error: 'Could not send the reply. ' + err.message });
   }
+});
+
+
+// ---------------------------------------------------------------------
+// Work folder endpoints
+// ---------------------------------------------------------------------
+function convoFromReq(req, res) {
+  const reference = (req.body && req.body.reference) || req.params.reference;
+  const convo = reference && getConversationByReference(reference);
+  if (!convo) { res.status(404).json({ success: false, error: 'Message not found.' }); return null; }
+  return convo;
+}
+function folderFromReq(req, res) {
+  const convo = convoFromReq(req, res);
+  if (!convo) return null;
+  if (!convo.folder) { res.status(400).json({ success: false, error: 'This conversation has no work folder yet.' }); return null; }
+  return convo;
+}
+
+// Rename the customer shown on a conversation.
+app.post('/api/inbox/rename', requireAdminKey, (req, res) => {
+  const convo = convoFromReq(req, res); if (!convo) return;
+  const name = String((req.body || {}).name || '').trim().slice(0, 120);
+  if (!name) return res.status(400).json({ success: false, error: 'Name can\'t be empty.' });
+  convo.name = name;
+  res.status(200).json({ success: true });
+});
+
+// Turn a conversation into a work folder.
+app.post('/api/inbox/folder/create', requireAdminKey, (req, res) => {
+  const convo = convoFromReq(req, res); if (!convo) return;
+  ensureFolder(convo);
+  res.status(200).json({ success: true, folder: convo.folder });
+});
+
+app.post('/api/inbox/folder/update', requireAdminKey, (req, res) => {
+  const convo = folderFromReq(req, res); if (!convo) return;
+  const b = req.body || {};
+  if (typeof b.name === 'string') convo.folder.name = b.name.slice(0, 160);
+  if (Object.prototype.hasOwnProperty.call(b, 'quoted')) {
+    const q = parseFloat(b.quoted);
+    convo.folder.quoted = (b.quoted === '' || b.quoted === null || isNaN(q)) ? null : Math.round(q * 100) / 100;
+  }
+  res.status(200).json({ success: true });
+});
+
+app.post('/api/inbox/folder/expense', requireAdminKey, (req, res) => {
+  const convo = folderFromReq(req, res); if (!convo) return;
+  const desc = String((req.body || {}).desc || '').trim().slice(0, 160);
+  const amount = parseFloat((req.body || {}).amount);
+  if (!desc || isNaN(amount)) return res.status(400).json({ success: false, error: 'Add a description and an amount.' });
+  const entry = { id: newId(), desc, amount: Math.round(amount * 100) / 100, at: Date.now() };
+  convo.folder.expenses.push(entry);
+  res.status(200).json({ success: true, entry });
+});
+app.post('/api/inbox/folder/expense/delete', requireAdminKey, (req, res) => {
+  const convo = folderFromReq(req, res); if (!convo) return;
+  convo.folder.expenses = convo.folder.expenses.filter((e) => e.id !== (req.body || {}).id);
+  res.status(200).json({ success: true });
+});
+
+app.post('/api/inbox/folder/time', requireAdminKey, (req, res) => {
+  const convo = folderFromReq(req, res); if (!convo) return;
+  const task = String((req.body || {}).task || '').trim().slice(0, 160);
+  const min = Math.round(Number((req.body || {}).min));
+  if (!task || !(min > 0) || min > 24 * 60 * 30) return res.status(400).json({ success: false, error: 'Add what you worked on and how long.' });
+  const entry = { id: newId(), task, min, at: Date.now() };
+  convo.folder.time.push(entry);
+  res.status(200).json({ success: true, entry });
+});
+app.post('/api/inbox/folder/time/delete', requireAdminKey, (req, res) => {
+  const convo = folderFromReq(req, res); if (!convo) return;
+  convo.folder.time = convo.folder.time.filter((e) => e.id !== (req.body || {}).id);
+  res.status(200).json({ success: true });
+});
+
+// Add your own files (photos of the finished piece, supplier receipts…).
+app.post('/api/inbox/folder/upload', requireAdminKey, upload.array('files', 10), (req, res) => {
+  const convo = folderFromReq(req, res); if (!convo) return;
+  const saved = (req.files || []).map((f) => saveConvoFile(convo, f, 'me')).filter(Boolean);
+  res.status(200).json({ success: true, files: saved });
+});
+
+app.post('/api/inbox/folder/file/delete', requireAdminKey, (req, res) => {
+  const convo = folderFromReq(req, res); if (!convo) return;
+  const id = (req.body || {}).id;
+  const entry = (convo.files || []).find((f) => f.id === id);
+  if (!entry) return res.status(404).json({ success: false, error: 'File not found.' });
+  convo.files = convo.files.filter((f) => f.id !== id);
+  try { fs.unlinkSync(path.join(convoDir(convo), entry.id)); } catch (e) { /* ignore */ }
+  res.status(200).json({ success: true });
+});
+
+
+// Payment tracking (entries are created automatically when an invoice is sent).
+function paymentFromReq(req, res) {
+  const convo = folderFromReq(req, res); if (!convo) return null;
+  const pay = (convo.folder.payments || []).find((x) => x.id === (req.body || {}).id);
+  if (!pay) { res.status(404).json({ success: false, error: 'Payment not found.' }); return null; }
+  return { convo, pay };
+}
+app.post('/api/inbox/folder/payment/paid', requireAdminKey, (req, res) => {
+  const r = paymentFromReq(req, res); if (!r) return;
+  const paid = !!(req.body || {}).paid;
+  r.pay.paid = paid;
+  r.pay.paidAt = paid ? Date.now() : null;
+  r.pay.paidAmount = paid ? r.pay.total : null;
+  res.status(200).json({ success: true, payment: r.pay });
+});
+app.post('/api/inbox/folder/payment/due', requireAdminKey, (req, res) => {
+  const r = paymentFromReq(req, res); if (!r) return;
+  const t = Number((req.body || {}).dueAt);
+  if (!t || isNaN(t)) return res.status(400).json({ success: false, error: 'Pick a valid date.' });
+  r.pay.dueAt = t;
+  res.status(200).json({ success: true, payment: r.pay });
+});
+
+// Send a stored file back to the admin page (it fetches with the admin key
+// header and shows it in the viewer window).
+app.get('/api/inbox/file/:reference/:id', requireAdminKey, (req, res) => {
+  const convo = getConversationByReference(req.params.reference);
+  const entry = convo && (convo.files || []).find((f) => f.id === req.params.id);
+  if (!entry) return res.status(404).json({ success: false, error: 'File not found.' });
+  const full = path.join(convoDir(convo), entry.id);
+  if (!fs.existsSync(full)) return res.status(404).json({ success: false, error: 'File is no longer on the server.' });
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Disposition', 'attachment; filename="' + entry.name.replace(/"/g, '') + '"');
+  res.sendFile(path.resolve(full));
 });
 
 // Fallback: serve index.html for the root and any unmatched route
