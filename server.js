@@ -844,6 +844,12 @@ async function sendReadyForPickupEmail(order) {
 //   items: [ { description, qty, unitPrice } ],
 //   taxRate                         // number, percent e.g. 6.625 (optional, default 0)
 // }
+// Bank details printed on every INVOICE (not quotes). Override in Railway
+// Variables with BANK_ACCOUNT_NAME / BANK_BSB / BANK_ACCOUNT_NUMBER if they change.
+const BANK_ACCOUNT_NAME = process.env.BANK_ACCOUNT_NAME || 'FRIEDMAN BREINDY';
+const BANK_BSB = process.env.BANK_BSB || '013-125';
+const BANK_ACCOUNT_NUMBER = process.env.BANK_ACCOUNT_NUMBER || '667194827';
+
 const QUOTE_DISCLAIMER = 'This is an approximate quote only. Final pricing may increase by up to 15% depending on design complexity, materials, and any changes requested.';
 
 function generateInvoicePdf(data) {
@@ -1002,12 +1008,29 @@ function generateInvoicePdf(data) {
         doc.font('Helvetica-Bold').fontSize(11).fillColor(NAVY).text(QUOTE_DISCLAIMER, marginX + 16, y + 12, { width: contentW - 32 });
       }
 
+      if (!isQuote) {
+        // "How to pay" box with the bank details; the invoice number is the reference.
+        y += 44;
+        const boxH = 92;
+        if (y + boxH > doc.page.height - 120) { doc.addPage(); y = 56; }
+        doc.roundedRect(marginX, y, contentW, boxH, 6).lineWidth(1).strokeColor(LINE).stroke();
+        doc.font('Helvetica-Bold').fontSize(9).fillColor(MUTED).text('HOW TO PAY — BANK TRANSFER', marginX + 16, y + 14);
+        const rows = [['Account name', BANK_ACCOUNT_NAME], ['BSB', BANK_BSB], ['Account number', BANK_ACCOUNT_NUMBER], ['Reference', invoiceNumber]];
+        let ry = y + 32;
+        rows.forEach(([label, value]) => {
+          doc.font('Helvetica').fontSize(10.5).fillColor(SECONDARY).text(label, marginX + 16, ry, { width: 110 });
+          doc.font('Helvetica-Bold').fontSize(10.5).fillColor(NAVY).text(value, marginX + 130, ry, { width: contentW - 146 });
+          ry += 14;
+        });
+        y += boxH;
+      }
+
       // --- Footer ---
       if (y > doc.page.height - 130) { doc.addPage(); y = 56; }
       const footerY = doc.page.height - 100;
       doc.moveTo(marginX, footerY).lineTo(pageW - marginX, footerY).strokeColor(LINE).lineWidth(1).stroke();
       doc.font('Helvetica').fontSize(10).fillColor(SECONDARY).text(
-        isQuote ? 'Thank you for considering myLucent.co. Reply to this email to confirm and we will get started.' : 'Payment due within 14 days by card or bank transfer. Thank you for supporting handmade work.',
+        isQuote ? 'Thank you for considering myLucent.co. Reply to this email to confirm and we will get started.' : 'Please pay by bank transfer using the details above, with the invoice number as the reference. Thank you for supporting handmade work.',
         marginX, footerY + 18, { width: contentW - 120 }
       );
       doc.fontSize(9).fillColor(MUTED).text('mylucent.co', marginX, footerY + 18, { width: contentW, align: 'right' });
