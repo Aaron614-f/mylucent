@@ -1405,7 +1405,7 @@ app.post('/api/inbound-sms', async (req, res) => {
 // Mailgun sends emails WITH attachments as multipart/form-data (plain emails
 // arrive form-encoded as before). A parse problem (e.g. a huge file) must not
 // stop the message itself being handled, so errors just fall through.
-const inboundUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024, files: 10 } });
+const inboundUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 40 * 1024 * 1024, files: 25 } });
 function parseInboundAttachments(req, res, next) {
   inboundUpload.any()(req, res, (err) => {
     if (err) console.error('Inbound email attachments could not be read:', err.message);
