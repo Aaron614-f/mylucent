@@ -120,6 +120,15 @@
     .ar-row .ar-txt::before{left:0 !important;right:0 !important;}
   }
   @media (prefers-reduced-motion:reduce){ .ar-row .ar-img,.ar-row .ar-txt{opacity:1;transform:none;transition:none;} }
+  .ar-row .ar-img.slider img{position:absolute;inset:0;opacity:0;transition:opacity .9s ease,transform .6s cubic-bezier(.2,.7,.2,1);}
+  .ar-row .ar-img.slider img.on{opacity:1;}
+  .sl-btn{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:38px;height:38px;border:none;border-radius:50%;background:rgba(255,255,255,0.85);color:#1B2733;font-size:18px;line-height:1;cursor:pointer;opacity:0;transition:opacity .3s ease;}
+  .ar-img:hover .sl-btn{opacity:1;}
+  @media (hover:none){ .sl-btn{opacity:1;} }
+  .sl-btn.prev{left:14px;} .sl-btn.next{right:14px;}
+  .sl-dots{position:absolute;left:0;right:0;bottom:12px;z-index:2;display:flex;justify-content:center;gap:7px;}
+  .sl-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.55);cursor:pointer;}
+  .sl-dots i.on{background:#fff;}
   .gal-empty{padding:40px 44px 80px;text-align:center;font-size:14px;color:rgba(27,39,51,0.55);}
 
   .gal-modal-backdrop{position:fixed;inset:0;background:rgba(27,39,51,0.92);z-index:100;display:none;align-items:center;justify-content:center;padding:40px;}
@@ -222,13 +231,24 @@
   <div class="gal-modal-backdrop" id="galModal">
     <button class="gal-modal-close" id="galModalClose" aria-label="Close">×</button>
     <div class="gal-modal" id="galModalBox">
-      <img id="galModalImg" src="" alt="" style="width:100%;max-height:70vh;object-fit:cover;display:block;">
-      <div style="padding:24px 28px;">
+      <img id="galModalImg" src="" alt="" style="width:100%;max-height:62vh;object-fit:cover;display:block;">
+      <div id="galModalStrip" style="display:none;gap:8px;padding:12px 28px 0;overflow-x:auto;"></div>
+      <div style="padding:24px 28px 28px;">
         <span id="galModalCat" style="font-size:10px;letter-spacing:2px;color:#A9784F;display:block;margin-bottom:6px;"></span>
-        <span id="galModalTitle" style="font-family:'Spectral',serif;font-weight:500;font-size:22px;color:#1B2733;"></span>
+        <span id="galModalTitle" style="font-family:'Spectral',serif;font-weight:500;font-size:22px;color:#1B2733;display:block;"></span>
+        <p id="galModalText" style="display:none;font-size:14.5px;line-height:1.75;color:rgba(27,39,51,0.75);margin-top:14px;white-space:pre-line;"></p>
+        <p id="galModalQuote" style="display:none;font-family:'Spectral',serif;font-style:italic;font-size:16px;line-height:1.6;color:#1B2733;margin-top:18px;padding-left:16px;border-left:2px solid #C9A97D;"></p>
       </div>
     </div>
   </div>
+
+  <section id="kind" style="display:none;background:#FFFFFF;">
+    <div style="max-width:1080px;margin:0 auto;padding:96px 44px 24px;">
+      <div style="display:flex;justify-content:center;margin-bottom:14px;"><span style="font-size:10px;letter-spacing:2px;color:rgba(27,39,51,0.6);">KIND WORDS</span></div>
+      <h2 style="font-family:'Spectral',serif;font-weight:500;font-size:30px;margin:0 0 48px;text-align:center;">From people we've made for</h2>
+      <div id="kindGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:32px;padding-bottom:40px;"></div>
+    </div>
+  </section>
 
   <section id="how" style="background:#FFFFFF;">
     <div style="padding:112px 44px 0;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;">
@@ -316,46 +336,95 @@
     }, { passive: true });
   })();
 
-  // Gallery rows are built from projects-data.js — add a project there and it appears here.
+  // Gallery: projects chosen in the admin (Work folder > Website tab) plus any in projects-data.js.
   (function(){
-    var LABELS = { wall: 'WALL ART', book: 'BOOK PLAQUES', simcha: 'SIMCHA' };
+    var LABELS = { wall: 'WALL ART', book: 'BOOK PLAQUES', simcha: 'SIMCHA', gift: 'PERSONALISED GIFT' };
     var host = document.getElementById('galRows');
-    var projects = window.PROJECTS || [];
     var modal = document.getElementById('galModal');
     var modalImg = document.getElementById('galModalImg');
-    var modalCat = document.getElementById('galModalCat');
-    var modalTitle = document.getElementById('galModalTitle');
+    var strip = document.getElementById('galModalStrip');
     function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function setText(id, v){ var el = document.getElementById(id); el.textContent = v || ''; el.style.display = v ? 'block' : 'none'; }
 
-    if (!projects.length){
-      host.innerHTML = '<div class="gal-empty">More pieces coming soon.</div>';
-      return;
+    function build(projects){
+      host.innerHTML = '';
+      if (!projects.length){ host.innerHTML = '<div class="gal-empty">More pieces coming soon.</div>'; return; }
+      projects.forEach(function(p, i){
+        var row = document.createElement('div');
+        row.className = 'ar-row' + (i % 2 ? ' flip' : '');
+        row.innerHTML =
+          '<div class="ar-img"></div>' +
+          '<div class="ar-txt"><span class="cat" style="font-size:10px;letter-spacing:2px;color:#A9784F;display:block;margin-bottom:6px;">' + esc(LABELS[p.category] || '') + '</span>' +
+          '<h3 style="font-family:\'Spectral\',serif;font-weight:500;font-size:22px;color:#1B2733;">' + esc(p.title) + '</h3></div>';
+        var slides = (p.photos && p.photos.length) ? p.photos : [p.cover];
+        var box = row.querySelector('.ar-img');
+        box.innerHTML = slides.map(function(u, k){ return '<img src="' + esc(u) + '" alt="' + esc(p.title) + '"' + (k === 0 ? ' class="on"' : ' loading="lazy"') + '>'; }).join('');
+        if (slides.length > 1){
+          box.classList.add('slider');
+          box.insertAdjacentHTML('beforeend', '<button class="sl-btn prev" aria-label="Previous">\u2039</button><button class="sl-btn next" aria-label="Next">\u203A</button><div class="sl-dots">' + slides.map(function(_, k){ return '<i data-k="' + k + '"' + (k === 0 ? ' class="on"' : '') + '></i>'; }).join('') + '</div>');
+          var imgsEl = box.querySelectorAll('img'), dots = box.querySelectorAll('.sl-dots i'), cur = 0, timer;
+          function go(n){ cur = (n + slides.length) % slides.length; Array.prototype.forEach.call(imgsEl, function(im, k){ im.classList.toggle('on', k === cur); }); Array.prototype.forEach.call(dots, function(d, k){ d.classList.toggle('on', k === cur); }); }
+          function restart(){ clearInterval(timer); timer = setInterval(function(){ go(cur + 1); }, 4500); }
+          box.querySelector('.prev').addEventListener('click', function(e){ e.stopPropagation(); go(cur - 1); restart(); });
+          box.querySelector('.next').addEventListener('click', function(e){ e.stopPropagation(); go(cur + 1); restart(); });
+          Array.prototype.forEach.call(dots, function(d){ d.addEventListener('click', function(e){ e.stopPropagation(); go(parseInt(d.getAttribute('data-k'), 10)); restart(); }); });
+          restart();
+        }
+        function open(){
+          var photos = (p.photos && p.photos.length) ? p.photos : [p.cover];
+          function show(u){ modalImg.src = u; modalImg.alt = p.title; Array.prototype.forEach.call(strip.children, function(b){ b.style.opacity = b.getAttribute('data-u') === u ? '1' : '0.5'; }); }
+          strip.innerHTML = '';
+          if (photos.length > 1){
+            photos.forEach(function(u){
+              var b = document.createElement('button');
+              b.setAttribute('data-u', u);
+              b.style.cssText = 'flex:0 0 auto;width:64px;height:64px;padding:0;border:none;background:#F4F1EA center/cover no-repeat url("' + u + '");cursor:pointer;';
+              b.addEventListener('click', function(){ show(u); });
+              strip.appendChild(b);
+            });
+            strip.style.display = 'flex';
+          } else strip.style.display = 'none';
+          show(photos[0]);
+          setText('galModalCat', LABELS[p.category] || '');
+          setText('galModalTitle', p.title);
+          setText('galModalText', p.writeup || '');
+          setText('galModalQuote', p.comment ? '\u201C' + p.comment.text + '\u201D' + (p.comment.name ? ' \u2014 ' + p.comment.name : '') : '');
+          modal.classList.add('open');
+        }
+        row.querySelector('.ar-img').addEventListener('click', open);
+        row.querySelector('.ar-txt').addEventListener('click', open);
+        host.appendChild(row);
+      });
+      var last = projects[0];
+      if (last && last.cover) document.getElementById('ctaImg').src = last.cover;
+      window.dispatchEvent(new Event('scroll'));
     }
-    projects.forEach(function(p, i){
-      var row = document.createElement('div');
-      row.className = 'ar-row' + (i % 2 ? ' flip' : '');
-      row.innerHTML =
-        '<div class="ar-img"><img src="' + esc(p.cover) + '" alt="' + esc(p.title) + '" loading="lazy"></div>' +
-        '<div class="ar-txt"><span class="cat" style="font-size:10px;letter-spacing:2px;color:#A9784F;display:block;margin-bottom:6px;">' + esc(LABELS[p.category] || '') + '</span>' +
-        '<h3 style="font-family:\'Spectral\',serif;font-weight:500;font-size:22px;color:#1B2733;">' + esc(p.title) + '</h3></div>';
-      function open(){
-        modalImg.src = p.cover; modalImg.alt = p.title;
-        modalCat.textContent = LABELS[p.category] || '';
-        modalTitle.textContent = p.title;
-        modal.classList.add('open');
-      }
-      row.querySelector('.ar-img').addEventListener('click', open);
-      row.querySelector('.ar-txt').addEventListener('click', open);
-      host.appendChild(row);
-    });
 
     function close(){ modal.classList.remove('open'); }
     modal.addEventListener('click', function(e){ if (!document.getElementById('galModalBox').contains(e.target)) close(); });
     document.getElementById('galModalClose').addEventListener('click', close);
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
 
-    var last = projects[projects.length - 1];
-    if (last && last.cover) document.getElementById('ctaImg').src = last.cover;
+    var fixed = (window.PROJECTS || []).map(function(p){ return { title: p.title, category: p.category, cover: p.cover, photos: p.photos || [p.cover], writeup: p.writeup || '', comment: null }; });
+    build(fixed);
+
+    fetch('/api/showcase').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      if (!d) return;
+      if (d.projects && d.projects.length) build(d.projects.concat(fixed));
+      if (d.comments && d.comments.length){
+        var g = document.getElementById('kindGrid');
+        g.innerHTML = d.comments.map(function(c){
+          return '<figure style="margin:0;padding:28px;background:#F4F1EA;"><blockquote style="margin:0;font-family:\'Spectral\',serif;font-style:italic;font-size:18px;line-height:1.6;color:#1B2733;">\u201C' + esc(c.text) + '\u201D</blockquote>' +
+            (c.name ? '<figcaption style="margin-top:14px;font-size:11px;letter-spacing:1.8px;color:#A9784F;">' + esc(c.name.toUpperCase()) + '</figcaption>' : '') + '</figure>';
+        }).join('');
+        document.getElementById('kind').style.display = 'block';
+      }
+      if (d.hero){
+        var im = new Image();
+        im.onload = function(){ var bg = document.querySelector('.hero img.bg'); bg.src = d.hero; bg.style.objectPosition = 'center'; };
+        im.src = d.hero;
+      }
+    }).catch(function(){});
   })();
 
   // Scroll effects

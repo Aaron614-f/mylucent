@@ -1902,6 +1902,93 @@ app.get('/api/inbox/file/:reference/:id', requireAdminKey, (req, res) => {
   res.sendFile(path.resolve(full));
 });
 
+// ---------------------------------------------------------------------
+// Website showcase (work folder > Website tab)
+// convo.showcase = { slug, show, title, category, writeup, comment,
+//   commentName, showComment, coverId, photoIds[], heroId, updatedAt }
+// Only what the owner chooses is ever shown publicly, and only image files
+// the owner picked are served (never customer documents, quotes or invoices).
+// ---------------------------------------------------------------------
+const SHOWCASE_CATEGORIES = ['wall', 'simcha', 'gift', 'other'];
+function imageMimeFor(name) {
+  const e = String(name || '').split('.').pop().toLowerCase();
+  return { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' }[e] || null;
+}
+function showcaseFor(convo) {
+  if (!convo.showcase) {
+    convo.showcase = { slug: newId(), show: false, title: '', category: 'wall', writeup: '', comment: '', commentName: '', showComment: false, coverId: null, photoIds: [], heroId: null, updatedAt: Date.now() };
+  }
+  return convo.showcase;
+}
+function showcaseImageIds(convo, sc) {
+  const imgs = new Set((convo.files || []).filter((f) => imageMimeFor(f.name)).map((f) => f.id));
+  let ids = (sc.photoIds || []).filter((id) => imgs.has(id));
+  if (sc.coverId && imgs.has(sc.coverId)) ids = [sc.coverId].concat(ids.filter((id) => id !== sc.coverId));
+  return { ids, imgs };
+}
+
+app.post('/api/inbox/showcase/update', requireAdminKey, (req, res) => {
+  const convo = folderFromReq(req, res); if (!convo) return;
+  const b = req.body || {};
+  const sc = showcaseFor(convo);
+  const imgIds = new Set((convo.files || []).filter((f) => imageMimeFor(f.name)).map((f) => f.id));
+  if (typeof b.show === 'boolean') sc.show = b.show;
+  if (typeof b.title === 'string') sc.title = b.title.trim().slice(0, 120);
+  if (typeof b.category === 'string' && SHOWCASE_CATEGORIES.indexOf(b.category) !== -1) sc.category = b.category;
+  if (typeof b.writeup === 'string') sc.writeup = b.writeup.slice(0, 4000);
+  if (typeof b.comment === 'string') sc.comment = b.comment.slice(0, 1000);
+  if (typeof b.commentName === 'string') sc.commentName = b.commentName.trim().slice(0, 80);
+  if (typeof b.showComment === 'boolean') sc.showComment = b.showComment;
+  if (Array.isArray(b.photoIds)) sc.photoIds = b.photoIds.filter((id, i, a) => imgIds.has(id) && a.indexOf(id) === i).slice(0, 30);
+  if (Object.prototype.hasOwnProperty.call(b, 'coverId')) {
+    sc.coverId = (b.coverId && imgIds.has(b.coverId)) ? b.coverId : null;
+    if (sc.coverId && sc.photoIds.indexOf(sc.coverId) === -1) sc.photoIds.unshift(sc.coverId);
+  }
+  if (Object.prototype.hasOwnProperty.call(b, 'heroId')) {
+    sc.heroId = (b.heroId && imgIds.has(b.heroId)) ? b.heroId : null;
+    if (sc.heroId) { // only one hero picture across the whole site
+      inquiries.forEach((c) => { if (c !== convo && c.showcase && c.showcase.heroId) c.showcase.heroId = null; });
+    }
+  }
+  sc.updatedAt = Date.now();
+  res.status(200).json({ success: true, showcase: sc });
+});
+
+// Public: what the website shows. No customer name, email or reference is exposed.
+app.get('/api/showcase', (req, res) => {
+  const projects = [], comments = [];
+  let hero = null;
+  Array.from(inquiries.values()).forEach((c) => {
+    const sc = c.showcase; if (!sc) return;
+    const url = (id) => '/api/showcase/img/' + sc.slug + '/' + id;
+    if (sc.heroId && (c.files || []).some((f) => f.id === sc.heroId)) hero = url(sc.heroId);
+    if (!sc.show) return;
+    const { ids } = showcaseImageIds(c, sc);
+    if (!ids.length) return;
+    const cm = sc.showComment && sc.comment ? { text: sc.comment, name: sc.commentName || '' } : null;
+    projects.push({ id: sc.slug, title: sc.title || (c.folder && c.folder.name) || 'Custom piece', category: sc.category, writeup: sc.writeup || '', comment: cm, cover: url(ids[0]), photos: ids.map(url), at: sc.updatedAt || 0 });
+    if (cm) comments.push(cm);
+  });
+  projects.sort((a, b) => b.at - a.at);
+  res.setHeader('Cache-Control', 'no-cache');
+  res.status(200).json({ projects, comments, hero });
+});
+app.get('/api/showcase/img/:slug/:id', (req, res) => {
+  const convo = Array.from(inquiries.values()).find((c) => c.showcase && c.showcase.slug === req.params.slug);
+  if (!convo) return res.status(404).end();
+  const sc = convo.showcase;
+  const entry = (convo.files || []).find((f) => f.id === req.params.id);
+  const mime = entry && imageMimeFor(entry.name);
+  const allowed = entry && ((sc.show && (sc.photoIds || []).indexOf(entry.id) !== -1) || sc.heroId === entry.id);
+  if (!mime || !allowed) return res.status(404).end();
+  const full = path.join(convoDir(convo), entry.id);
+  if (!fs.existsSync(full)) return res.status(404).end();
+  res.setHeader('Content-Type', mime);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.sendFile(path.resolve(full));
+});
+
 // Fallback: serve index.html for the root and any unmatched route
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

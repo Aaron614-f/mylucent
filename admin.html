@@ -305,7 +305,7 @@
 
   /* ---------- loading ---------- */
   function sigOf(c){
-    return c ? [c.messages.length, c.replies.length, c.status, c.textMode ? 1 : 0, (c.files || []).length, JSON.stringify(c.folder || null), c.name].join('|') : '';
+    return c ? [c.messages.length, c.replies.length, c.status, c.textMode ? 1 : 0, (c.files || []).length, JSON.stringify(c.folder || null), JSON.stringify(c.showcase || null), c.name].join('|') : '';
   }
   function loadMessages(cb, silent){
     apiFetch('/api/inbox/messages')
@@ -387,11 +387,12 @@
   }
 
   function tabsHtml(){
-    var inF = S.view === 'folder';
+    var inF = S.view === 'folder', inS = S.view === 'site', inC = !inF && !inS;
     function tb(on){ return on ? '1px solid ' + INK : '1px solid transparent'; }
-    return '<div style="display:flex;gap:32px;margin-top:-16px;">' +
-      '<button class="tabbtn" data-act="tabConvo" style="border-bottom:' + tb(!inF) + ';color:' + (!inF ? INK : MUTE) + ';">CONVERSATION</button>' +
-      '<button class="tabbtn" data-act="tabFolder" style="border-bottom:' + tb(inF) + ';color:' + (inF ? INK : MUTE) + ';">' + ICON_FOLDER + 'WORK FOLDER</button></div>';
+    return '<div style="display:flex;gap:32px;margin-top:-16px;flex-wrap:wrap;">' +
+      '<button class="tabbtn" data-act="tabConvo" style="border-bottom:' + tb(inC) + ';color:' + (inC ? INK : MUTE) + ';">CONVERSATION</button>' +
+      '<button class="tabbtn" data-act="tabFolder" style="border-bottom:' + tb(inF) + ';color:' + (inF ? INK : MUTE) + ';">' + ICON_FOLDER + 'WORK FOLDER</button>' +
+      '<button class="tabbtn" data-act="tabSite" style="border-bottom:' + tb(inS) + ';color:' + (inS ? INK : MUTE) + ';">WEBSITE' + ((activeSc() || {}).show ? ' <span style="color:#A9784F;">●</span>' : '') + '</button></div>';
   }
 
   function renderMain(){
@@ -401,7 +402,7 @@
     main.innerHTML = '<div style="max-width:880px;display:flex;flex-direction:column;gap:36px;">' +
       '<div id="headWrap" style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid rgba(27,39,51,0.1);">' + headInner(c) + '</div>' +
       (c.folder ? tabsHtml() : '') +
-      (view === 'convo' ? convoHtml(c) : folderHtml(c)) + '</div>';
+      (view === 'convo' ? convoHtml(c) : (view === 'site' ? siteHtml(c) : folderHtml(c))) + '</div>';
     if (S.editingName){ var ni = $('nameInput'); if (ni){ ni.focus(); ni.select(); } }
     if (view === 'convo'){ renderChips(); updateTotals(); applyMicUi(); }
     else hydrateThumbs(main);
@@ -625,6 +626,63 @@
       }).join('') : '<div style="padding:8px 0;font-size:13px;color:rgba(27,39,51,0.45);">No invoice sent yet. When you send an invoice from the Conversation tab, payment tracking starts here automatically.</div>') + '</section>';
     return '<div style="display:flex;flex-direction:column;gap:64px;">' + head + paySec + filesSec +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:48px 40px;align-items:start;">' + expSec + timeSec + '</div></div>';
+  }
+
+  /* ---------- website tab ---------- */
+  function activeSc(){ var c = active(); return c && c.showcase; }
+  function saveSite(c, patch, quiet){
+    patch.reference = c.reference;
+    postJson('/api/inbox/showcase/update', patch).then(function(d){
+      if (!d.success){ S.siteMsg = d.error || 'Could not save that.'; renderMain(); return; }
+      c.showcase = d.showcase; S.siteMsg = 'Saved'; S.sig = sigOf(c);
+      if (quiet){ var m = $('siteMsg'); if (m) m.textContent = 'Saved'; } else renderMain();
+    });
+  }
+  var CAT_LABELS = { wall: 'Wall art', simcha: 'Simcha', gift: 'Personalised gift', other: 'Other' };
+  function siteHtml(c){
+    var sc = c.showcase || { show: false, title: '', category: 'wall', writeup: '', comment: '', commentName: '', showComment: false, coverId: null, photoIds: [], heroId: null };
+    var imgs = folderFiles(c).filter(function(f){ return kindOf(f) === 'image'; });
+    var inMod = sc.photoIds || [];
+    function btn(act, id, on, label){
+      return '<button class="tb" data-act="' + act + '" data-id="' + esc(id) + '" style="font-size:10px;letter-spacing:1.4px;' + (on ? 'color:#A9784F;font-weight:600;' : 'color:rgba(27,39,51,0.55);') + '">' + label + '</button>';
+    }
+    var live = sc.show && inMod.length;
+    var top = '<section class="sec"><div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">' +
+      '<div style="display:flex;align-items:baseline;gap:12px;"><span style="font-size:10px;letter-spacing:2px;color:#A9784F;">01</span><h3>On the website</h3></div>' +
+      '<button data-act="scShow" style="background:' + (sc.show ? INK : 'transparent') + ';color:' + (sc.show ? '#F4F1EA' : INK) + ';border:1px solid ' + INK + ';padding:11px 20px;font-size:11px;letter-spacing:1.8px;">' + (sc.show ? 'SHOWING IN GALLERY · HIDE' : 'SHOW IN GALLERY') + '</button></div>' +
+      '<div style="font-size:12.5px;line-height:1.6;color:rgba(27,39,51,0.6);">' + (sc.show
+        ? (inMod.length ? 'This project is live in the gallery on the home page.' : 'Switched on, but nothing appears until you add at least one picture below.')
+        : 'Hidden. Nobody sees this project on the website until you switch it on.') + '</div></section>';
+
+    var pics = '<section class="sec"><div style="display:flex;align-items:baseline;gap:12px;"><span style="font-size:10px;letter-spacing:2px;color:#A9784F;">02</span><h3>Pictures</h3><span style="font-size:12px;color:rgba(27,39,51,0.45);">' + inMod.length + ' in gallery</span></div>' +
+      '<div style="font-size:12.5px;line-height:1.6;color:rgba(27,39,51,0.6);"><b style="font-weight:600;color:#1B2733;">MAIN</b> is the picture in the gallery. <b style="font-weight:600;color:#1B2733;">ADD</b> puts a picture inside the pop-up when someone clicks the project. <b style="font-weight:600;color:#1B2733;">HERO</b> makes it the big picture at the top of the home page (only one project at a time).</div>' +
+      (imgs.length ? '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:22px 16px;">' + imgs.map(function(f){
+        var isCover = sc.coverId === f.id, added = inMod.indexOf(f.id) !== -1, isHero = sc.heroId === f.id;
+        return '<div style="display:flex;flex-direction:column;gap:8px;">' +
+          '<span style="position:relative;display:block;width:100%;aspect-ratio:1 / 1;background:#F4F1EA;overflow:hidden;outline:' + (isCover ? '2px solid #A9784F' : (added ? '1px solid rgba(27,39,51,0.4)' : 'none')) + ';outline-offset:2px;">' +
+            '<span class="thumb" data-thumb="' + esc(f.id) + '" style="width:100%;height:100%;display:block;"></span>' +
+            (isCover ? '<span style="position:absolute;left:0;top:0;background:#A9784F;color:#F4F1EA;font-size:9px;letter-spacing:1.5px;padding:4px 8px;">MAIN</span>' : (added ? '<span style="position:absolute;left:0;top:0;background:#1B2733;color:#F4F1EA;font-size:9px;letter-spacing:1.5px;padding:4px 8px;">IN POP-UP</span>' : '')) +
+            (isHero ? '<span style="position:absolute;right:0;top:0;background:#F4F1EA;color:#1B2733;font-size:9px;letter-spacing:1.5px;padding:4px 8px;">HERO</span>' : '') +
+          '</span>' +
+          '<span style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(f.name) + '</span>' +
+          '<span style="display:flex;gap:12px;flex-wrap:wrap;">' + btn('scCover', f.id, isCover, 'MAIN') + btn('scPhoto', f.id, added && !isCover, added ? 'REMOVE' : 'ADD') + btn('scHero', f.id, isHero, 'HERO') + '</span></div>';
+      }).join('') + '</div>' : '<div style="padding:20px 0;font-size:13px;color:rgba(27,39,51,0.45);border-top:1px solid rgba(27,39,51,0.08);">No pictures yet. Upload photos in the Work folder tab (Files) and they will appear here.</div>') + '</section>';
+
+    var field = 'width:100%;border:1px solid rgba(27,39,51,0.2);background:#fff;padding:12px 14px;font-family:inherit;font-size:14px;line-height:1.6;color:#1B2733;';
+    var text = '<section class="sec"><div style="display:flex;align-items:baseline;gap:12px;"><span style="font-size:10px;letter-spacing:2px;color:#A9784F;">03</span><h3>Write-up</h3></div>' +
+      '<label style="display:flex;flex-direction:column;gap:6px;"><span class="eyebrow">TITLE</span><input data-chg="scTitle" value="' + esc(sc.title || '') + '" placeholder="' + esc(c.folder.name) + '" style="' + field + '"></label>' +
+      '<label style="display:flex;flex-direction:column;gap:6px;"><span class="eyebrow">TYPE</span><select data-chg="scCategory" style="' + field + '">' +
+        Object.keys(CAT_LABELS).map(function(k){ return '<option value="' + k + '"' + (sc.category === k ? ' selected' : '') + '>' + CAT_LABELS[k] + '</option>'; }).join('') + '</select></label>' +
+      '<label style="display:flex;flex-direction:column;gap:6px;"><span class="eyebrow">ABOUT THIS PROJECT (SHOWN IN THE POP-UP)</span><textarea data-chg="scWriteup" rows="6" placeholder="What is this piece, who is it for, what makes it special?" style="' + field + 'resize:vertical;">' + esc(sc.writeup || '') + '</textarea></label></section>';
+
+    var cm = '<section class="sec"><div style="display:flex;align-items:baseline;gap:12px;"><span style="font-size:10px;letter-spacing:2px;color:#A9784F;">04</span><h3>Customer comment</h3></div>' +
+      '<label style="display:flex;flex-direction:column;gap:6px;"><span class="eyebrow">COMMENT</span><textarea data-chg="scComment" rows="3" placeholder="e.g. We love it, it looks stunning in our hallway." style="' + field + 'resize:vertical;">' + esc(sc.comment || '') + '</textarea></label>' +
+      '<label style="display:flex;flex-direction:column;gap:6px;"><span class="eyebrow">SIGNED AS (OPTIONAL, E.G. "SARAH, SYDNEY")</span><input data-chg="scCommentName" value="' + esc(sc.commentName || '') + '" style="' + field + '"></label>' +
+      '<label style="display:flex;align-items:center;gap:10px;font-size:13px;"><input type="checkbox" data-chg="scShowComment"' + (sc.showComment ? ' checked' : '') + '> Show this comment on the home page' + '</label>' +
+      '<div style="font-size:12px;color:rgba(27,39,51,0.5);">Only the name you type above is shown. The customer\'s real name and email are never put on the website.</div></section>';
+
+    return '<div style="display:flex;flex-direction:column;gap:56px;">' + top + pics + text + cm +
+      '<div id="siteMsg" style="font-size:12px;color:#A9784F;min-height:16px;">' + esc(S.siteMsg || '') + '</div></div>';
   }
 
   /* ---------- file viewer ---------- */
@@ -863,6 +921,17 @@
     },
     tabConvo: function(){ S.view = 'convo'; renderMain(); },
     tabFolder: function(){ S.view = 'folder'; renderMain(); },
+    tabSite: function(){ S.view = 'site'; S.siteMsg = ''; renderMain(); },
+    scShow: function(){ var c = active(); if (!c) return; var sc = c.showcase || {}; saveSite(c, { show: !sc.show }); },
+    scCover: function(t){ var c = active(); if (c) saveSite(c, { coverId: t.getAttribute('data-id') }); },
+    scHero: function(t){ var c = active(); if (!c) return; var id = t.getAttribute('data-id'); saveSite(c, { heroId: (c.showcase || {}).heroId === id ? null : id }); },
+    scPhoto: function(t){
+      var c = active(); if (!c) return; var sc = c.showcase || {}, id = t.getAttribute('data-id'), list = (sc.photoIds || []).slice();
+      var i = list.indexOf(id);
+      if (i === -1) list.push(id); else list.splice(i, 1);
+      var patch = { photoIds: list }; if (i !== -1 && sc.coverId === id) patch.coverId = null;
+      saveSite(c, patch);
+    },
 
     /* reply tools */
     pickFiles: function(){ $('replyFileInput').click(); },
@@ -1035,6 +1104,12 @@
     var which = t.getAttribute('data-chg');
     if (which === 'folderName'){
       postJson('/api/inbox/folder/update', { reference: c.reference, name: t.value }).then(function(d){ if (d.success){ c.folder.name = t.value; S.sig = sigOf(c); } });
+    } else if (which === 'scTitle'){ saveSite(c, { title: t.value }, true);
+    } else if (which === 'scCategory'){ saveSite(c, { category: t.value }, true);
+    } else if (which === 'scWriteup'){ saveSite(c, { writeup: t.value }, true);
+    } else if (which === 'scComment'){ saveSite(c, { comment: t.value }, true);
+    } else if (which === 'scCommentName'){ saveSite(c, { commentName: t.value }, true);
+    } else if (which === 'scShowComment'){ saveSite(c, { showComment: t.checked });
     } else if (which === 'folderQuoted'){
       postJson('/api/inbox/folder/update', { reference: c.reference, quoted: t.value }).then(function(d){
         if (d.success){ c.folder.quoted = t.value === '' || isNaN(parseFloat(t.value)) ? null : Math.round(parseFloat(t.value) * 100) / 100; S.sig = sigOf(c); renderMain(); }
