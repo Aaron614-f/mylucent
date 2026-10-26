@@ -655,9 +655,9 @@
         : 'Hidden. Nobody sees this project on the website until you switch it on.') + '</div></section>';
 
     var pics = '<section class="sec"><div style="display:flex;align-items:baseline;gap:12px;"><span style="font-size:10px;letter-spacing:2px;color:#A9784F;">02</span><h3>Pictures</h3><span style="font-size:12px;color:rgba(27,39,51,0.45);">' + inMod.length + ' in gallery</span></div>' +
-      '<div style="font-size:12.5px;line-height:1.6;color:rgba(27,39,51,0.6);"><b style="font-weight:600;color:#1B2733;">MAIN</b> is the picture in the gallery. <b style="font-weight:600;color:#1B2733;">ADD</b> puts a picture inside the pop-up when someone clicks the project. <b style="font-weight:600;color:#1B2733;">HERO</b> makes it the big picture at the top of the home page (only one project at a time).</div>' +
+      '<div style="font-size:12.5px;line-height:1.6;color:rgba(27,39,51,0.6);"><b style="font-weight:600;color:#1B2733;">MAIN</b> is the picture on the gallery tile. Tick one and only that one shows; tick several and the tile becomes a slider. <b style="font-weight:600;color:#1B2733;">ADD</b> puts a picture inside the pop-up when someone clicks the project. <b style="font-weight:600;color:#1B2733;">HERO</b> makes it the big picture at the top of the home page (only one project at a time).</div>' +
       (imgs.length ? '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:22px 16px;">' + imgs.map(function(f){
-        var isCover = sc.coverId === f.id, added = inMod.indexOf(f.id) !== -1, isHero = sc.heroId === f.id;
+        var isCover = (sc.coverIds || []).indexOf(f.id) !== -1, added = inMod.indexOf(f.id) !== -1, isHero = sc.heroId === f.id;
         return '<div style="display:flex;flex-direction:column;gap:8px;">' +
           '<span style="position:relative;display:block;width:100%;aspect-ratio:1 / 1;background:#F4F1EA;overflow:hidden;outline:' + (isCover ? '2px solid #A9784F' : (added ? '1px solid rgba(27,39,51,0.4)' : 'none')) + ';outline-offset:2px;">' +
             '<span class="thumb" data-thumb="' + esc(f.id) + '" style="width:100%;height:100%;display:block;"></span>' +
@@ -665,7 +665,7 @@
             (isHero ? '<span style="position:absolute;right:0;top:0;background:#F4F1EA;color:#1B2733;font-size:9px;letter-spacing:1.5px;padding:4px 8px;">HERO</span>' : '') +
           '</span>' +
           '<span style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(f.name) + '</span>' +
-          '<span style="display:flex;gap:12px;flex-wrap:wrap;">' + btn('scCover', f.id, isCover, 'MAIN') + btn('scPhoto', f.id, added && !isCover, added ? 'REMOVE' : 'ADD') + btn('scHero', f.id, isHero, 'HERO') + '</span></div>';
+          '<span style="display:flex;gap:12px;flex-wrap:wrap;">' + btn('scCover', f.id, isCover, isCover ? 'UNMAIN' : 'MAIN') + btn('scPhoto', f.id, added && !isCover, added ? 'REMOVE' : 'ADD') + btn('scHero', f.id, isHero, 'HERO') + '</span></div>';
       }).join('') + '</div>' : '<div style="padding:20px 0;font-size:13px;color:rgba(27,39,51,0.45);border-top:1px solid rgba(27,39,51,0.08);">No pictures yet. Upload photos in the Work folder tab (Files) and they will appear here.</div>') + '</section>';
 
     var field = 'width:100%;border:1px solid rgba(27,39,51,0.2);background:#fff;padding:12px 14px;font-family:inherit;font-size:14px;line-height:1.6;color:#1B2733;';
@@ -923,13 +923,17 @@
     tabFolder: function(){ S.view = 'folder'; renderMain(); },
     tabSite: function(){ S.view = 'site'; S.siteMsg = ''; renderMain(); },
     scShow: function(){ var c = active(); if (!c) return; var sc = c.showcase || {}; saveSite(c, { show: !sc.show }); },
-    scCover: function(t){ var c = active(); if (c) saveSite(c, { coverId: t.getAttribute('data-id') }); },
+    scCover: function(t){
+      var c = active(); if (!c) return; var sc = c.showcase || {}, id = t.getAttribute('data-id'), list = (sc.coverIds || []).slice(), i = list.indexOf(id);
+      if (i === -1) list.push(id); else list.splice(i, 1);
+      saveSite(c, { coverIds: list });
+    },
     scHero: function(t){ var c = active(); if (!c) return; var id = t.getAttribute('data-id'); saveSite(c, { heroId: (c.showcase || {}).heroId === id ? null : id }); },
     scPhoto: function(t){
       var c = active(); if (!c) return; var sc = c.showcase || {}, id = t.getAttribute('data-id'), list = (sc.photoIds || []).slice();
       var i = list.indexOf(id);
       if (i === -1) list.push(id); else list.splice(i, 1);
-      var patch = { photoIds: list }; if (i !== -1 && sc.coverId === id) patch.coverId = null;
+      var patch = { photoIds: list }; if (i !== -1) patch.coverIds = (sc.coverIds || []).filter(function(x){ return x !== id; });
       saveSite(c, patch);
     },
 

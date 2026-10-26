@@ -356,7 +356,7 @@
           '<div class="ar-img"></div>' +
           '<div class="ar-txt"><span class="cat" style="font-size:10px;letter-spacing:2px;color:#A9784F;display:block;margin-bottom:6px;">' + esc(LABELS[p.category] || '') + '</span>' +
           '<h3 style="font-family:\'Spectral\',serif;font-weight:500;font-size:22px;color:#1B2733;">' + esc(p.title) + '</h3></div>';
-        var slides = (p.photos && p.photos.length) ? p.photos : [p.cover];
+        var slides = (p.covers && p.covers.length) ? p.covers : [p.cover];
         var box = row.querySelector('.ar-img');
         box.innerHTML = slides.map(function(u, k){ return '<img src="' + esc(u) + '" alt="' + esc(p.title) + '"' + (k === 0 ? ' class="on"' : ' loading="lazy"') + '>'; }).join('');
         if (slides.length > 1){
@@ -405,7 +405,7 @@
     document.getElementById('galModalClose').addEventListener('click', close);
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
 
-    var fixed = (window.PROJECTS || []).map(function(p){ return { title: p.title, category: p.category, cover: p.cover, photos: p.photos || [p.cover], writeup: p.writeup || '', comment: null }; });
+    var fixed = (window.PROJECTS || []).map(function(p){ return { title: p.title, category: p.category, cover: p.cover, covers: [p.cover], photos: p.photos || [p.cover], writeup: p.writeup || '', comment: null }; });
     build(fixed);
 
     fetch('/api/showcase').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){

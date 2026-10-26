@@ -1916,15 +1916,16 @@ function imageMimeFor(name) {
 }
 function showcaseFor(convo) {
   if (!convo.showcase) {
-    convo.showcase = { slug: newId(), show: false, title: '', category: 'wall', writeup: '', comment: '', commentName: '', showComment: false, coverId: null, photoIds: [], heroId: null, updatedAt: Date.now() };
+    convo.showcase = { slug: newId(), show: false, title: '', category: 'wall', writeup: '', comment: '', commentName: '', showComment: false, coverIds: [], photoIds: [], heroId: null, updatedAt: Date.now() };
   }
   return convo.showcase;
 }
 function showcaseImageIds(convo, sc) {
   const imgs = new Set((convo.files || []).filter((f) => imageMimeFor(f.name)).map((f) => f.id));
-  let ids = (sc.photoIds || []).filter((id) => imgs.has(id));
-  if (sc.coverId && imgs.has(sc.coverId)) ids = [sc.coverId].concat(ids.filter((id) => id !== sc.coverId));
-  return { ids, imgs };
+  const covers = (sc.coverIds || (sc.coverId ? [sc.coverId] : [])).filter((id) => imgs.has(id));
+  const rest = (sc.photoIds || []).filter((id) => imgs.has(id) && covers.indexOf(id) === -1);
+  const ids = covers.concat(rest);
+  return { ids, covers: covers.length ? covers : ids.slice(0, 1), imgs };
 }
 
 app.post('/api/inbox/showcase/update', requireAdminKey, (req, res) => {
@@ -1940,10 +1941,12 @@ app.post('/api/inbox/showcase/update', requireAdminKey, (req, res) => {
   if (typeof b.commentName === 'string') sc.commentName = b.commentName.trim().slice(0, 80);
   if (typeof b.showComment === 'boolean') sc.showComment = b.showComment;
   if (Array.isArray(b.photoIds)) sc.photoIds = b.photoIds.filter((id, i, a) => imgIds.has(id) && a.indexOf(id) === i).slice(0, 30);
-  if (Object.prototype.hasOwnProperty.call(b, 'coverId')) {
-    sc.coverId = (b.coverId && imgIds.has(b.coverId)) ? b.coverId : null;
-    if (sc.coverId && sc.photoIds.indexOf(sc.coverId) === -1) sc.photoIds.unshift(sc.coverId);
-  }
+  if (!Array.isArray(sc.coverIds)) sc.coverIds = sc.coverId ? [sc.coverId] : [];
+  if (Array.isArray(b.coverIds)) sc.coverIds = b.coverIds.filter((id, i, a) => imgIds.has(id) && a.indexOf(id) === i).slice(0, 10);
+  // every main picture is also in the pop-up; removing a picture removes it as a main
+  sc.coverIds.forEach((id) => { if (sc.photoIds.indexOf(id) === -1) sc.photoIds.unshift(id); });
+  sc.coverIds = sc.coverIds.filter((id) => sc.photoIds.indexOf(id) !== -1);
+  delete sc.coverId;
   if (Object.prototype.hasOwnProperty.call(b, 'heroId')) {
     sc.heroId = (b.heroId && imgIds.has(b.heroId)) ? b.heroId : null;
     if (sc.heroId) { // only one hero picture across the whole site
@@ -1963,10 +1966,10 @@ app.get('/api/showcase', (req, res) => {
     const url = (id) => '/api/showcase/img/' + sc.slug + '/' + id;
     if (sc.heroId && (c.files || []).some((f) => f.id === sc.heroId)) hero = url(sc.heroId);
     if (!sc.show) return;
-    const { ids } = showcaseImageIds(c, sc);
+    const { ids, covers } = showcaseImageIds(c, sc);
     if (!ids.length) return;
     const cm = sc.showComment && sc.comment ? { text: sc.comment, name: sc.commentName || '' } : null;
-    projects.push({ id: sc.slug, title: sc.title || (c.folder && c.folder.name) || 'Custom piece', category: sc.category, writeup: sc.writeup || '', comment: cm, cover: url(ids[0]), photos: ids.map(url), at: sc.updatedAt || 0 });
+    projects.push({ id: sc.slug, title: sc.title || (c.folder && c.folder.name) || 'Custom piece', category: sc.category, writeup: sc.writeup || '', comment: cm, cover: url(covers[0]), covers: covers.map(url), photos: ids.map(url), at: sc.updatedAt || 0 });
     if (cm) comments.push(cm);
   });
   projects.sort((a, b) => b.at - a.at);
