@@ -104,6 +104,7 @@
           <input id="searchBox" placeholder="Search" style="flex:1;min-width:0;border:none;background:transparent;font-size:13px;padding:2px 0;">
         </div>
       </div>
+      <div id="listTabs" style="display:flex;gap:24px;padding:0 28px 10px;"></div>
       <div id="msgList" style="display:flex;flex-direction:column;border-top:1px solid rgba(27,39,51,0.1);overflow-y:auto;"></div>
     </aside>
     <main id="mainPane" class="mainpane" style="flex:999 1 480px;min-width:0;padding:40px 48px 64px;"></main>
@@ -127,7 +128,7 @@
     replyText: '', files: [], prePolish: null, polishing: false, polishMsg: '', listening: false,
     invoiceOpen: false, docType: 'invoice', billTo: '', orderDesc: '', address: '', dueDate: '', taxRate: '', rows: [],
     error: '', sentFlash: false, sending: false,
-    fileFilter: 'all', viewer: null,
+    fileFilter: 'all', viewer: null, showArchived: false,
     expDesc: '', expAmt: '', timeTask: '', timeDur: '', manualOpen: false, manTask: '',
     editingName: false, nameDraft: '', timer: null, now: Date.now(), folderMsg: '', screen: 'inbox', reattach: []
   };
@@ -305,7 +306,7 @@
 
   /* ---------- loading ---------- */
   function sigOf(c){
-    return c ? [c.messages.length, c.replies.length, c.status, c.textMode ? 1 : 0, (c.files || []).length, JSON.stringify(c.folder || null), JSON.stringify(c.showcase || null), c.name].join('|') : '';
+    return c ? [c.messages.length, c.replies.length, c.status, c.textMode ? 1 : 0, (c.files || []).length, JSON.stringify(c.folder || null), JSON.stringify(c.showcase || null), c.archived ? 1 : 0, c.name].join('|') : '';
   }
   function loadMessages(cb, silent){
     apiFetch('/api/inbox/messages')
@@ -343,13 +344,17 @@
   /* ---------- sidebar ---------- */
   function renderList(){
     var q = S.search.trim().toLowerCase();
-    var unread = S.convos.filter(function(c){ return c.status === 'unread'; }).length;
+    var nArch = S.convos.filter(function(c){ return c.archived; }).length;
+    var unread = S.convos.filter(function(c){ return c.status === 'unread' && !c.archived; }).length;
+    function lt(on){ return 'background:none;border:none;padding:0 0 6px;font-size:10.5px;letter-spacing:2px;cursor:pointer;border-bottom:1px solid ' + (on ? INK : 'transparent') + ';color:' + (on ? INK : MUTE) + ';'; }
+    $('listTabs').innerHTML = '<button data-act="listActive" style="' + lt(!S.showArchived) + '">ACTIVE</button><button data-act="listArchived" style="' + lt(S.showArchived) + '">ARCHIVED' + (nArch ? ' (' + nArch + ')' : '') + '</button>';
     var badge = $('unreadBadge');
     badge.textContent = unread + ' NEW'; badge.style.display = unread ? 'inline' : 'none';
     var html = '';
     S.convos.forEach(function(c){
       var hay = (c.name + ' ' + c.email + ' ' + c.messages.map(function(m){ return m.text; }).join(' ')).toLowerCase();
       if (q && hay.indexOf(q) === -1) return;
+      if (!!c.archived !== !!S.showArchived) return;
       var isUnread = c.status === 'unread', isActive = c.reference === S.active;
       var last = c.messages[c.messages.length - 1];
       html += '<button class="conv" data-act="select" data-ref="' + esc(c.reference) + '" style="background:' + (isActive ? '#F4F1EA' : 'transparent') + ';opacity:' + (c.status === 'replied' && !isActive ? 0.6 : 1) + ';">' +
@@ -366,7 +371,7 @@
         '</span></button>';
     });
     renderNav();
-    $('msgList').innerHTML = html || '<div style="padding:40px 28px;font-size:13px;color:rgba(27,39,51,0.45);">' + (S.convos.length ? 'No messages found.' : 'No messages yet.') + '</div>';
+    $('msgList').innerHTML = html || '<div style="padding:40px 28px;font-size:13px;color:rgba(27,39,51,0.45);">' + (S.showArchived ? 'Nothing archived yet.' : (S.convos.length ? 'No messages found.' : 'No messages yet.')) + '</div>';
   }
 
   /* ---------- main pane ---------- */
@@ -380,9 +385,11 @@
           '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(27,39,51,0.4)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>';
     return '<div style="display:flex;flex-direction:column;gap:6px;flex:1 1 240px;min-width:0;">' +
         '<span style="font-size:10.5px;letter-spacing:2px;color:#A9784F;">' + esc(c.reference) + '</span>' + nameBlock +
-        '<span style="font-size:13px;color:rgba(27,39,51,0.55);">' + esc(c.email) + '</span></div>' +
+        '<span style="font-size:13px;color:rgba(27,39,51,0.55);">' + esc(c.email) + '</span>' +
+        (c.archived ? '<span style="font-size:11.5px;letter-spacing:.5px;color:#A9784F;margin-top:4px;">ARCHIVED ' + new Date(c.archivedAt || Date.now()).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) + ' \u00B7 if ' + esc(c.name) + ' contacts you again it starts a new conversation</span>' : '') + '</div>' +
       '<div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">' +
         (c.folder ? '' : '<button class="ghost" data-act="createFolder">' + ICON_FOLDER.replace('width="12" height="12"', 'width="14" height="14"') + 'CREATE WORK FOLDER</button>') +
+        '<button class="tb" data-act="archiveConvo">' + (c.archived ? 'RESTORE' : 'ARCHIVE') + '</button>' +
         '<button class="tb danger" data-act="deleteConvo">DELETE</button></div>';
   }
 
@@ -901,6 +908,24 @@
       postJson('/api/inbox/rename', { reference: c.reference, name: v }).then(function(d){
         S.editingName = false;
         if (d.success){ c.name = v; S.sig = sigOf(c); renderList(); renderMain(); } else { renderMain(); }
+      });
+    },
+    listActive: function(){ S.showArchived = false; renderList(); },
+    listArchived: function(){ S.showArchived = true; renderList(); },
+    archiveConvo: function(){
+      var c = active(); if (!c) return;
+      var restoring = !!c.archived;
+      if (!restoring){
+        var owing = pays(c).filter(function(p){ return !p.paid; }).length;
+        var msg = 'Archive the project with ' + c.name + '? It moves to the Archived tab with everything kept (messages, files, work folder). If they contact you again, it starts a new conversation.' +
+          (owing ? '\n\nNote: ' + owing + ' invoice' + (owing === 1 ? ' is' : 's are') + ' still unpaid.' : '');
+        if (!confirm(msg)) return;
+      }
+      postJson('/api/inbox/archive', { reference: c.reference, archive: !restoring }).then(function(d){
+        if (!d.success){ alert(d.error || 'Could not do that.'); return; }
+        if (restoring){ delete c.archived; delete c.archivedAt; S.showArchived = false; }
+        else { c.archived = true; c.archivedAt = d.archivedAt; c.textMode = false; if (c.status === 'unread') c.status = 'read'; S.showArchived = false; S.active = null; }
+        S.sig = sigOf(active()); renderList(); renderMain();
       });
     },
     deleteConvo: function(){

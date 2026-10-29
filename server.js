@@ -129,6 +129,7 @@ const referenceToEmail = new Map();
 function cleanupOldInquiries() {
   const cutoff = Date.now() - 45 * 24 * 60 * 60 * 1000; // 45 days
   for (const [emailKey, convo] of inquiries) {
+    if (convo.archived || convo.folder) continue; // archived chats and work folders are kept until deleted by hand
     if (convo.lastActivityAt < cutoff) {
       referenceToEmail.delete(convo.reference);
       inquiries.delete(emailKey);
@@ -1641,6 +1642,39 @@ app.post('/api/inbox/import', requireAdminKey, upload.single('backup'), (req, re
   const counts = applySnapshot(snap, true);
   saveToDisk();
   res.status(200).json({ success: true, added: counts });
+});
+
+// Archive a finished project. The conversation is moved under a different
+// key, so if the same person emails or uses the contact form again, they
+// start a brand-new conversation (new reference, empty thread). Everything
+// in the archived one (messages, files, work folder, payments) is kept.
+app.post('/api/inbox/archive', requireAdminKey, (req, res) => {
+  const { reference, archive } = req.body || {};
+  const oldKey = reference && referenceToEmail.get(reference);
+  const convo = oldKey && inquiries.get(oldKey);
+  if (!convo) return res.status(404).json({ success: false, error: 'Message not found.' });
+  if (archive) {
+    if (convo.archived) return res.status(200).json({ success: true, archived: true, archivedAt: convo.archivedAt });
+    const newKey = oldKey + '#archived-' + convo.reference;
+    inquiries.delete(oldKey);
+    inquiries.set(newKey, convo);
+    referenceToEmail.set(convo.reference, newKey);
+    if (textModeEmailKey === oldKey) textModeEmailKey = null;
+    convo.archived = true;
+    convo.archivedAt = Date.now();
+    if (convo.status === 'unread') convo.status = 'read';
+    return res.status(200).json({ success: true, archived: true, archivedAt: convo.archivedAt });
+  }
+  if (!convo.archived) return res.status(200).json({ success: true, archived: false });
+  const liveKey = oldKey.split('#archived-')[0];
+  if (inquiries.has(liveKey)) {
+    return res.status(409).json({ success: false, error: 'This person already has a current conversation. Archive or delete that one first, then restore this.' });
+  }
+  inquiries.delete(oldKey);
+  inquiries.set(liveKey, convo);
+  referenceToEmail.set(convo.reference, liveKey);
+  delete convo.archived; delete convo.archivedAt;
+  res.status(200).json({ success: true, archived: false });
 });
 
 // Switch text mode on/off for one conversation. Turning it on for one
