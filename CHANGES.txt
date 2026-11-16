@@ -46,7 +46,7 @@ DELETE BY HAND in your website folder (copying the zip over it won't remove old 
 
 DESIGN PREFERENCE (checkout.html)
   Customers must pick Design 1 (Arches), 2 (Key pattern) or 3 (Shards) before paying,
-  with a clear note that it's a preference, not a guarantee.
+  with the note "While stocks last. If your chosen design is no longer available, we will contact you to choose the next-best preference."
   The choice shows in your order text ("Pref: ..."), the customer email, and the Stripe payment description.
   Design names live in pricing.js under products -> designs. Images: assets/design-1.svg, -2, -3.
 

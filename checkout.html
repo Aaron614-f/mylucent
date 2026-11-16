@@ -77,12 +77,13 @@
   .muted{color:rgba(255,255,255,0.72);}
   .dz-wrap{border:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;min-width:0;}
   .dz-wrap legend{font-size:13px;font-weight:500;color:#1B2733;padding:0;margin-bottom:2px;}
+  .dz-where{font-size:13px;line-height:1.55;color:rgba(27,39,51,0.75);margin:-4px 0 2px;}
   .dz-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
   .dz{position:relative;display:flex;flex-direction:column;gap:8px;cursor:pointer;}
   .dz input{position:absolute;opacity:0;pointer-events:none;}
-  .dz-box{display:flex;align-items:center;justify-content:center;aspect-ratio:1 / 1;background:#F4F3F0;border:1.5px solid transparent;border-radius:14px;padding:12px;transition:border-color .2s ease,background .2s ease,box-shadow .2s ease;}
-  .dz-box img{width:auto;height:100%;max-height:120px;display:block;}
-  .dz:hover .dz-box{background:#EFEDE9;}
+  .dz-box{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;aspect-ratio:1 / 1;background:#FFFFFF;border:1.5px solid rgba(27,39,51,0.14);border-radius:14px;padding:12px;transition:border-color .2s ease,background .2s ease,box-shadow .2s ease;}
+  .dz-box img{position:absolute;inset:14%;width:72%;height:72%;max-width:none;object-fit:contain;display:block;}
+  .dz:hover .dz-box{background:#FAF9F7;border-color:rgba(27,39,51,0.3);}
   .dz input:checked + .dz-box{background:#FFFFFF;border-color:#1B2733;box-shadow:0 0 0 4px rgba(27,39,51,0.08);}
   .dz input:focus-visible + .dz-box{outline:2px solid #1B2733;outline-offset:2px;}
   .dz-name{font-size:13px;font-weight:600;text-align:center;line-height:1.3;}
@@ -155,6 +156,7 @@
         </div>
         <fieldset class="dz-wrap" id="fDesign">
           <legend>Choose your preferred design</legend>
+          <p class="dz-where">The design is the pattern cut into the shamash holder, the small clear piece on the side of the stand that holds the shamash candle. The stand, lettering and brachos are the same on every option; only this pattern changes.</p>
           <div class="dz-grid">
             <label class="dz">
               <input type="radio" name="design" value="design-1">
@@ -173,9 +175,9 @@
             </label>
           </div>
           <p class="dz-err">Please pick the design you’d prefer.</p>
-          <p class="dz-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7E5634" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:2px;"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg><span><b>This is a preference, not a guarantee.</b> We’ll do our best to send the design you choose, but depending on stock you may receive one of the other designs.</span></p>
+          <p class="dz-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7E5634" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:2px;"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg><span><b>While stocks last.</b> If your chosen design is no longer available, we will contact you to choose the next-best preference.</span></p>
         </fieldset>
-        <div class="info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7E5634" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px;"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span><b>Pickup only — no delivery.</b> We’ll confirm the pickup address and a time with you by phone after payment.</span></div>
+        <div class="info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7E5634" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px;"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span><b>Pickup only:</b> We’ll confirm the pickup address and a time with you by phone.</span></div>
         <p class="alert err" id="regErr" role="alert" hidden></p>
         <button type="submit" class="main-btn" id="toPayBtn">Continue to payment <span aria-hidden="true">→</span></button>
       </form>

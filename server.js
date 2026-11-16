@@ -375,7 +375,7 @@ function addPaidOrderToInbox(order, reference) {
     'PAID ORDER — ' + reference,
     '',
     'Item: ' + (order.productLabel || order.product) + (order.quantity > 1 ? ' × ' + order.quantity : ''),
-    order.designPreference ? 'Preferred design: ' + order.designPreference + ' (preference only, not guaranteed)' : null,
+    order.designPreference ? 'Preferred design: ' + order.designPreference + ' (while stocks last — contact the customer if it is unavailable)' : null,
     order.totalPaid ? 'Total paid: $' + order.totalPaid : null,
     '',
     'Name: ' + order.name,
@@ -470,7 +470,7 @@ function orderItemLine(order) {
   const qtySuffix = order.quantity && order.quantity > 1 ? ' × ' + order.quantity : '';
   if (order.product) {
     return (order.productLabel || order.product) + qtySuffix +
-      (order.designPreference ? ' — preferred design: ' + order.designPreference + ' (preference, not guaranteed)' : '');
+      (order.designPreference ? ' — preferred design: ' + order.designPreference + ' (while stocks last; we will contact you if it is unavailable)' : '');
   }
   const designName = (order.design || '').includes(' — ') ? order.design.split(' — ')[1] : order.design;
   return (order.sizeLabel || order.size) + ' ' + order.finish + ' Nameplate (' + designName + ')' + qtySuffix;
@@ -1643,7 +1643,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
               product_data: {
                 name: 'myLucent.co — ' + priced.label,
                 description: 'Order ' + reference + ' · Pickup only' +
-                  (order.designPreference ? ' · Preferred design: ' + order.designPreference + ' (not guaranteed)' : '')
+                  (order.designPreference ? ' · Preferred design: ' + order.designPreference + ' (while stocks last)' : '')
               }
             },
             quantity: priced.qty
