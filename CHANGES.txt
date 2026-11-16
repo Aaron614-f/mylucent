@@ -62,3 +62,14 @@ AFTER PAYMENT (Chanukah stand) — only once Stripe confirms the payment:
   Nothing is sent if they stop before paying.
   When the piece is ready, text "ML-XXXXXXX ready" (reference is in the Inbox message)
   to email the customer that it's ready for pickup.
+
+IPHONE FIT (index.html)
+  On phones the top slider now fills exactly one screen under the menu bar
+  (checked on iPhone SE, iPhone 14 and iPhone 14 Pro Max sizes), with the
+  scrolling banner sitting at the bottom edge. Also fixed the page being
+  slightly wider than the phone (it could wiggle sideways).
+
+MOBILE MENU (all pages)
+  The phone menu button is now a burger icon that turns into an X when open,
+  with a rounded dropdown card (How it works / About / Contact) that slides in.
+  Applied to index, about, checkout, contact, order, gallery and project pages.

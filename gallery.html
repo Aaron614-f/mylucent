@@ -77,6 +77,20 @@
     #site-header .mobile-menu-btn{display:flex;}
   }
 </style>
+<style id="burger-menu">
+  #mobileMenuBtn{width:40px;height:40px;margin-right:-8px;padding:0 !important;align-items:center;justify-content:center;}
+  .bg-icon{position:relative;display:block;width:22px;height:14px;}
+  .bg-icon i{position:absolute;left:0;right:0;height:1.6px;border-radius:2px;background:#1B2733;transition:transform .3s ease,opacity .2s ease,top .3s ease;}
+  .bg-icon i:nth-child(1){top:0;} .bg-icon i:nth-child(2){top:6px;} .bg-icon i:nth-child(3){top:12px;}
+  .bg-icon.open i:nth-child(1){top:6px;transform:rotate(45deg);}
+  .bg-icon.open i:nth-child(2){opacity:0;}
+  .bg-icon.open i:nth-child(3){top:6px;transform:rotate(-45deg);}
+  @keyframes dropIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
+  #site-header .mobile-dropdown{left:12px;right:12px;border-radius:12px;box-shadow:0 14px 32px -10px rgba(27,39,51,0.3);padding:8px;}
+  #site-header .mobile-dropdown.open{animation:dropIn .25s ease both;}
+  #site-header .mobile-dropdown a{padding:14px;border-radius:8px;}
+  @media (prefers-reduced-motion:reduce){ .bg-icon i{transition:none;} #site-header .mobile-dropdown.open{animation:none;} }
+</style>
 </head>
 <body>
 
@@ -87,8 +101,8 @@
     <a href="./about.html" class="nav-link">ABOUT</a>
     <a href="./contact.html" class="nav-link">CONTACT</a>
   </nav>
-  <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1B2733" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileDropdown">
+    <span class="bg-icon" aria-hidden="true"><i></i><i></i><i></i></span>
   </button>
   <div class="mobile-dropdown" id="mobileDropdown">
     <a href="./index.html#how">HOW IT WORKS</a>
@@ -147,6 +161,22 @@
   }
   if(h){var last=window.scrollY;window.addEventListener('scroll',function(){var y=window.scrollY;h.classList.toggle('hdr-hidden',y>last&&y>80);last=y;},{passive:true});}
 })();
+</script>
+<script>
+  // Burger icon: turns into an X while the menu is open
+  (function(){
+    var btn = document.getElementById('mobileMenuBtn'), dd = document.getElementById('mobileDropdown');
+    if (!btn || !dd) return;
+    var icon = btn.querySelector('.bg-icon');
+    function sync(){
+      var open = dd.classList.contains('open');
+      if (icon) icon.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    }
+    new MutationObserver(sync).observe(dd, { attributes: true, attributeFilter: ['class'] });
+    sync();
+  })();
 </script>
 </body>
 </html>
