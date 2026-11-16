@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Chanukah Brachos Stand | myLucent.co</title>
+<meta name="description" content="Buy the myLucent.co Chanukah Brachos Stand — one clear acrylic piece with mirror-silver lettering and a built-in shamash holder. Pickup only.">
+<link rel="canonical" href="https://mylucent.co/checkout.html">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;color:#1B2733;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;}
+  #site-header{background:#FFFFFF;padding:20px 32px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 14px -6px rgba(27,39,51,0.12);position:sticky;top:0;z-index:50;transition:transform .3s ease,opacity .3s ease;}
+  #site-header.hdr-hidden{transform:translateY(-140%);opacity:0;}
+  #site-header > a{flex-shrink:0;display:block;}
+  .desktop-nav{display:flex;gap:32px;}
+  .nav-link{position:relative;color:#1B2733;font-size:12px;letter-spacing:1.5px;padding:6px 2px;white-space:nowrap;}
+  .nav-link::after{content:'';position:absolute;left:0;right:100%;bottom:0;height:1px;background:currentColor;transition:right .3s ease;}
+  .nav-link:hover::after,.nav-link.current::after{right:0;}
+  .mobile-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-shrink:0;}
+  .mobile-dropdown{display:none;position:absolute;top:calc(100% + 8px);left:12px;right:12px;background:#FFFFFF;border-radius:10px;box-shadow:0 10px 28px -8px rgba(27,39,51,0.28);padding:8px;flex-direction:column;gap:2px;z-index:60;}
+  .mobile-dropdown.open{display:flex;}
+  .mobile-dropdown a{padding:13px 14px;font-size:12px;letter-spacing:1.5px;color:#1B2733;border-radius:6px;}
+  .mobile-dropdown a:hover{background:rgba(169,120,79,0.08);}
+  @media (max-width:820px){ #site-header{padding:14px 16px;} .desktop-nav{display:none;} .mobile-menu-btn{display:flex;} }
+  footer{padding:36px 44px;text-align:center;border-top:1px solid rgba(27,39,51,0.12);background:#FFFFFF;}
+  .footer-inner{display:flex;justify-content:center;flex-wrap:wrap;gap:24px;margin-bottom:14px;}
+  .footer-inner a{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#1B2733;}
+  .footer-inner a:hover{color:#A9784F;}
+  footer p{font-size:11px;letter-spacing:1px;color:rgba(27,39,51,0.6);margin:0;}
+  body{background:#F6F5F2;}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 28px 96px;}
+  .back-link{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#1B2733;padding:9px 14px;margin-left:-14px;border-radius:999px;transition:background .2s ease;}
+  .back-link:hover{background:#EEECE7;}
+  .grid{display:flex;flex-wrap:wrap-reverse;gap:28px;align-items:flex-start;margin-top:18px;}
+  .card{flex:999 1 460px;min-width:0;background:#FFFFFF;border-radius:20px;box-shadow:0 1px 2px rgba(27,39,51,0.04),0 12px 32px -16px rgba(27,39,51,0.18);padding:clamp(24px,4vw,44px);display:flex;flex-direction:column;gap:30px;}
+  .steps{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:500;}
+  .steps .n{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;transition:background .3s ease,color .3s ease;}
+  .steps .s{display:inline-flex;align-items:center;gap:8px;}
+  .steps .bar{flex:1;max-width:80px;height:2px;border-radius:2px;background:#E6E3DD;position:relative;overflow:hidden;}
+  .steps .bar span{position:absolute;inset:0;width:0;background:#1B2733;transition:width .5s cubic-bezier(.2,.7,.2,1);}
+  .s1 .n{background:#1B2733;color:#FFFFFF;}
+  .s2 .n{background:#E6E3DD;color:rgba(27,39,51,0.7);} .s2{color:rgba(27,39,51,0.7);}
+  .on-pay .s2 .n{background:#1B2733;color:#FFFFFF;} .on-pay .s2{color:#1B2733;} .on-pay .bar span{width:100%;}
+  h1{font-weight:600;font-size:clamp(26px,3vw,32px);letter-spacing:-0.8px;margin:0;}
+  .fld{display:flex;flex-direction:column;gap:8px;min-width:0;}
+  .fld label{font-size:13px;font-weight:500;color:#1B2733;}
+  .fld input{font-family:'Inter',sans-serif;font-size:15px;color:#1B2733;background:#F4F3F0;border:1.5px solid transparent;border-radius:12px;height:52px;padding:0 16px;width:100%;transition:border-color .2s ease,background .2s ease,box-shadow .2s ease;}
+  .fld input::placeholder{color:rgba(27,39,51,0.45);}
+  .fld input:hover{background:#EFEDE9;}
+  .fld input:focus{outline:none;background:#FFFFFF;border-color:#1B2733;box-shadow:0 0 0 4px rgba(27,39,51,0.08);}
+  .fld.bad input{border-color:#B3261E;background:#FFF8F7;}
+  .fld .err{display:none;font-size:12.5px;color:#B3261E;}
+  .fld.bad .err{display:block;}
+  .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px;}
+  .info{display:flex;gap:12px;align-items:flex-start;background:#F4F1EA;border-radius:14px;padding:14px 16px;font-size:13.5px;line-height:1.55;color:#2A3742;}
+  .main-btn,.stripe-btn{width:100%;height:56px;display:flex;align-items:center;justify-content:center;gap:10px;color:#FFFFFF;border:none;border-radius:999px;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:background .25s ease,transform .2s ease,box-shadow .25s ease;}
+  .main-btn{background:#1B2733;}
+  .main-btn:hover{background:#2A3B4C;transform:translateY(-1px);box-shadow:0 12px 24px -12px rgba(27,39,51,0.6);}
+  .stripe-btn{background:#635BFF;}
+  .stripe-btn:hover{background:#4B45CC;transform:translateY(-1px);box-shadow:0 12px 24px -12px rgba(99,91,255,0.7);}
+  .stripe-btn:disabled{opacity:.75;cursor:progress;transform:none;box-shadow:none;}
+  .ghost-btn{background:transparent;border:none;color:#1B2733;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;padding:8px 4px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+  .kv{display:flex;justify-content:space-between;gap:16px;font-size:14.5px;padding:12px 0;border-bottom:1px solid #EFEDE9;}
+  .kv span:first-child{color:rgba(27,39,51,0.65);}
+  .kv span:last-child{font-weight:500;text-align:right;min-width:0;overflow-wrap:anywhere;}
+  .alert{font-size:13.5px;border-radius:12px;padding:12px 14px;margin:0;}
+  .alert.err{color:#B3261E;background:#FFF4F3;}
+  .alert.warn{color:#1B2733;background:#F4F1EA;}
+  aside{flex:1 1 300px;min-width:0;background:#1B2733;color:#FFFFFF;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:20px;box-shadow:0 24px 48px -24px rgba(27,39,51,0.6);}
+  .qty{display:inline-flex;align-items:center;background:rgba(255,255,255,0.1);border-radius:999px;padding:4px;}
+  .qty button{width:34px;height:34px;border:none;border-radius:50%;background:transparent;color:#FFFFFF;font-size:18px;line-height:1;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s ease;}
+  .qty button:hover{background:rgba(255,255,255,0.16);}
+  .qty button:disabled{opacity:.35;cursor:default;background:transparent;}
+  .muted{color:rgba(255,255,255,0.72);}
+  .dz-wrap{border:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;min-width:0;}
+  .dz-wrap legend{font-size:13px;font-weight:500;color:#1B2733;padding:0;margin-bottom:2px;}
+  .dz-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+  .dz{position:relative;display:flex;flex-direction:column;gap:8px;cursor:pointer;}
+  .dz input{position:absolute;opacity:0;pointer-events:none;}
+  .dz-box{display:flex;align-items:center;justify-content:center;aspect-ratio:1 / 1;background:#F4F3F0;border:1.5px solid transparent;border-radius:14px;padding:12px;transition:border-color .2s ease,background .2s ease,box-shadow .2s ease;}
+  .dz-box img{width:auto;height:100%;max-height:120px;display:block;}
+  .dz:hover .dz-box{background:#EFEDE9;}
+  .dz input:checked + .dz-box{background:#FFFFFF;border-color:#1B2733;box-shadow:0 0 0 4px rgba(27,39,51,0.08);}
+  .dz input:focus-visible + .dz-box{outline:2px solid #1B2733;outline-offset:2px;}
+  .dz-name{font-size:13px;font-weight:600;text-align:center;line-height:1.3;}
+  .dz-name small{display:block;font-weight:400;color:rgba(27,39,51,0.7);font-size:12px;}
+  .dz-note{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.55;color:#2A3742;background:#F4F1EA;border-radius:12px;padding:12px 14px;margin:0;}
+  .dz-wrap.bad .dz-box{border-color:rgba(179,38,30,0.5);}
+  .dz-err{display:none;font-size:12.5px;color:#B3261E;margin:0;}
+  .dz-wrap.bad .dz-err{display:block;}
+  @media (max-width:420px){ .dz-grid{gap:8px;} .dz-box{padding:8px;border-radius:10px;} }
+  [hidden]{display:none !important;}
+  @keyframes popIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+  .pop{animation:popIn .45s cubic-bezier(.2,.7,.2,1) both;}
+  @media (prefers-reduced-motion:reduce){ .pop{animation:none;} }
+</style>
+</head>
+<body>
+
+<header id="site-header">
+  <a href="./index.html"><img src="logo.svg" alt="myLucent.co" style="height:26px;width:94px;display:block;"></a>
+  <nav class="desktop-nav">
+    <a href="./index.html#how" class="nav-link">HOW IT WORKS</a>
+    <a href="./about.html" class="nav-link">ABOUT</a>
+    <a href="./contact.html" class="nav-link">CONTACT</a>
+  </nav>
+  <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1B2733" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <div class="mobile-dropdown" id="mobileDropdown">
+    <a href="./index.html#how">HOW IT WORKS</a>
+    <a href="./about.html">ABOUT</a>
+    <a href="./contact.html">CONTACT</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <a href="./index.html" class="back-link">← Back to home</a>
+
+  <div class="grid">
+    <section class="card" id="coCard" aria-labelledby="coTitle">
+      <div style="display:flex;flex-direction:column;gap:18px;">
+        <div class="steps" aria-hidden="true">
+          <span class="s s1"><span class="n" id="dot1">1</span>Details</span>
+          <span class="bar"><span></span></span>
+          <span class="s s2"><span class="n">2</span>Payment</span>
+        </div>
+        <h1 id="coTitle">Your details</h1>
+      </div>
+
+      <p class="alert warn" id="cancelNote" hidden>Payment was cancelled — you haven’t been charged. You can try again below.</p>
+
+      <form id="stepDetails" class="pop" novalidate style="display:flex;flex-direction:column;gap:20px;">
+        <div class="fld" id="fName"><label for="coName">Full name</label><input id="coName" type="text" autocomplete="name" placeholder="Your name" required><span class="err">Please enter your name.</span></div>
+        <div class="two">
+          <div class="fld" id="fPhone"><label for="coPhone">Mobile</label><input id="coPhone" type="tel" autocomplete="tel" placeholder="04xx xxx xxx" required><span class="err">Enter a valid Australian mobile.</span></div>
+          <div class="fld" id="fEmail"><label for="coEmail">Email</label><input id="coEmail" type="email" autocomplete="email" placeholder="you@example.com" required><span class="err">Enter a valid email.</span></div>
+        </div>
+        <fieldset class="dz-wrap" id="fDesign">
+          <legend>Choose your preferred design</legend>
+          <div class="dz-grid">
+            <label class="dz">
+              <input type="radio" name="design" value="design-1">
+              <span class="dz-box"><img src="assets/design-1.svg" alt="" width="120" height="140"></span>
+              <span class="dz-name">Design 1<small>Arches</small></span>
+            </label>
+            <label class="dz">
+              <input type="radio" name="design" value="design-2">
+              <span class="dz-box"><img src="assets/design-2.svg" alt="" width="120" height="140"></span>
+              <span class="dz-name">Design 2<small>Key pattern</small></span>
+            </label>
+            <label class="dz">
+              <input type="radio" name="design" value="design-3">
+              <span class="dz-box"><img src="assets/design-3.svg" alt="" width="120" height="140"></span>
+              <span class="dz-name">Design 3<small>Shards</small></span>
+            </label>
+          </div>
+          <p class="dz-err">Please pick the design you’d prefer.</p>
+          <p class="dz-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7E5634" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:2px;"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg><span><b>This is a preference, not a guarantee.</b> We’ll do our best to send the design you choose, but depending on stock you may receive one of the other designs.</span></p>
+        </fieldset>
+        <div class="info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7E5634" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px;"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span><b>Pickup only — no delivery.</b> We’ll confirm the pickup address and a time with you by phone after payment.</span></div>
+        <p class="alert err" id="regErr" role="alert" hidden></p>
+        <button type="submit" class="main-btn" id="toPayBtn">Continue to payment <span aria-hidden="true">→</span></button>
+      </form>
+
+      <div id="stepPay" class="pop" hidden style="display:flex;flex-direction:column;gap:22px;">
+        <div>
+          <div class="kv"><span>Order reference</span><span id="rvRef"></span></div>
+          <div class="kv"><span>Name</span><span id="rvName"></span></div>
+          <div class="kv"><span>Mobile</span><span id="rvPhone"></span></div>
+          <div class="kv"><span>Email</span><span id="rvEmail"></span></div>
+          <div class="kv"><span>Preferred design</span><span id="rvDesign"></span></div>
+          <div class="kv" style="border-bottom:none;"><span>Pickup</span><span>Confirmed by phone</span></div>
+        </div>
+        <button type="button" class="stripe-btn" id="payBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="payLabel">Pay with Stripe</span></button>
+        <p style="font-size:13px;line-height:1.6;color:rgba(27,39,51,0.7);margin:-6px 0 0;text-align:center;">You’ll enter card details on Stripe’s secure checkout page. We’re notified automatically once payment goes through.</p>
+        <p class="alert err" id="payErr" role="alert" hidden></p>
+        <div style="text-align:center;"><button type="button" class="ghost-btn" id="editBtn">Edit details</button></div>
+      </div>
+    </section>
+
+    <aside aria-label="Order summary">
+      <div style="border-radius:14px;overflow:hidden;aspect-ratio:4 / 3;background:#2A3742;">
+        <img src="assets/chanukah-stand.jpg" alt="Chanukah brachos stand" style="width:100%;height:100%;object-fit:cover;object-position:50% 55%;display:block;">
+      </div>
+      <div style="padding:0 8px;display:flex;flex-direction:column;gap:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
+            <span style="font-size:16px;font-weight:600;letter-spacing:-0.2px;" id="prodName">Chanukah Brachos Stand</span>
+            <span style="font-size:13px;" class="muted"><span id="unitLabel">$45.00</span> each</span>
+          </div>
+          <div class="qty" id="qtyCtl">
+            <button type="button" id="qtyDec" aria-label="Decrease quantity" disabled>−</button>
+            <span aria-live="polite" id="qtyVal" style="min-width:26px;text-align:center;font-size:15px;font-weight:600;">1</span>
+            <button type="button" id="qtyInc" aria-label="Increase quantity">+</button>
+          </div>
+          <span id="qtyFixed" class="muted" style="font-size:14px;" hidden></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;border-top:1px solid rgba(255,255,255,0.12);padding-top:16px;">
+          <div style="display:flex;justify-content:space-between;"><span class="muted">Subtotal</span><span id="subLabel">$45.00</span></div>
+          <div style="display:flex;justify-content:space-between;"><span class="muted">Pickup</span><span>Free</span></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(255,255,255,0.12);padding:16px 0 8px;">
+          <span style="font-size:14px;font-weight:500;">Total</span>
+          <span style="font-size:30px;font-weight:600;letter-spacing:-0.8px;" id="totalLabel">$45.00</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <a href="index.html">Home</a>
+    <a href="index.html#how">How It Works</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </div>
+  <p>© myLucent.co — custom acrylic art</p>
+</footer>
+
+<script>
+  (function(){
+    var btn = document.getElementById('mobileMenuBtn'), dd = document.getElementById('mobileDropdown');
+    if (!btn || !dd) return;
+    btn.addEventListener('click', function(e){ e.stopPropagation(); dd.classList.toggle('open'); });
+    dd.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', function(){ dd.classList.remove('open'); }); });
+    document.addEventListener('click', function(e){ if (!dd.contains(e.target) && !btn.contains(e.target)) dd.classList.remove('open'); });
+  })();
+  (function(){
+    var header = document.getElementById('site-header'), lastY = window.scrollY;
+    window.addEventListener('scroll', function(){ var y = window.scrollY; header.classList.toggle('hdr-hidden', y > lastY && y > 80); lastY = y; }, { passive: true });
+  })();
+
+  // ===== Chanukah Brachos Stand checkout =====
+  // The price shown here is for display only. The server (pricing.js →
+  // products) decides what Stripe actually charges.
+  (function(){
+    var PRODUCT = 'chanukah-brachos-stand';
+    var MAX_QTY = 20;
+    var unit = 45;          // replaced by the live price from /api/pricing below
+    var qty = 1, ref = '';
+    var $ = function(id){ return document.getElementById(id); };
+    function money(n){ return '$' + n.toFixed(2); }
+    function render(){
+      $('qtyVal').textContent = qty;
+      $('qtyDec').disabled = qty <= 1;
+      $('qtyInc').disabled = qty >= MAX_QTY;
+      $('unitLabel').textContent = money(unit);
+      $('subLabel').textContent = money(unit * qty);
+      $('totalLabel').textContent = money(unit * qty);
+      $('payLabel').textContent = 'Pay ' + money(unit * qty) + ' with Stripe';
+    }
+    fetch('/api/pricing').then(function(r){ return r.ok ? r.json() : null; }).then(function(p){
+      var prod = p && p.products && p.products[PRODUCT];
+      if (prod && typeof prod.unitPrice === 'number'){ unit = prod.unitPrice; if (prod.label) $('prodName').textContent = prod.label; render(); }
+    }).catch(function(){});
+    $('qtyInc').addEventListener('click', function(){ qty = Math.min(MAX_QTY, qty + 1); render(); });
+    $('qtyDec').addEventListener('click', function(){ qty = Math.max(1, qty - 1); render(); });
+
+    function validMobile(raw){ var d = (raw || '').replace(/[\s-]/g, '').replace(/^\+?61/, '0'); return /^04\d{8}$/.test(d); }
+    function validEmail(raw){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((raw || '').trim()); }
+    function mark(id, bad){ $(id).classList.toggle('bad', bad); }
+    document.querySelectorAll('input[name="design"]').forEach(function(r){ r.addEventListener('change', function(){ $('fDesign').classList.remove('bad'); }); });
+    ['coName','coPhone','coEmail'].forEach(function(id){
+      $(id).addEventListener('input', function(){ $(id).parentNode.classList.remove('bad'); });
+    });
+
+    function setStep(pay){
+      $('stepDetails').hidden = pay;
+      $('stepPay').hidden = !pay;
+      $('coCard').classList.toggle('on-pay', pay);
+      $('dot1').textContent = pay ? '✓' : '1';
+      $('coTitle').textContent = pay ? 'Review & pay' : 'Your details';
+      $('qtyCtl').hidden = pay;
+      $('qtyFixed').hidden = !pay;
+      $('qtyFixed').textContent = '× ' + qty;
+      window.scrollTo(0, 0);
+    }
+
+    $('stepDetails').addEventListener('submit', function(e){
+      e.preventDefault();
+      var name = $('coName').value.trim(), phone = $('coPhone').value.trim(), email = $('coEmail').value.trim();
+      var bad = false;
+      if (!name){ mark('fName', true); bad = true; }
+      if (!validMobile(phone)){ mark('fPhone', true); bad = true; }
+      if (!validEmail(email)){ mark('fEmail', true); bad = true; }
+      var pick = document.querySelector('input[name="design"]:checked');
+      if (!pick){ mark('fDesign', true); bad = true; }
+      if (bad){ var first = document.querySelector('.bad'); if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+      var designValue = pick.value;
+      var designLabel = pick.closest('.dz').querySelector('.dz-name').innerText.replace(/\s*\n\s*/, ' — ');
+      ref = 'ML-' + Date.now().toString(36).toUpperCase();
+      var btn = $('toPayBtn'); btn.disabled = true;
+      $('regErr').hidden = true;
+      fetch('/api/register-order', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: ref, product: PRODUCT, quantity: qty, design: designValue, name: name, phone: phone, email: email })
+      })
+        .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
+        .then(function(res){
+          if (!res.ok || !res.d.success) throw new Error(res.d.error || 'Could not save your order.');
+          $('rvRef').textContent = ref; $('rvName').textContent = name; $('rvPhone').textContent = phone; $('rvEmail').textContent = email; $('rvDesign').textContent = designLabel + ' (preference)';
+          setStep(true);
+        })
+        .catch(function(err){ $('regErr').textContent = (err && err.message) || 'Something went wrong. Please try again.'; $('regErr').hidden = false; })
+        .then(function(){ btn.disabled = false; });
+    });
+
+    $('editBtn').addEventListener('click', function(){ setStep(false); });
+
+    $('payBtn').addEventListener('click', function(){
+      var btn = this; btn.disabled = true;
+      $('payLabel').textContent = 'Redirecting to Stripe…';
+      $('payErr').hidden = true;
+      fetch('/api/create-checkout-session', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: ref })
+      })
+        .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
+        .then(function(res){
+          if (!res.ok || !res.d.url) throw new Error(res.d.error || 'Could not start checkout.');
+          window.location.href = res.d.url;
+        })
+        .catch(function(err){
+          $('payErr').textContent = (err && err.message) || 'Something went wrong starting checkout. Please try again.';
+          $('payErr').hidden = false; btn.disabled = false; render();
+        });
+    });
+
+    if (new URLSearchParams(location.search).get('order') === 'cancelled'){
+      $('cancelNote').hidden = false;
+      if (history.replaceState) history.replaceState(null, '', location.pathname);
+    }
+    render();
+  })();
+</script>
+</body>
+</html>

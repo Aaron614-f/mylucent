@@ -24,38 +24,58 @@
 // ============================================================
 
 module.exports = {
-  currency: "aud",
+
+  currency: 'aud',
 
   small: {
-    label: "Small (45 × 10.4mm)",
+    label: 'Small (45 × 10.4mm)',
     pricing: {
-      1: 20, // <-- set price for ordering 1
-      2: 25, // <-- set TOTAL price for ordering 2
-      3: 32, // <-- set TOTAL price for ordering 3
+      1: 25,   // <-- set price for ordering 1
+      2: 35,   // <-- set TOTAL price for ordering 2
+      3: 40    // <-- set TOTAL price for ordering 3
     },
-    additionalUnitPrice: 2.5, // price for each extra beyond 3
+    additionalUnitPrice: 2.5   // price for each extra beyond 3
   },
 
   medium: {
-    label: "Medium (65 × 15mm)",
+    label: 'Medium (65 × 15mm)',
     pricing: {
-      1: 25, // <-- set price for ordering 1
-      2: 35, // <-- set TOTAL price for ordering 2
-      3: 40, // <-- set TOTAL price for ordering 3
+      1: 25,   // <-- set price for ordering 1
+      2: 35,   // <-- set TOTAL price for ordering 2
+      3: 40    // <-- set TOTAL price for ordering 3
     },
-    additionalUnitPrice: 2.5, // price for each extra beyond 3
+    additionalUnitPrice: 2.5   // price for each extra beyond 3
   },
 
   large: {
-    label: "Large (85 × 19.6mm)",
+    label: 'Large (85 × 19.6mm)',
     pricing: {
-      1: 25, // <-- set price for ordering 1
-      2: 35, // <-- set TOTAL price for ordering 2
-      3: 40, // <-- set TOTAL price for ordering 3
+      1: 25,   // <-- set price for ordering 1
+      2: 35,   // <-- set TOTAL price for ordering 2
+      3: 40    // <-- set TOTAL price for ordering 3
     },
-    additionalUnitPrice: 2.5, // price for each extra beyond 3
+    additionalUnitPrice: 2.5   // price for each extra beyond 3
   },
 
   // Custom sizes are handled separately (quote by phone/email) and
   // are not priced through this file.
+
+  // ----------------------------------------------------------
+  //  READY-MADE PRODUCTS (sold from checkout.html)
+  //  unitPrice = price for ONE, in AUD dollars. The total is
+  //  unitPrice × quantity. Change the number here to change the
+  //  price everywhere it is charged.
+  // ----------------------------------------------------------
+  products: {
+    'chanukah-brachos-stand': {
+      label: 'Chanukah Brachos Stand',
+      unitPrice: 45,
+      // Designs the customer can choose as a PREFERENCE (not guaranteed).
+      designs: {
+        'design-1': 'Design 1 (Arches)',
+        'design-2': 'Design 2 (Key pattern)',
+        'design-3': 'Design 3 (Shards)'
+      }
+    }
+  }
 };

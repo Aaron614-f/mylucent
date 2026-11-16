@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="67.4901mm" height="77.62mm" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 884 1017">
+ <defs><style type="text/css"><![CDATA[ .str0 {stroke:#373435;stroke-width:0.998416} .fil1 {fill:none} .fil0 {fill:#E6E7E8} ]]></style></defs>
+ <g>
+  <polygon class="fil0 str0" points="0,3 527,3 527,1017 0,1017 0,674 132,495 354,770 143,917 0,674 "/>
+  <polygon class="fil0 str0" points="590,0 877,0 877,1014 590,1014 "/>
+  <line class="fil1 str0" x1="0" y1="3" x2="527" y2="629"/>
+  <line class="fil1 str0" x1="264" y1="3" x2="410" y2="490"/>
+  <line class="fil1 str0" x1="264" y1="316" x2="0" y2="674"/>
+  <line class="fil1 str0" x1="132" y1="495" x2="527" y2="983"/>
+  <line class="fil1 str0" x1="354" y1="770" x2="0" y2="1017"/>
+  <line class="fil1 str0" x1="353" y1="302" x2="527" y2="213"/>
+  <line class="fil1 str0" x1="329" y1="395" x2="471" y2="914"/>
+  <g>
+   <line class="fil1 str0" x1="596" y1="687" x2="884" y2="354"/>
+   <line class="fil1 str0" x1="613" y1="980" x2="764" y2="493"/>
+   <line class="fil1 str0" x1="613" y1="667" x2="596" y2="645"/>
+   <line class="fil1 str0" x1="596" y1="346" x2="884" y2="0"/>
+   <line class="fil1 str0" x1="706" y1="214" x2="596" y2="139"/>
+   <line class="fil1 str0" x1="705" y1="682" x2="884" y2="770"/>
+   <line class="fil1 str0" x1="681" y1="589" x2="827" y2="69"/>
+  </g>
+ </g>
+</svg>

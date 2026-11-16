@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="66.9989mm" height="78.5525mm" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 871 1022">
+ <defs><style type="text/css"><![CDATA[ .str0 {stroke:#373435;stroke-width:0.99115} .fil1 {fill:none} .fil0 {fill:#E6E7E8} ]]></style></defs>
+ <g>
+  <g>
+   <path class="fil0 str0" d="M148 0l76 0 177 0 122 0 0 1006 -122 0 -25 0 -228 0 -25 0 -122 0 0 -1006 122 0 25 0zm76 19l0 39 152 0 0 228 -152 0 0 76 152 0 0 228 -152 0 0 76 152 0 0 228 -152 0 0 76 152 0 0 20 25 0 0 -969 -177 0zm-101 0l0 969 25 0 0 -171 152 0 0 -76 -152 0 0 -228 152 0 0 -76 -152 0 0 -228 152 0 0 -76 -152 0 0 -115 -25 0z"/>
+   <line class="fil1 str0" x1="148" y1="19" x2="148" y2="0"/>
+   <line class="fil1 str0" x1="224" y1="19" x2="224" y2="0"/>
+   <line class="fil1 str0" x1="375" y1="988" x2="375" y2="1007"/>
+   <line class="fil1 str0" x1="148" y1="988" x2="148" y2="1007"/>
+  </g>
+  <polygon class="fil0 str0" points="585,15 871,15 871,1021 585,1021 "/>
+ </g>
+</svg>
