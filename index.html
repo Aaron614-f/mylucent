@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>myLucent.co — Custom Acrylic Art, Simcha Gifts &amp; Personalised Gifts</title>
-<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-48x48.png" type="image/png" sizes="48x48">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="description" content="Custom acrylic wall art, simcha gifts and personalised gifts, designed around you — your colours, your design — and made to order in Australia by myLucent.co.">
 <link rel="canonical" href="https://mylucent.co/">
@@ -190,6 +191,10 @@
   .sl-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:20;width:36px;height:64px;border:none;background:transparent;color:#1B2733;font-size:38px;font-weight:300;line-height:1;cursor:pointer;opacity:0;transition:opacity .3s ease;font-family:'Inter',sans-serif;}
   .hero-slider:hover .sl-arrow{opacity:.35;}
   .hero-slider .sl-arrow:hover,.hero-slider .sl-arrow:focus-visible{opacity:.85;}
+  .sl-cue{position:absolute;right:44px;bottom:84px;z-index:20;display:flex;flex-direction:column;align-items:center;gap:14px;color:#1B2733;transition:bottom .6s ease;}
+  .hero-slider.at-1 .sl-cue{bottom:40px;color:#F4F1EA;text-shadow:0 1px 6px rgba(0,0,0,0.45);}
+  .hero-slider.at-1 .sl-cue .cue-line{background:rgba(244,241,234,0.4) !important;}
+  .hero-slider.at-1 .sl-cue .scroll-tick{background:#F4F1EA !important;}
   .sl-marks{position:absolute;left:48px;bottom:72px;z-index:20;display:flex;gap:6px;align-items:center;transition:bottom .6s ease;}
   .hero-slider.at-1 .sl-marks{bottom:32px;}
   .sl-prog{display:flex;align-items:center;background:none;border:none;padding:8px 0;cursor:pointer;}
@@ -259,6 +264,23 @@
 
   .foot-grid{max-width:1080px;margin:0 auto;padding:80px 44px 0;display:grid;grid-template-columns:minmax(0,1.6fr) repeat(2,minmax(0,1fr));gap:48px;}
   @media (max-width:760px){ .foot-grid{grid-template-columns:1fr;padding:56px 24px 0;gap:36px;} }
+  /* Group gifts */
+  .gg-wrap{max-width:1176px;margin:0 auto;padding:112px 48px;}
+  .gg-card{background:#F4F1EA;border-radius:28px;display:flex;flex-wrap:wrap;}
+  .gg-text{flex:1 1 440px;min-width:0;padding:72px 96px 72px 64px;display:flex;flex-direction:column;justify-content:center;gap:20px;}
+  .gg-text h2{font-family:'Spectral',serif;font-weight:400;font-size:clamp(34px,3.8vw,48px);line-height:1.1;letter-spacing:-0.5px;margin:0;color:#1B2733;}
+  .gg-img{flex:1 1 380px;min-width:0;min-height:380px;position:relative;border-radius:0 28px 28px 0;}
+  .gg-img .gg-photo{position:absolute;inset:0;overflow:hidden;border-radius:inherit;}
+  .gg-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.16,1,.3,1);}
+  .gg-card:hover .gg-img img{transform:scale(1.04);}
+  .gg-badge{position:absolute;left:-84px;bottom:56px;width:168px;height:168px;z-index:2;display:flex;align-items:center;justify-content:center;}
+  .gg-badge .gg-back{position:absolute;inset:0;border-radius:50%;background:#F4F1EA;}
+  .gg-badge .gg-words{position:absolute;inset:0;width:100%;height:100%;overflow:visible;animation:chSpin 24s linear infinite reverse;}
+  .gg-badge .gg-core{position:relative;width:52%;height:52%;border-radius:50%;background:#FFFFFF;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 22px -10px rgba(27,39,51,0.45);}
+  .gg-badge .gg-ring{position:absolute;inset:6px;border-radius:50%;border:1px dashed rgba(169,120,79,0.75);animation:chSpin 18s linear infinite;}
+  @media (max-width:960px){ .gg-card{flex-direction:column;} .gg-text{flex:none;padding:56px 48px 88px;} .gg-img{flex:none;min-height:clamp(260px,52vw,420px);border-radius:0 0 28px 28px;} .gg-badge{left:auto;right:clamp(16px,5vw,48px);bottom:auto;top:clamp(-76px,-8vw,-64px);width:clamp(128px,16vw,152px);height:clamp(128px,16vw,152px);} }
+  @media (max-width:760px){ .gg-wrap{padding:72px 20px;} .gg-text{padding:40px 24px 80px;} }
+  @media (prefers-reduced-motion:reduce){ .gg-badge .gg-words,.gg-badge .gg-ring{animation:none;} .gg-img img{transition:none;} }
 </style>
 <style id="burger-menu">
   #mobileMenuBtn{width:40px;height:40px;margin-right:-8px;padding:0 !important;align-items:center;justify-content:center;}
@@ -359,16 +381,17 @@
           </div>
         </div>
       </div>
-      <a class="scroll-cue" href="#how" aria-label="Scroll to how it works" style="position:absolute;right:44px;bottom:40px;z-index:60;display:flex;flex-direction:column;align-items:center;gap:16px;color:#1B2733;">
-        <span style="writing-mode:vertical-rl;font-size:10px;letter-spacing:3px;">SCROLL</span>
-        <span style="position:relative;width:1px;height:72px;background:rgba(27,39,51,0.2);overflow:hidden;display:block;">
-          <span class="scroll-tick" style="position:absolute;left:0;top:0;width:1px;height:24px;background:#1B2733;display:block;"></span>
-        </span>
-      </a>
+
     </section>
 
     <button type="button" class="sl-arrow" aria-label="Previous slide" data-sl="prev" style="left:10px;">‹</button>
     <button type="button" class="sl-arrow" aria-label="Next slide" data-sl="next" style="right:10px;">›</button>
+    <a class="scroll-cue sl-cue" href="#how" aria-label="Scroll down to how it works">
+      <span style="writing-mode:vertical-rl;font-size:10px;letter-spacing:3px;">SCROLL</span>
+      <span class="cue-line" style="position:relative;width:1px;height:72px;background:rgba(27,39,51,0.25);overflow:hidden;display:block;">
+        <span class="scroll-tick" style="position:absolute;left:0;top:0;width:1px;height:24px;background:#1B2733;display:block;"></span>
+      </span>
+    </a>
     <div class="sl-marks">
       <button type="button" class="sl-prog" aria-label="Show slide 1" data-sl="0"><span class="sl-track"><span class="sl-fill"></span></span></button>
       <button type="button" class="sl-prog" aria-label="Show slide 2" data-sl="1"><span class="sl-track"><span class="sl-fill"></span></span></button>
@@ -426,6 +449,23 @@
         <div class="how-step left" id="how-step-3"><div class="how-ic"><span><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#A9784F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 7l3 3"/></svg></span></div><span class="how-dot"></span><div class="how-body"><span class="how-num">03</span><h3>Your plan</h3><p>We draw up a design plan for you to look over. Nothing moves forward until you’re happy with it.</p></div></div>
         <div class="how-step right" id="how-step-4"><div class="how-ic"><span><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#A9784F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 16h5"/></svg></span></div><span class="how-dot"></span><div class="how-body"><span class="how-num">04</span><h3>Your quote</h3><p>Once you’re happy with the plan, we send you a quote. When you give the go-ahead, we get started.</p></div></div>
         <div class="how-step left" id="how-step-5"><div class="how-ic"><span><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#A9784F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></span></div><span class="how-dot"></span><div class="how-body"><span class="how-num">05</span><h3>Production &amp; pickup</h3><p>We make your piece, and let you know the moment it’s ready for pickup.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="group-gifts" aria-labelledby="bulk-title" style="background:#FFFFFF;">
+    <div class="gg-wrap">
+      <div class="gg-card">
+        <div class="gg-text">
+          <span style="font-size:11px;letter-spacing:3px;color:#7E5634;">GIFTS FOR GROUPS</span>
+          <h2 id="bulk-title">A gift they’ll remember —<br><em style="font-style:italic;color:#A9784F;">with your logo on it.</em></h2>
+          <p style="font-size:15px;line-height:1.75;color:rgba(27,39,51,0.75);margin:0;max-width:440px;text-wrap:pretty;">Giving a present to a group of people? Make it something that will be remembered and well received, customised with your school, workplace or organisation’s logo.</p>
+          <p style="font-size:11px;letter-spacing:2px;color:#7E5634;margin:2px 0 0;">SCHOOLS &nbsp;·&nbsp; WORKPLACES &nbsp;·&nbsp; SHULS &nbsp;·&nbsp; SIMCHAS</p>
+        </div>
+        <div class="gg-img">
+          <div class="gg-photo"><img src="assets/group-gifts.jpg" alt="Clear acrylic Shabbos Kodesh piece with mirror-silver lettering on a marble table" loading="lazy" width="1672" height="941"></div>
+          <span class="gg-badge" role="img" aria-label="Great bulk pricing"><span class="gg-back" aria-hidden="true"></span><svg class="gg-words" aria-hidden="true" viewBox="0 0 100 100"><defs><path id="gg-path" d="M50,50 m-40,0 a40,40 0 1,1 80,0 a40,40 0 1,1 -80,0"/></defs><text font-family="Inter, sans-serif" font-size="7" font-weight="500" fill="#7E5634"><textPath href="#gg-path" textLength="250" lengthAdjust="spacing">GREAT BULK PRICING ✦ GREAT BULK PRICING ✦</textPath></text></svg><span class="gg-core" aria-hidden="true"><span class="gg-ring"></span><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#A9784F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg></span></span>
+        </div>
       </div>
     </div>
   </section>

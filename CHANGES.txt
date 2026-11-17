@@ -73,3 +73,15 @@ MOBILE MENU (all pages)
   The phone menu button is now a burger icon that turns into an X when open,
   with a rounded dropdown card (How it works / About / Contact) that slides in.
   Applied to index, about, checkout, contact, order, gallery and project pages.
+
+VISITOR TRACKING
+  Cloudflare Web Analytics added to every public page (not admin.html).
+  See visits at dash.cloudflare.com -> Analytics & Logs -> Web Analytics.
+
+SITE ICON (favicon)
+  Your swirl icon (cream on dark blue) now shows in browser tabs, bookmarks, phone home screens and next to your site in Google results.
+  New files: favicon.ico, favicon.svg, favicon-48x48.png, favicon-192.png, favicon-512.png, apple-touch-icon.png (in the main folder).
+
+SCROLL MARKER (index.html)
+  The "SCROLL" marker now shows on both home slides (it used to be only on the second one),
+  sitting above the banner on the Chanukah slide and in cream over the photo on the second slide.
