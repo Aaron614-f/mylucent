@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="66.9989mm" height="77.4248mm" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 871 1007">
+ <defs><style type="text/css"><![CDATA[ .str0 {stroke:#373435;stroke-width:0.99115} .fil0 {fill:#E6E7E8} ]]></style></defs>
+ <g>
+  <path class="fil0 str0" d="M523 0l-522 0 0 1006 522 0 0 -39c-110,-20 -214,-74 -295,-153 -107,-104 -168,-244 -172,-393 0,-6 3,-357 3,-365l0 -9 113 0 0 9c0,8 -3,341 -3,363 6,213 152,388 354,433l0 -41c-71,-18 -135,-54 -188,-106 -78,-76 -123,-179 -126,-288 0,-4 3,-353 3,-361l0 -9 113 0 0 9c0,8 -3,336 -3,359 3,126 85,236 201,278l0 -43c-30,-13 -58,-31 -81,-54 -50,-48 -78,-113 -80,-183 0,-3 3,-349 3,-357l0 -9 113 0 0 9c0,8 -3,331 -3,355 1,42 19,80 48,107l0 -517z"/>
+  <polygon class="fil0 str0" points="585,0 871,0 871,352 871,765 871,1007 585,1007 585,682 585,641 585,343 585,138 "/>
+ </g>
+</svg>

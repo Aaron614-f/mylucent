@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Custom Acrylic Art Gallery — myLucent.co</title>
+<meta name="description" content="Browse real custom acrylic art and personalized silver nameplate projects made by myLucent.co — get inspired for your own piece.">
+<link rel="canonical" href="https://mylucent.co/gallery.html">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap');
+  :root{
+    --ivory:#F4F1EA; --white:#FFFFFF; --charcoal:#1B2733;
+    --gold:#A9784F; --gold-soft:#C9A97D;
+    --line: rgba(27,39,51,0.12); --muted: rgba(27,39,51,0.6);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--ivory); color:var(--charcoal); font-family:'Inter', sans-serif; }
+  h1,h2,h3{ font-family:'Spectral', serif; margin:0; }
+  a{ color:inherit; }
+  img{ max-width:100%; display:block; }
+
+  header{ display:flex; align-items:center; justify-content:space-between; padding:22px 44px; background:var(--charcoal); }
+  .brand{ display:flex; align-items:center; }
+  .brand-logo{ height:26px; width:94px; display:block; }
+  nav{ display:flex; gap:28px; }
+  nav a{ font-size:12px; letter-spacing:2px; text-decoration:none; color:var(--ivory); opacity:0.85; }
+  nav a:hover{ opacity:1; color:var(--gold-soft); }
+
+  .section-inner{ max-width:1100px; margin:0 auto; padding:70px 44px 90px; }
+  @media (max-width: 760px){ .section-inner{ padding:50px 20px 60px; } }
+  .intro{ text-align:center; margin-bottom:48px; }
+  .eyebrow{ font-size:11px; letter-spacing:3px; color:var(--gold); display:block; margin-bottom:16px; }
+  .intro h1{ font-size:34px; font-weight:500; margin-bottom:14px; }
+  .intro p{ font-size:14px; color:var(--muted); max-width:520px; margin:0 auto; line-height:1.7; }
+
+  .project-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:26px;
+  }
+  @media (max-width: 900px){ .project-grid{ grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width: 560px){ .project-grid{ grid-template-columns:1fr; } }
+
+  .project-card{
+    display:block; text-decoration:none; color:inherit;
+    border-radius:16px; overflow:hidden;
+    background:var(--white);
+    box-shadow: 0 20px 40px -28px rgba(27,39,51,0.28);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .project-card:hover{ transform:translateY(-4px); box-shadow: 0 28px 52px -26px rgba(27,39,51,0.34); }
+  .project-card .thumb{ height:220px; width:100%; object-fit:cover; }
+  .project-card .card-body{ padding:18px 20px 22px; }
+  .project-card .tag{ font-size:10px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; }
+  .project-card h3{ font-size:17px; font-weight:500; margin-top:8px; }
+
+  footer{ padding:40px 44px 28px; text-align:center; border-top:1px solid var(--line); background:var(--white); }
+  .footer-inner{ display:flex; justify-content:center; gap:24px; margin-bottom:16px; }
+  .footer-inner a{ font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--charcoal); text-decoration:none; }
+  .footer-inner a:hover{ color:var(--gold); }
+  footer p{ font-size:11px; letter-spacing:1px; color:var(--muted); margin:0; }
+</style>
+<style id="std-nav">
+  #site-header{background:#FFFFFF !important;border-radius:0 !important;padding:20px 32px !important;margin:0 !important;display:flex !important;align-items:center !important;justify-content:space-between !important;box-shadow:0 4px 14px -6px rgba(27,39,51,0.12) !important;position:sticky !important;top:0 !important;left:auto !important;right:auto !important;width:auto !important;max-width:none !important;z-index:50 !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;border:none !important;transition:transform .3s ease,opacity .3s ease;}
+  #site-header.hdr-hidden{transform:translateY(-140%);opacity:0;}
+  #site-header > a{flex-shrink:0;display:block;}
+  #site-header .desktop-nav{display:flex;gap:32px;}
+  #site-header .nav-link{position:relative;color:#1B2733 !important;text-decoration:none;font-family:'Inter',sans-serif;font-size:12px;letter-spacing:1.5px;padding:6px 2px;white-space:nowrap;}
+  #site-header .nav-link::after{content:'';position:absolute;left:0;right:100%;bottom:0;height:1px;background:#1B2733;transition:right .3s ease;}
+  #site-header .nav-link:hover::after{right:0;}
+  #site-header .mobile-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-shrink:0;}
+  #site-header .mobile-dropdown{display:none;position:absolute;top:calc(100% + 8px);left:12px;right:12px;background:#FFFFFF;border-radius:10px;box-shadow:0 10px 28px -8px rgba(27,39,51,0.28);padding:8px;flex-direction:column;gap:2px;z-index:60;}
+  #site-header .mobile-dropdown.open{display:flex;}
+  #site-header .mobile-dropdown a{padding:13px 14px;font-family:'Inter',sans-serif;font-size:12px;letter-spacing:1.5px;color:#1B2733;border-radius:6px;text-decoration:none;}
+  #site-header .mobile-dropdown a:hover{background:rgba(169,120,79,0.08);}
+  @media (max-width:820px){
+    #site-header{padding:14px 16px !important;margin:0 !important;}
+    #site-header .desktop-nav{display:none !important;}
+    #site-header .mobile-menu-btn{display:flex;}
+  }
+</style>
+<style id="burger-menu">
+  #mobileMenuBtn{width:40px;height:40px;margin-right:-8px;padding:0 !important;align-items:center;justify-content:center;}
+  .bg-icon{position:relative;display:block;width:22px;height:14px;}
+  .bg-icon i{position:absolute;left:0;right:0;height:1.6px;border-radius:2px;background:#1B2733;transition:transform .3s ease,opacity .2s ease,top .3s ease;}
+  .bg-icon i:nth-child(1){top:0;} .bg-icon i:nth-child(2){top:6px;} .bg-icon i:nth-child(3){top:12px;}
+  .bg-icon.open i:nth-child(1){top:6px;transform:rotate(45deg);}
+  .bg-icon.open i:nth-child(2){opacity:0;}
+  .bg-icon.open i:nth-child(3){top:6px;transform:rotate(-45deg);}
+  @keyframes dropIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
+  #site-header .mobile-dropdown{left:12px;right:12px;border-radius:12px;box-shadow:0 14px 32px -10px rgba(27,39,51,0.3);padding:8px;}
+  #site-header .mobile-dropdown.open{animation:dropIn .25s ease both;}
+  #site-header .mobile-dropdown a{padding:14px;border-radius:8px;}
+  @media (prefers-reduced-motion:reduce){ .bg-icon i{transition:none;} #site-header .mobile-dropdown.open{animation:none;} }
+</style>
+</head>
+<body>
+
+  <header id="site-header">
+  <a href="./index.html"><img src="logo.svg" alt="myLucent.co" style="height:26px;width:94px;display:block;"></a>
+  <nav class="desktop-nav">
+    <a href="./index.html#how" class="nav-link">HOW IT WORKS</a>
+    <a href="./about.html" class="nav-link">ABOUT</a>
+    <a href="./contact.html" class="nav-link">CONTACT</a>
+  </nav>
+  <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileDropdown">
+    <span class="bg-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+  </button>
+  <div class="mobile-dropdown" id="mobileDropdown">
+    <a href="./index.html#how">HOW IT WORKS</a>
+    <a href="./about.html">ABOUT</a>
+    <a href="./contact.html">CONTACT</a>
+  </div>
+</header>
+
+  <div class="section-inner">
+    <div class="intro">
+      <span class="eyebrow">THE GALLERY</span>
+      <h1>A growing collection of finished pieces.</h1>
+      <p>Click into any project to see every photo from that piece.</p>
+    </div>
+
+    <div class="project-grid" id="projectGrid"></div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <p>© myLucent.co — Personalized Acrylic Art &amp; Silver Nameplates</p>
+  </footer>
+
+<script src="projects-data.js"></script>
+<script>
+  var grid = document.getElementById('projectGrid');
+  (window.PROJECTS || []).forEach(function(p){
+    var a = document.createElement('a');
+    a.className = 'project-card';
+    a.href = 'project.html?id=' + encodeURIComponent(p.id);
+
+    var img = document.createElement('img');
+    img.className = 'thumb';
+    img.src = p.cover;
+    img.alt = p.title;
+
+    var body = document.createElement('div');
+    body.className = 'card-body';
+    body.innerHTML = '<div class="tag">' + p.tag + '</div><h3>' + p.title + '</h3>';
+
+    a.appendChild(img);
+    a.appendChild(body);
+    grid.appendChild(a);
+  });
+</script>
+<script id="std-nav-js">
+(function(){
+  var btn=document.getElementById('mobileMenuBtn'),dd=document.getElementById('mobileDropdown'),h=document.getElementById('site-header');
+  if(btn&&dd){
+    btn.addEventListener('click',function(e){e.stopPropagation();dd.classList.toggle('open');});
+    document.addEventListener('click',function(e){if(!dd.contains(e.target)&&!btn.contains(e.target))dd.classList.remove('open');});
+  }
+  if(h){var last=window.scrollY;window.addEventListener('scroll',function(){var y=window.scrollY;h.classList.toggle('hdr-hidden',y>last&&y>80);last=y;},{passive:true});}
+})();
+</script>
+<script>
+  // Burger icon: turns into an X while the menu is open
+  (function(){
+    var btn = document.getElementById('mobileMenuBtn'), dd = document.getElementById('mobileDropdown');
+    if (!btn || !dd) return;
+    var icon = btn.querySelector('.bg-icon');
+    function sync(){
+      var open = dd.classList.contains('open');
+      if (icon) icon.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    }
+    new MutationObserver(sync).observe(dd, { attributes: true, attributeFilter: ['class'] });
+    sync();
+  })();
+</script>
+</body>
+</html>

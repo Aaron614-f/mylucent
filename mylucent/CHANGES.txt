@@ -1,0 +1,75 @@
+myLucent.co — website update (Chanukah stand, About page, slider)
+==================================================================
+
+NEW FILES
+  checkout.html            Checkout for the Chanukah Brachos Stand: details -> review -> Pay with Stripe
+  about.html               About page ("It started as a hobby")
+  assets/chanukah-stand.jpg
+  assets/hero-portrait.jpg  (photo on slide 2 of the home slider)
+  assets/project-03.jpg     (Shabbos Kodesh napkin holder)
+  assets/portrait-framed-tall.jpg (framed portrait, tall)
+
+CHANGED FILES
+  index.html     Top of the page is now a 2-slide fading slider:
+                   1) Chanukah stand (marble background, BUY NOW -> checkout.html, scrolling banner)
+                   2) "Your idea, made in acrylic" over the photo of the framed engraved portrait on a marble table
+                      (text on the left over a soft cream fade; on phones the photo sits under the text)
+                 Gallery section hidden (search for 'Gallery hidden for now' to bring it back).
+                 Shows a thank-you / cancelled message when customers return from Stripe.
+  pricing.js     New "products" section: chanukah-brachos-stand = $45 each.
+                 Change unitPrice there to change the price everywhere.
+  server.js      /api/register-order and /api/create-checkout-session now also handle
+                 ready-made products. Price and product name come from pricing.js only.
+                 Owner SMS + customer confirmation email name the Chanukah stand correctly.
+                 Plaque orders work exactly as before.
+  contact.html, order.html, gallery.html, project.html
+                 Menus: GALLERY and ORDER PLAQUE removed, ABOUT added.
+                 (order.html and gallery.html still exist, just not linked.)
+  sitemap.xml    about.html added.
+
+STRIPE — nothing new to set up
+  Uses the same STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET already in Railway,
+  and the same webhook (POST /api/stripe-webhook, event checkout.session.completed).
+
+TEST BEFORE GOING LIVE
+  1. In Railway, temporarily use your Stripe TEST keys (sk_test_... and the test webhook secret).
+  2. Go to /checkout.html, fill in details, pay with card 4242 4242 4242 4242, any future date, any CVC.
+  3. Check: you land back on the home page with "Thank you — your order is confirmed",
+     you get the order text, and the customer email arrives.
+  4. Switch back to the live keys.
+
+GALLERY (projects-data.js) now shows only:
+  Engraved Portrait Plaque, Simcha Grazing Table Signage, Shabbos Kodesh Napkin Holder, Chanukah Brachos Stand
+
+DELETE BY HAND in your website folder (copying the zip over it won't remove old files):
+  assets/hero-interior.jpg   (portrait-above-sofa photo, no longer used anywhere)
+
+DESIGN PREFERENCE (checkout.html)
+  Customers must pick Design 1 (Arches), 2 (Key pattern) or 3 (Shards) before paying,
+  with the note "While stocks last. If your chosen design is no longer available, we will contact you to choose the next-best preference."
+  The choice shows in your order text ("Pref: ..."), the customer email, and the Stripe payment description.
+  Design names live in pricing.js under products -> designs. Images: assets/design-1.svg, -2, -3.
+
+AFTER PAYMENT (Chanukah stand) — only once Stripe confirms the payment:
+  1. Admin Inbox: a new unread message from the customer with the full order
+     (reference, item, quantity, preferred design, total paid, name, mobile, email).
+  2. One short text to you, e.g.
+        New paid order
+        Rivka Cohen
+        0412345678
+        Pref: Design 2 (Key pattern)
+  3. The customer gets their confirmation email.
+  Nothing is sent if they stop before paying.
+  When the piece is ready, text "ML-XXXXXXX ready" (reference is in the Inbox message)
+  to email the customer that it's ready for pickup.
+
+IPHONE FIT (index.html)
+  On phones the top slider now fills exactly one screen under the menu bar
+  (checked on iPhone SE, iPhone 14 and iPhone 14 Pro Max sizes), with the
+  scrolling banner sitting at the bottom edge. Also fixed the page being
+  slightly wider than the phone (it could wiggle sideways).
+
+MOBILE MENU (all pages)
+  The phone menu button is now a burger icon that turns into an X when open,
+  with a rounded dropdown card (How it works / About / Contact) that slides in.
+  Applied to index, about, checkout, contact, order, gallery and project pages.
