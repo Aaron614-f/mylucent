@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>myLucent.co — Custom Acrylic Art, Simcha Gifts &amp; Personalised Gifts</title>
+<link rel="preload" as="image" href="assets/chanukah-stand.jpg" fetchpriority="high">
 <link rel="icon" href="/favicon.ico?v=3" sizes="any">
 <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml">
 <link rel="icon" href="/favicon-48x48.png?v=3" type="image/png" sizes="48x48">
@@ -31,7 +32,7 @@
 }
 </script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;800&display=swap');
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;scroll-padding-top:72px;}
   html,body{margin:0;padding:0;background:#FFFFFF;color:#1B2733;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
@@ -206,7 +207,7 @@
   .ch-bg{position:absolute;inset:0;width:100%;height:100%;display:block;animation:chBgDrift 26s ease-in-out infinite alternate;}
   @keyframes chBgDrift{0%{transform:scale(1.04) translateX(1.5%);}100%{transform:scale(1.04) translateX(-1.5%);}}
   .ch-inner{position:relative;z-index:2;flex:1;max-width:1176px;margin:0 auto;width:100%;padding:36px 48px 48px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:40px 72px;}
-  .ch-frame{display:block;position:relative;height:min(62vh,540px);max-width:100%;aspect-ratio:4 / 5;border-radius:240px 240px 16px 16px;overflow:hidden;border:1px solid rgba(255,255,255,0.75);box-shadow:0 40px 80px -30px rgba(27,39,51,0.55),0 0 0 10px rgba(244,241,234,0.45);background:#E9E5DC;}
+  .ch-frame{display:block;position:relative;height:min(62vh,540px);width:calc(min(62vh,540px) * 0.8);max-width:100%;aspect-ratio:4 / 5;isolation:isolate;-webkit-mask-image:-webkit-radial-gradient(white,black);transform:translateZ(0);border-radius:240px 240px 16px 16px;overflow:hidden;border:1px solid rgba(255,255,255,0.75);box-shadow:0 40px 80px -30px rgba(27,39,51,0.55),0 0 0 10px rgba(244,241,234,0.45);background:#E9E5DC;}
   .ch-frame img{width:100%;height:100%;object-fit:cover;display:block;max-width:none;}
   @keyframes chPan{0%{transform:scale(1.22) translate(-6%,3%);}50%{transform:scale(1.06) translate(5%,-2%);}100%{transform:scale(1.22) translate(-6%,3%);}}
   .ch-pan{animation:chPan 16s ease-in-out infinite;}
@@ -215,7 +216,7 @@
   @keyframes chShine{0%,55%{transform:translateX(-160%) skewX(-18deg);}100%{transform:translateX(320%) skewX(-18deg);}}
   .ch-shine{position:absolute;top:-10%;bottom:-10%;left:0;width:38%;background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0.5) 50%,rgba(255,255,255,0) 100%);pointer-events:none;animation:chShine 5.5s ease-in-out infinite;}
   @keyframes chSlideIn{from{opacity:0;transform:translateX(120px);}to{opacity:1;transform:none;}}
-  .ch-in-right{opacity:0;animation:chSlideIn 1.3s cubic-bezier(.2,.7,.2,1) .35s forwards;}
+  .ch-in-right{animation:chSlideIn 1.3s cubic-bezier(.2,.7,.2,1) .35s both;}
   @keyframes chSpin{to{transform:rotate(360deg);}}
   .ch-badge{position:absolute;right:-34px;bottom:56px;width:118px;height:118px;border-radius:50%;background:#1B2733;color:#F4F1EA;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 16px 32px -12px rgba(27,39,51,0.6);}
   .ch-badge .ring{position:absolute;inset:7px;border-radius:50%;border:1px dashed rgba(201,169,125,0.8);animation:chSpin 18s linear infinite;}
@@ -237,11 +238,11 @@
     .hero-slider .hero{min-height:calc(100svh - 62px);}
     .ch-inner{flex:1 1 auto;align-content:center;}
     #slide-1{flex-direction:column;align-items:stretch;}
-    #slide-1 img.bg{position:relative;inset:auto;order:2;width:100%;height:0;flex:1 1 auto;min-height:36svh;object-position:76% 50%;}
+    #slide-1 img.bg{position:relative;inset:auto;order:2;width:100%;height:0;flex:1 1 auto;min-height:200px;object-position:76% 50%;}
     #slide-1 .veil{display:none;}
     #slide-1 > div{order:1;padding:40px 20px 28px !important;}
     .ch-inner{padding:18px 20px 22px;gap:16px;}
-    .ch-frame{height:clamp(170px, calc(100vh - 400px), 420px);height:clamp(170px, calc(100svh - 400px), 420px);border-radius:200px 200px 12px 12px;box-shadow:0 24px 48px -24px rgba(27,39,51,0.5),0 0 0 6px rgba(244,241,234,0.45);}
+    .ch-frame{height:clamp(200px, calc(100vh - 380px), 420px);height:clamp(200px, calc(100svh - 380px), 420px);width:calc(clamp(200px, calc(100vh - 380px), 420px) * 0.8);width:calc(clamp(200px, calc(100svh - 380px), 420px) * 0.8);border-radius:200px 200px 12px 12px;box-shadow:0 24px 48px -24px rgba(27,39,51,0.5),0 0 0 6px rgba(244,241,234,0.45);}
     .ch-badge{right:-14px;width:82px;height:82px;bottom:22px;}
     .ch-badge span:last-child{font-size:15px !important;}
     .ch-slide h1{font-size:27px !important;margin-bottom:8px !important;}
@@ -250,6 +251,19 @@
     .ch-marquee{font-size:11px;}
     .sl-marks{left:20px;bottom:64px;}
     .sl-arrow{display:none;}
+  }
+  @media (min-width:761px) and (max-height:560px){
+    /* Phones turned sideways: let the slides grow instead of cutting them off */
+    .hero-slider{height:auto;min-height:0;}
+    .sl-slide{position:relative;inset:auto;}
+    .sl-slide:not(.on){display:none;}
+    .hero-slider .hero{min-height:calc(100svh - 62px);}
+    .ch-inner{flex-wrap:nowrap;padding:28px 48px 36px;gap:48px;}
+    .ch-frame{height:clamp(220px, calc(100svh - 150px), 420px);width:calc(clamp(220px, calc(100svh - 150px), 420px) * 0.8);}
+    .sl-arrow{display:none;}
+    #slide-1 img.bg{left:auto;right:0;width:46%;object-position:60% 50%;}
+    #slide-1 .veil{display:none;}
+    #slide-1 > div > div{max-width:46% !important;}
   }
   @media (prefers-reduced-motion:reduce){
     .sl-slide,.sl-slide.on{transition:none;} .sl-slide.on img.sl-zoom,.ch-bg,.ch-pan,.ch-float,.ch-marquee,.ch-badge .ring{animation:none;}
@@ -281,6 +295,51 @@
   @media (max-width:960px){ .gg-card{flex-direction:column;} .gg-text{flex:none;padding:56px 48px 88px;} .gg-img{flex:none;min-height:clamp(260px,52vw,420px);border-radius:0 0 28px 28px;} .gg-badge{left:auto;right:clamp(16px,5vw,48px);bottom:auto;top:clamp(-76px,-8vw,-64px);width:clamp(128px,16vw,152px);height:clamp(128px,16vw,152px);} }
   @media (max-width:760px){ .gg-wrap{padding:72px 20px;} .gg-text{padding:40px 24px 80px;} }
   @media (prefers-reduced-motion:reduce){ .gg-badge .gg-words,.gg-badge .gg-ring{animation:none;} .gg-img img{transition:none;} }
+
+  /* Flyer slide */
+  #slide-flyer{background:#E2DDD7;overflow:hidden;}
+  .fl-area{position:absolute;inset:0;overflow:hidden;}
+  .fl-photo{position:absolute;left:50%;top:50%;transform:translate(-42%,-50%);width:max(100%, calc(max(640px, 100vh - 66px) * 1.7778));width:max(100%, calc(max(640px, 100svh - 66px) * 1.7778));aspect-ratio:2400 / 1350;-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 9%);mask-image:linear-gradient(90deg,transparent 0%,#000 9%);}
+  .fl-flyer{display:block;width:100%;height:100%;}
+  .fl-copy{position:absolute;z-index:5;left:max(44px,calc((100% - 1176px) / 2 + 44px));top:50%;transform:translateY(-50%);width:min(28vw,340px);color:#1B2733;}
+  .fl-eye{display:block;font-size:11px;letter-spacing:3px;color:#7E5634;margin-bottom:14px;}
+  .fl-copy h2{font-family:'Spectral',serif;font-weight:400;font-size:clamp(28px,2.7vw,38px);line-height:1.12;letter-spacing:-0.3px;margin:0 0 16px;}
+  .fl-copy h2 em{font-style:italic;color:#7E5634;}
+  .fl-copy p{font-size:14.5px;line-height:1.7;color:rgba(27,39,51,0.8);margin:0 0 18px;}
+  .fl-copy ul{list-style:none;margin:0;padding:0;}
+  .fl-copy li{display:flex;align-items:center;gap:12px;font-size:13.5px;color:#1B2733;}
+  .fl-copy li::before{content:"";width:18px;height:1px;background:#A9784F;flex:none;}
+  @media (max-width:1100px){ .fl-copy{width:min(30vw,300px);} .fl-copy p{font-size:13.5px;} }
+  .fl-run{position:absolute;inset:0;z-index:4;pointer-events:none;font-size:clamp(84px,17vh,190px);}
+  .fl-row{position:absolute;left:0;right:0;top:3%;} .fl-row2{top:auto;bottom:5%;}
+  .fl-track{display:flex;width:max-content;white-space:nowrap;font-family:'Inter',sans-serif;font-weight:800;font-size:1em;line-height:.92;letter-spacing:-0.035em;word-spacing:-0.06em;color:rgba(27,39,51,0.11);}
+  .fl-row2 .fl-track{color:rgba(126,86,52,0.14);}
+  .fl-track span{padding-right:.18em;}
+  .fl-l{animation:flL 60s linear infinite;} .fl-r{animation:flR 60s linear infinite;}
+  @keyframes flL{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  @keyframes flR{from{transform:translateX(-50%);}to{transform:translateX(0);}}
+  .fl-badge{position:absolute;left:71.5%;top:57%;width:124px;height:124px;border-radius:50%;background:#1B2733;color:#F4F1EA;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 16px 32px -12px rgba(27,39,51,0.6);text-decoration:none;transition:transform .3s ease;z-index:6;}
+  .fl-badge:hover{transform:scale(1.06);}
+  .fl-badge .ring{position:absolute;inset:7px;border-radius:50%;border:1px dashed rgba(201,169,125,0.8);animation:chSpin 18s linear infinite;}
+  .fl-badge .t1{font-size:10.5px;letter-spacing:2.5px;color:#C9A97D;}
+  .fl-badge .t2{font-family:'Spectral',serif;font-style:italic;font-size:21px;line-height:1.1;}
+  @media (max-width:760px){
+    #slide-flyer{flex-direction:column;} #slide-flyer.on{display:flex;}
+    .fl-area{position:relative;inset:auto;flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:clamp(50px,9svh,74px) 20px clamp(52px,10svh,80px);}
+    .fl-run{font-size:clamp(46px,8svh,64px);}
+    .fl-row{top:8px;} .fl-row2{top:auto;bottom:10px;}
+    .fl-copy{position:relative;left:auto;top:auto;transform:none;width:auto;max-width:420px;}
+    .fl-eye{font-size:10px;margin-bottom:8px;}
+    .fl-copy h2{font-size:clamp(24px,7vw,30px);margin:0 0 8px;}
+    .fl-copy p{font-size:13.5px;line-height:1.55;margin:0 0 8px;}
+    .fl-copy li{font-size:12.5px;}
+    .fl-photo{position:relative;left:auto;top:auto;transform:none;width:100%;max-width:440px;margin:0 auto;aspect-ratio:auto;height:clamp(180px,36svh,340px);flex:none;overflow:hidden;-webkit-mask-image:radial-gradient(ellipse 72% 70% at 50% 50%,#000 62%,transparent 100%);mask-image:radial-gradient(ellipse 72% 70% at 50% 50%,#000 62%,transparent 100%);}
+    .fl-flyer{position:absolute;left:50%;top:50%;height:132%;width:auto;max-width:none;transform:translate(-51%,-51%);}
+    .fl-badge{width:80px;height:80px;left:auto;right:1%;top:auto;bottom:2%;} .fl-badge .t2{font-size:15px;} .fl-badge .t1{font-size:9px;}
+  }
+  @media (max-width:760px) and (max-height:600px){ .fl-copy ul{display:none;} .fl-copy p{margin:0;} .fl-area{gap:8px;} }
+  @media (min-width:761px) and (max-height:560px){ #slide-flyer{min-height:calc(100svh - 62px);} .fl-copy{display:none;} .fl-photo{transform:translate(-50%,-50%);width:calc((100svh - 62px) * 1.7778);} }
+  @media (prefers-reduced-motion:reduce){ .fl-badge .ring,.fl-l,.fl-r{animation:none;} }
 </style>
 <style id="burger-menu">
   #mobileMenuBtn{width:40px;height:40px;margin-right:-8px;padding:0 !important;align-items:center;justify-content:center;}
@@ -320,7 +379,7 @@
 
 <main>
   <div class="hero-slider" id="heroSlider" aria-roledescription="carousel" aria-label="Featured">
-    <section class="sl-slide ch-slide on" id="slide-0" aria-roledescription="slide" aria-label="1 of 2" aria-labelledby="ch-title">
+    <section class="sl-slide ch-slide on" id="slide-0" aria-roledescription="slide" aria-label="1 of 3" aria-labelledby="ch-title">
       <svg aria-hidden="true" class="ch-bg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
         <defs>
           <filter id="chCloud" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.0035 0.009" numOctaves="4" seed="7"/><feColorMatrix values="0 0 0 0 0.55  0 0 0 0 0.53  0 0 0 0 0.5  0 0 0 0.35 0"/></filter>
@@ -345,7 +404,7 @@
         <div class="ch-in-right" style="flex:0 1 auto;min-width:0;display:flex;justify-content:center;">
           <div class="ch-float">
             <a href="./checkout.html" class="ch-frame" aria-label="Buy the Chanukah brachos stand">
-              <img class="ch-pan" src="assets/chanukah-stand.jpg" alt="One-piece clear acrylic Chanukah brachos stand with mirror-silver lettering and a built-in shamash holder, beside a silver menorah">
+              <img class="ch-pan" src="assets/chanukah-stand.jpg" fetchpriority="high" decoding="async" alt="One-piece clear acrylic Chanukah brachos stand with mirror-silver lettering and a built-in shamash holder, beside a silver menorah">
               <span class="ch-shine" aria-hidden="true"></span>
             </a>
             <span class="ch-badge" aria-hidden="true">
@@ -368,7 +427,26 @@
       </div>
     </section>
 
-      <section class="hero sl-slide" id="slide-1" aria-roledescription="slide" aria-label="2 of 2">
+    <section class="sl-slide" id="slide-flyer" aria-roledescription="slide" aria-label="2 of 3">
+      <div class="fl-area">
+        <div class="fl-photo">
+          <img class="fl-flyer" src="assets/flyer.jpg" alt="myLucent Chanukah flyer: the perfect gift, $45, clear acrylic brachos stand with a built-in shamash holder. Order online or text 0451 937 339" decoding="async">
+          <a href="./checkout.html" class="fl-badge" aria-label="Order now"><span class="ring"></span><span class="t1">ORDER</span><span class="t2">now →</span></a>
+        </div>
+        <div class="fl-copy">
+          <span class="fl-eye">GIFT IDEAS FOR CHANUKAH</span>
+          <h2>The perfect gift<br><em>for Chanukah.</em></h2>
+          <p>Looking for a gift for someone and can’t think what to get? This is it. Get yours now, while stock lasts.</p>
+          <ul><li>Only limited stock available</li></ul>
+        </div>
+        <div class="fl-run" aria-hidden="true">
+          <div class="fl-row"><div class="fl-track fl-l"><span>DON’T MISS OUT &nbsp; DON’T MISS OUT &nbsp; DON’T MISS OUT &nbsp; DON’T MISS OUT &nbsp; DON’T MISS OUT &nbsp; </span><span>DON’T MISS OUT &nbsp; DON’T MISS OUT &nbsp; DON’T MISS OUT &nbsp; DON’T MISS OUT &nbsp; DON’T MISS OUT &nbsp; </span></div></div>
+          <div class="fl-row fl-row2"><div class="fl-track fl-r"><span>THE PERFECT GIFT &nbsp; THE PERFECT GIFT &nbsp; THE PERFECT GIFT &nbsp; THE PERFECT GIFT &nbsp; THE PERFECT GIFT &nbsp; </span><span>THE PERFECT GIFT &nbsp; THE PERFECT GIFT &nbsp; THE PERFECT GIFT &nbsp; THE PERFECT GIFT &nbsp; THE PERFECT GIFT &nbsp; </span></div></div>
+        </div>
+      </div>
+    </section>
+
+      <section class="hero sl-slide" id="slide-1" aria-roledescription="slide" aria-label="3 of 3">
       <img class="bg sl-zoom" src="assets/hero-portrait.jpg" alt="Engraved portrait on a brushed-silver plate in a black frame, standing on a marble table in a warm room">
       <div class="veil"></div>
       <div style="position:relative;max-width:1080px;margin:0 auto;padding:110px 44px 96px;width:100%;">
@@ -395,6 +473,7 @@
     <div class="sl-marks">
       <button type="button" class="sl-prog" aria-label="Show slide 1" data-sl="0"><span class="sl-track"><span class="sl-fill"></span></span></button>
       <button type="button" class="sl-prog" aria-label="Show slide 2" data-sl="1"><span class="sl-track"><span class="sl-fill"></span></span></button>
+      <button type="button" class="sl-prog" aria-label="Show slide 3" data-sl="2"><span class="sl-track"><span class="sl-fill"></span></span></button>
     </div>
   </div>
 
@@ -638,7 +717,7 @@
   (function(){
     var root = document.getElementById('heroSlider');
     if (!root) return;
-    var slides = [document.getElementById('slide-0'), document.getElementById('slide-1')];
+    var slides = [document.getElementById('slide-0'), document.getElementById('slide-flyer'), document.getElementById('slide-1')];
     var marks = root.querySelectorAll('.sl-prog');
     var cur = 0, timer = null, DELAY = 7000;
     function show(n){
@@ -649,7 +728,7 @@
       });
       void root.offsetWidth;  // restart the progress line
       if (marks[cur]) marks[cur].classList.add('on');
-      root.classList.toggle('at-1', cur === 1);
+      root.classList.toggle('at-1', cur === 2);
     }
     function restart(){ clearInterval(timer); timer = setInterval(function(){ show(cur + 1); }, DELAY); }
     root.addEventListener('click', function(e){
@@ -658,7 +737,16 @@
       show(v === 'prev' ? cur - 1 : v === 'next' ? cur + 1 : parseInt(v, 10));
       restart();
     });
-    show(0); restart();
+    function evenHeights(){
+      slides.forEach(function(el){ el.style.minHeight = ''; });
+      if (getComputedStyle(slides[0]).position !== 'relative') return;
+      var hs = slides.map(function(el){ var was = el.style.display; el.style.display = 'flex'; var v = el.offsetHeight; el.style.display = was; return v; });
+      var m = Math.max.apply(null, hs);
+      slides.forEach(function(el){ el.style.minHeight = m + 'px'; });
+    }
+    var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(evenHeights, 150); });
+    window.addEventListener('load', evenHeights);
+    show(0); restart(); evenHeights();
   })();
 
   // Message after returning from Stripe checkout (?order=success / cancelled)
