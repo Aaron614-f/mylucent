@@ -39,6 +39,10 @@
 //                              are saved so they survive redeploys. Defaults
 //                              to /data if a Railway Volume is mounted there,
 //                              otherwise ./data (which is wiped on redeploy).
+//   COMIC_PASSWORD            - the password for Comic Studio at mylucent.co/comic
+//   OPENAI_API_KEY            - powers Comic Studio's pictures and writing help
+//                               (or GEMINI_API_KEY for Google's models instead).
+//                               More options are listed at the top of comic-server.js.
 //   ANTHROPIC_API_KEY         - (optional) powers the "Polish" button on the Inbox
 //                              page. Get one at console.anthropic.com.
 //   STRIPE_SECRET_KEY       - your Stripe SECRET key (starts with sk_test_...
@@ -1376,6 +1380,9 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
 
   res.status(200).send('ok');
 });
+
+// Comic Studio (mylucent.co/comic): login, AI and saving to the volume. See comic-server.js.
+require('./comic-server.js')(app, { express, dataDir: DATA_DIR });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Mailgun forwards inbound emails as form-encoded

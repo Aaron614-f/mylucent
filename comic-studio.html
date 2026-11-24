@@ -189,7 +189,8 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 <header>
   <h1>Comic <span>Studio</span></h1>
   <div class="row" style="flex:0 1 auto">
-    <button id="openSettings" type="button" class="fit">⚙ Settings &amp; API key</button>
+    <span id="saveState" class="hint" style="margin:0;color:#141414;font-weight:800" aria-live="polite"></span>
+    <button id="openSettings" type="button" class="fit">⚙ AI &amp; saving</button>
   </div>
 </header>
 
@@ -218,7 +219,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
     </div>
     <div class="card stack">
       <h3>Back up</h3>
-      <p class="hint" style="margin:0">Everything is saved in this browser only. Export a backup now and then.</p>
+      <p class="hint" style="margin:0">Everything saves to the myLucent server automatically. A backup file is an extra copy you keep yourself.</p>
       <div class="row">
         <button type="button" id="exportBtn">Export backup</button>
         <button type="button" id="importBtn">Import backup</button>
@@ -356,25 +357,24 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
   </form>
 </dialog>
 
-<!-- settings -->
+<!-- AI & saving status -->
 <dialog id="setDlg">
   <form method="dialog" id="setForm">
-    <h2>Settings</h2>
-    <div><label for="provider">Image service</label>
-      <select id="provider">
-        <option value="openai">OpenAI (GPT Image)</option>
-        <option value="gemini">Google Gemini (Nano Banana)</option>
-      </select></div>
-    <div><label for="apiKey">API key</label><input id="apiKey" type="password" autocomplete="off" placeholder="Paste your key">
-      <p class="hint" id="keyHint"></p></div>
-    <div><label for="model">Image model</label><input id="model" autocomplete="off">
-      <p class="hint">Leave the default unless you want a newer model.</p></div>
-    <div><label for="tmodel">Text model (for the "AI understood" summary)</label><input id="tmodel" autocomplete="off">
-      <p class="hint">A cheap, fast model is all this needs.</p></div>
-    <p class="hint">Your key is stored only in this browser and sent only to the service you picked.</p>
-    <div class="end"><button type="submit" class="primary">Save</button></div>
+    <h2>AI &amp; saving</h2>
+    <div id="srvInfo" class="stack"></div>
+    <div class="end"><button type="button" id="logoutBtn">Log out</button><button type="submit" class="primary">Close</button></div>
   </form>
 </dialog>
+
+<!-- login -->
+<div id="loginScreen" hidden style="position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;background:#ffd43b;background-image:radial-gradient(rgba(0,0,0,.08) 1.3px,transparent 1.4px);background-size:9px 9px">
+  <form id="loginForm" class="card stack" style="width:min(400px,100%);color:#141414;background:#fff">
+    <h1 style="margin:0">Comic <span style="color:#e8352e">Studio</span></h1>
+    <div><label for="loginPw">Password</label><input id="loginPw" type="password" autocomplete="current-password"></div>
+    <div id="loginErr"></div>
+    <button type="submit" class="primary" id="loginBtn">Log in</button>
+  </form>
+</div>
 
 <script>
 {
@@ -404,40 +404,70 @@ const LAYOUTS = {
 };
 const ratio = a => { const [w,h] = a.split(':').map(Number); return w/h; };
 
-/* ---------- storage ---------- */
-let db = null; const mem = {chars:new Map(), pages:new Map(), meta:new Map()};
-function openDB(){ return new Promise(res => {
-  try { const r = indexedDB.open('comic-studio', 2);
-    r.onupgradeneeded = () => { const d = r.result;
-      for (const s of ['chars','comics','pages','meta']) if (!d.objectStoreNames.contains(s)) d.createObjectStore(s,{keyPath:'id'}); };
-    r.onsuccess = () => { db = r.result; res(); }; r.onerror = () => res();
-  } catch { res(); } }); }
-function tx(store, mode, fn){ return new Promise((res, rej) => {
-  try { const t = db.transaction(store, mode); const req = fn(t.objectStore(store));
-    t.oncomplete = () => res(req?.result); t.onerror = () => rej(t.error);
-  } catch (e) { rej(e); } }); }
-const all = s => db ? tx(s,'readonly',o=>o.getAll()) : Promise.resolve([...mem[s].values()]);
-const put = (s, v) => (db ? tx(s,'readwrite',o=>o.put(v)) : (mem[s].set(v.id, v), Promise.resolve())).catch(e => showTopErr('Could not save: ' + e?.message));
-const del = (s, id) => db ? tx(s,'readwrite',o=>o.delete(id)) : (mem[s].delete(id), Promise.resolve());
+/* ---------- saving: everything lives on the myLucent server (Railway Volume) ---------- */
 const ls = {get(k,d){try{return localStorage.getItem(k) ?? d}catch{return d}}, set(k,v){try{localStorage.setItem(k,v)}catch{}}};
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+let srv = {ready: false, provider: 'openai'};
+async function api(method, url, body){
+  let r;
+  try { r = await fetch(url, {method, credentials: 'same-origin', headers: body ? {'Content-Type': 'application/json'} : {}, body: body ? JSON.stringify(body) : undefined}); }
+  catch { throw new Error('Could not reach the myLucent server. Check your internet connection.'); }
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401 && j.login){ showLogin('Your login ran out. Please log in again.'); throw new Error('Please log in again.'); }
+  if (!r.ok) throw new Error(j.error || ('Server error ' + r.status));
+  return j;
+}
+// pictures are uploaded once and replaced by their address on the server
+const upCache = new Map();
+function upload(dataUrl){
+  if (!upCache.has(dataUrl)){ const p = api('POST', '/api/comic/img', {data: dataUrl}).then(j => j.url); p.catch(() => upCache.delete(dataUrl)); upCache.set(dataUrl, p); }
+  return upCache.get(dataUrl);
+}
+async function externalize(o){
+  const jobs = [];
+  const walk = x => { for (const k of Object.keys(x)){ const v = x[k];
+    if (typeof v === 'string' && v.startsWith('data:image/')) jobs.push(upload(v).then(u => { if (x[k] === v) x[k] = u; }));
+    else if (v && typeof v === 'object') walk(v); } };
+  walk(o); await Promise.all(jobs);
+}
+const asUrl = async d => (typeof d === 'string' && d.startsWith('data:image/')) ? upload(d) : d;
+let pending = 0, failed = false;
+function setSaveState(){ const el = $('#saveState'); if (!el) return; el.textContent = failed ? '⚠ Not saved yet, retrying…' : pending ? 'Saving…' : 'Saved ✓'; el.style.color = failed ? '#a3241e' : '#141414'; }
+const saving = new Map();
+function put(store, doc){
+  const key = store + '/' + doc.id; let st = saving.get(key);
+  if (st){ st.doc = doc; st.again = true; return st.p; }
+  st = {doc, again: false}; saving.set(key, st); pending++; setSaveState();
+  st.p = (async () => {
+    for (let attempt = 0; ; attempt++){
+      try { do { st.again = false; await externalize(st.doc); await api('PUT', `/api/comic/doc/${store}/${encodeURIComponent(st.doc.id)}`, st.doc); } while (st.again); failed = false; break; }
+      catch (e){ failed = true; setSaveState(); if (attempt >= 4 || /log in/i.test(e.message)){ showTopErr('Could not save to the server: ' + e.message); break; } await new Promise(r => setTimeout(r, 3000 * (attempt + 1))); }
+    }
+    saving.delete(key); pending--; setSaveState();
+  })();
+  return st.p;
+}
+const del = (store, id) => api('DELETE', `/api/comic/doc/${store}/${encodeURIComponent(id)}`).catch(e => showTopErr('Could not delete on the server: ' + e.message));
+window.addEventListener('beforeunload', e => { if (pending){ e.preventDefault(); e.returnValue = ''; } });
 
 let chars = [], pages = [], book = {id:'book', title:'', style:'classic', styleNotes:''}, cur = 0;
 const page = () => pages[cur];
 const saveBook = () => put('meta', book);
 const savePage = p => put('pages', p);
 
-/* ---------- settings ---------- */
-const DEFAULT_TEXT = {gemini:'gemini-flash-latest', openai:'gpt-6-luna'};
-const settings = () => { const provider = ls.get('cs.provider','openai');
-  return {provider, key: ls.get('cs.key.'+provider,''), model: ls.get('cs.model.'+provider, DEFAULT_MODEL[provider]), tmodel: ls.get('cs.tmodel.'+provider, DEFAULT_TEXT[provider])}; };
-function fillSettings(p){ $('#provider').value = p; $('#apiKey').value = ls.get('cs.key.'+p,'');
-  $('#model').value = ls.get('cs.model.'+p, DEFAULT_MODEL[p]); $('#tmodel').value = ls.get('cs.tmodel.'+p, DEFAULT_TEXT[p]); $('#keyHint').textContent = KEY_HINT[p]; }
-$('#openSettings').onclick = () => { fillSettings(settings().provider); $('#setDlg').showModal(); };
-$('#provider').onchange = e => fillSettings(e.target.value);
-$('#setForm').onsubmit = () => { const p = $('#provider').value; ls.set('cs.provider', p);
-  ls.set('cs.key.'+p, $('#apiKey').value.trim()); ls.set('cs.model.'+p, $('#model').value.trim() || DEFAULT_MODEL[p]);
-  ls.set('cs.tmodel.'+p, $('#tmodel').value.trim() || DEFAULT_TEXT[p]); };
+/* ---------- AI status (keys live in Railway's Variables, never in the page) ---------- */
+const settings = () => ({provider: srv.provider || 'openai', key: srv.ready ? 'server' : ''});
+function fillSettings(){
+  $('#srvInfo').innerHTML = (srv.ready
+      ? `<p style="margin:0;font-size:17px;font-weight:800;color:#1f9d55">✓ AI is connected through the myLucent server</p>
+         <p style="margin:0">Service: <b>${srv.provider === 'gemini' ? 'Google Gemini' : 'OpenAI'}</b><br>Picture model: <b>${esc(srv.imageModel)}</b><br>Writing model: <b>${esc(srv.textModel)}</b></p>`
+      : `<p style="margin:0;font-size:17px;font-weight:800;color:#a3241e">The AI isn't set up yet</p>
+         <p style="margin:0">Add <b>OPENAI_API_KEY</b> (or <b>GEMINI_API_KEY</b>) in Railway → your myLucent service → Variables, then redeploy.</p>`) +
+    `<p class="hint" style="margin:0">Your key stays on the server and is never sent to this page. Characters, pages and pictures are saved on the server's volume, so they survive every redeploy and show up on any device you log in from.</p>`;
+}
+$('#openSettings').onclick = () => { fillSettings(); $('#setDlg').showModal(); };
+$('#logoutBtn').onclick = async () => { try { await api('POST', '/api/comic/logout'); } catch {} location.reload(); };
+const AI_MISSING = "The AI isn't set up on the server yet. Add OPENAI_API_KEY in Railway → Variables.";
 
 /* ---------- images ---------- */
 // crop region {x,y,w,h} in natural pixels (optional), then fit inside max
@@ -455,69 +485,20 @@ const b64 = d => d.split(',')[1];
 const mimeOf = d => d.slice(5, d.indexOf(';'));
 const toBlob = async d => (await fetch(d)).blob();
 
-/* ---------- image service ---------- */
-// refs: [{label, data}]
+/* ---------- AI: the server holds the key and makes the calls ---------- */
+// refs: [{label, data}]  (data is a saved-picture address or a fresh picture)
 async function generateImage(text, refs, aspect){
-  const s = settings();
-  if (!s.key) { $('#openSettings').click(); throw new Error('Add your API key first (Settings & API key, top right).'); }
-  try { return await (s.provider === 'openai' ? callOpenAI : callGemini)(s, text, refs, aspect); }
-  catch (e) { const m = String(e.message || e);
-    throw new Error(/Failed to fetch|NetworkError|Load failed/i.test(m) ? 'Could not reach the image service. Check your internet connection and that this file is open in a normal browser.' : m); }
-}
-async function callGemini(s, text, refs, aspect){
-  const parts = [{text}];
-  refs.forEach(r => { parts.push({text: r.label}); parts.push({inline_data:{mime_type: mimeOf(r.data), data: b64(r.data)}}); });
-  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(s.model)}:generateContent`, {
-    method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key': s.key},
-    body: JSON.stringify({contents:[{role:'user', parts}], generationConfig:{responseModalities:['TEXT','IMAGE'], imageConfig:{aspectRatio: aspect}}})});
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error?.message || ('Google returned error ' + r.status));
-  const ps = j.candidates?.[0]?.content?.parts || [];
-  const out = ps.find(p => p.inlineData || p.inline_data);
-  if (!out){ const why = j.candidates?.[0]?.finishReason || j.promptFeedback?.blockReason; const said = ps.map(p => p.text).filter(Boolean).join(' ');
-    throw new Error('No image came back' + (why ? ' (' + why + ')' : '') + (said ? ': ' + said : '.') + ' Try rewording.'); }
-  const d = out.inlineData || out.inline_data;
-  return `data:${d.mimeType || d.mime_type || 'image/png'};base64,${d.data}`;
-}
-async function callOpenAI(s, text, refs, aspect){
-  const size = ratio(aspect) > 1.05 ? '1536x1024' : ratio(aspect) < .95 ? '1024x1536' : '1024x1024';
-  let r;
-  if (refs.length){
-    const fd = new FormData();
-    for (const [i, ref] of refs.entries()) fd.append('image[]', await toBlob(ref.data), `ref${i+1}.${mimeOf(ref.data).split('/')[1] || 'png'}`);
-    text += '\n\nThe attached images, in order: ' + refs.map((ref,i) => `image ${i+1} = ${ref.label}`).join('; ');
-    fd.append('model', s.model); fd.append('prompt', text); fd.append('size', size); fd.append('n','1');
-    r = await fetch('https://api.openai.com/v1/images/edits', {method:'POST', headers:{Authorization:'Bearer ' + s.key}, body: fd});
-  } else {
-    r = await fetch('https://api.openai.com/v1/images/generations', {method:'POST', headers:{Authorization:'Bearer ' + s.key, 'Content-Type':'application/json'},
-      body: JSON.stringify({model: s.model, prompt: text, size, n:1})});
-  }
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error?.message || ('OpenAI returned error ' + r.status));
-  const d = j.data?.[0]; if (!d) throw new Error('No image came back. Try rewording.');
-  if (d.b64_json) return 'data:image/png;base64,' + d.b64_json;
-  throw new Error('The service returned a link instead of an image. Try the default model.');
+  if (!srv.ready) throw new Error(AI_MISSING);
+  const sent = await Promise.all(refs.map(async r => ({label: r.label, data: await asUrl(r.data)})));
+  const j = await api('POST', '/api/comic/ai/image', {text, refs: sent, aspect});
+  return j.url;
 }
 const styleText = () => STYLES[book.style] + (book.styleNotes ? '. ' + book.styleNotes : '');
 
-/* ---------- text model (summary + voice backup) ---------- */
-async function askText(system, user, json=true, audio=null){
-  const s = settings(); if (!s.key) throw new Error('Add your API key in Settings to turn this on.');
-  if (s.provider === 'gemini'){
-    const parts = [{text: user}]; if (audio) parts.push({inline_data:{mime_type: audio.type, data: audio.data}});
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(s.tmodel)}:generateContent`, {
-      method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key': s.key},
-      body: JSON.stringify({systemInstruction:{parts:[{text: system}]}, contents:[{role:'user', parts}], generationConfig: json ? {responseMimeType:'application/json'} : {}})});
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.error?.message || 'Google returned error ' + r.status);
-    return (j.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
-  }
-  const r = await fetch('https://api.openai.com/v1/responses', {method:'POST',
-    headers:{Authorization:'Bearer ' + s.key, 'Content-Type':'application/json'},
-    body: JSON.stringify({model: s.tmodel, instructions: system, input: json ? user + '\n\nReply with a JSON object only.' : user, ...(json ? {text:{format:{type:'json_object'}}} : {})})});
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error?.message || 'OpenAI returned error ' + r.status);
-  return j.output_text || (j.output || []).flatMap(o => o.content || []).filter(c => c.type === 'output_text').map(c => c.text).join('');
+/* ---------- AI writing help ---------- */
+async function askText(system, user, json=true){
+  if (!srv.ready) throw new Error(AI_MISSING);
+  return (await api('POST', '/api/comic/ai/text', {system, user, json})).text || '';
 }
 const parseJSON = t => { try { return JSON.parse(t); } catch { const m = t.match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; } };
 
@@ -610,7 +591,7 @@ document.addEventListener('click', async e => {
   if (mic && mic.target === target){ stopMic(); for (let i = 0; i < 20 && mic; i++) await new Promise(r => setTimeout(r, 50)); }
   const before = target.value, text = before.trim();
   if (!text){ toast('Type or say something first, then polish it.'); target.focus(); return; }
-  if (!settings().key){ toast('Add your API key in Settings to use Polish.'); return; }
+  if (!settings().key){ toast(AI_MISSING); return; }
   b.classList.add('wait'); b.disabled = true;
   try {
     const p = POLISH[id]();
@@ -1316,7 +1297,7 @@ function renderOverview(d, state, err){
   const st = {ok:['ok','✓ Up to date'], busy:['busy','Thinking…'], stale:['','Updating soon'], error:['','Not updated'], empty:['',''], nokey:['','']}[state];
   let h = `<h3>AI understood${st[1] ? ` <span class="st ${st[0]}">${st[1]}</span>` : ''}</h3>`;
   if (state === 'empty' && !d) h += '<p class="hint" style="margin:0">Start describing the panel. A short summary of what the AI thinks you mean shows up here, so you can catch mix-ups before drawing.</p>';
-  if (state === 'nokey') h += '<p class="hint" style="margin:0">Add your API key in Settings to turn this on.</p>';
+  if (state === 'nokey') h += '<p class="hint" style="margin:0">The AI is not set up on the server yet (OPENAI_API_KEY in Railway → Variables).</p>';
   if (state === 'error') h += `<div class="err">${esc(err)}</div><button type="button" class="small" id="ovRetry">Try again</button>`;
   if (d){
     const cs = list(d.characters), dl = list(d.dialogue), uq = list(d.unclear);
@@ -1454,7 +1435,7 @@ const idBusy = msg => `<div class="burst spin" style="font-size:30px">THINKING�
 const idErr = (m, retry) => `<div class="err">${esc(m)}</div>${retry ? `<button type="button" class="small" id="idRetry">Try again</button>` : ''}`;
 let idRetry = null;
 $('#idBody').addEventListener('click', e => { if (e.target.id === 'idRetry' && idRetry) idRetry(); });
-function needKey(){ if (settings().key) return false; toast('Add your API key in Settings first.'); return true; }
+function needKey(){ if (settings().key) return false; toast(AI_MISSING); return true; }
 
 // 1) Polish the whole page
 const POLISH_PAGE_SYS = `You proofread one page of a comic book. Fix spelling, punctuation, capitalisation and grammar in every speech bubble, and lightly tidy every panel description so an image AI understands it.
@@ -1542,10 +1523,18 @@ $('#styleNotes').onchange = () => { book.styleNotes = $('#styleNotes').value.tri
 $('#blurBg').onchange = () => { book.blurBg = $('#blurBg').checked; saveBook(); };
 
 /* ---------- backup ---------- */
-$('#exportBtn').onclick = () => {
-  const blob = new Blob([JSON.stringify({app:'comic-studio', v:3, book, chars, pages, tray})], {type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileBase() + '-backup.json'; a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+$('#exportBtn').onclick = async () => {
+  const btn = $('#exportBtn'); btn.disabled = true; btn.textContent = 'Preparing…';
+  try {
+    const data = JSON.parse(JSON.stringify({app:'comic-studio', v:3, book, chars, pages, tray})), cache = new Map(), jobs = [];
+    const inline = async url => { if (!cache.has(url)) cache.set(url, fetch(url, {credentials: 'same-origin'}).then(r => r.blob()).then(b => new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); }))); return cache.get(url); };
+    const walk = x => { for (const k of Object.keys(x)){ const v = x[k]; if (typeof v === 'string' && v.startsWith('/api/comic/img/')) jobs.push(inline(v).then(d => { x[k] = d; })); else if (v && typeof v === 'object') walk(v); } };
+    walk(data); await Promise.all(jobs);
+    const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileBase() + '-backup.json'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  } catch (e) { showTopErr('Could not make the backup: ' + e.message); }
+  btn.disabled = false; btn.textContent = 'Export backup';
 };
 $('#importBtn').onclick = () => $('#importFile').click();
 $('#importFile').onchange = async e => {
@@ -1564,18 +1553,63 @@ $('#importFile').onchange = async e => {
 function fillBook(){ $('#blurBg').checked = book.blurBg !== false; $('#bookTitle').value = book.title || ''; $('#style').value = STYLES[book.style] ? book.style : 'classic'; $('#styleNotes').value = book.styleNotes || ''; }
 
 window.__cs = {get pages(){ return pages; }, get cur(){ return cur; }, renderPagePNG}; // handy for testing
+/* ---------- login ---------- */
+let started = false;
+function showLogin(msg){
+  $('#loginScreen').hidden = false; $('#loginErr').innerHTML = msg ? `<div class="err">${esc(msg)}</div>` : '';
+  setTimeout(() => $('#loginPw').focus(), 50);
+}
+$('#loginForm').onsubmit = async e => {
+  e.preventDefault(); const btn = $('#loginBtn'); btn.disabled = true; $('#loginErr').innerHTML = '';
+  try { await api('POST', '/api/comic/login', {password: $('#loginPw').value}); $('#loginPw').value = ''; $('#loginScreen').hidden = true; if (!started) start(); }
+  catch (err) { $('#loginErr').innerHTML = `<div class="err">${esc(err.message)}</div>`; $('#loginPw').select(); }
+  btn.disabled = false;
+};
+
+/* ---------- old comics saved in this browser (before the server) ---------- */
+function readOldBrowserData(){ return new Promise(res => {
+  try {
+    const r = indexedDB.open('comic-studio');
+    r.onupgradeneeded = () => { try { r.transaction.abort(); } catch {} res(null); };
+    r.onerror = () => res(null);
+    r.onsuccess = () => { const d = r.result, out = {}, names = ['chars','pages','meta'].filter(n => d.objectStoreNames.contains(n));
+      if (!names.length){ d.close(); return res(null); }
+      const t = d.transaction(names, 'readonly'); names.forEach(n => { const q = t.objectStore(n).getAll(); q.onsuccess = () => { out[n] = q.result; }; });
+      t.oncomplete = () => { d.close(); res(out); }; t.onerror = () => { d.close(); res(null); }; };
+  } catch { res(null); } }); }
+
 /* ---------- start ---------- */
-(async () => {
-  await openDB();
-  try { chars = await all('chars'); pages = (await all('pages')).map(migratePage).sort((a,b) => a.order - b.order);
-    const meta = await all('meta'), m = meta.find(x => x.id === 'book'); if (m) book = {...book, ...m};
-    const t = meta.find(x => x.id === 'tray'); if (t && Array.isArray(t.items)) tray = t.items;
-    for (const p of pages) if (p.v === 3 && !p._saved) { await savePage(p); } } catch {}
+async function start(){
+  try { srv = await (await fetch('/api/comic/status', {credentials: 'same-origin'})).json(); }
+  catch { showLogin('Open Comic Studio from your site: mylucent.co/comic'); $('#loginBtn').disabled = true; return; }
+  if (srv.passwordSet === false){ showLogin('No password is set yet. Add COMIC_PASSWORD in Railway → Variables, then redeploy.'); return; }
+  if (!srv.loggedIn){ showLogin(''); return; }
+  started = true;
+  let data;
+  try { data = await api('GET', '/api/comic/all'); } catch (e) { showTopErr('Could not load your comic from the server: ' + e.message); data = {chars: [], pages: [], meta: []}; }
+  chars = data.chars || []; pages = (data.pages || []).map(migratePage).sort((a,b) => a.order - b.order);
+  const m = (data.meta || []).find(x => x.id === 'book'); if (m) book = {...book, ...m};
+  const t = (data.meta || []).find(x => x.id === 'tray'); if (t && Array.isArray(t.items)) tray = t.items;
+  // first time on the server: bring across anything made earlier in this browser
+  if (!chars.length && !pages.some(p => p.panels.some(x => x.takes.length || x.prompt) || p.bubbles.length) && ls.get('cs.moved', '') !== '1'){
+    const old = await readOldBrowserData();
+    if (old && ((old.chars || []).length || (old.pages || []).length)){
+      chars = old.chars || []; pages = (old.pages || []).map(migratePage).sort((a,b) => a.order - b.order);
+      const ob = (old.meta || []).find(x => x.id === 'book'); if (ob) book = {...book, ...ob, id: 'book'};
+      const ot = (old.meta || []).find(x => x.id === 'tray'); if (ot && Array.isArray(ot.items)) tray = ot.items;
+      for (const c of chars) put('chars', c);
+      for (const p of pages) put('pages', p);
+      saveBook(); if (tray.length) put('meta', {id: 'tray', items: tray});
+      ls.set('cs.moved', '1');
+      setTimeout(() => toast('Moved the comic saved in this browser to the server. It will now show up on any device.'), 600);
+    }
+  }
   if (!pages.length){ const p = newPage(); pages.push(p); await savePage(p); }
   cur = Math.min(+ls.get('cs.cur', 0) || 0, pages.length-1);
-  fillBook(); renderChars(); renderPages();
-  if (!settings().key) setTimeout(() => $('#openSettings').click(), 400);
-})();
+  fillBook(); renderChars(); renderPages(); setSaveState();
+  if (!srv.ready) setTimeout(() => { fillSettings(); $('#setDlg').showModal(); }, 400);
+}
+start();
 }
 </script>
 </body>
