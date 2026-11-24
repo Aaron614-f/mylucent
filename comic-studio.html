@@ -455,10 +455,6 @@ document.querySelectorAll('.mic').forEach(b => b.innerHTML = MIC_SVG);
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 // (no paid fallback: voice typing is always free)
 let mic = null;
-const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
-const OS_DICTATION = isMac
-  ? 'Free option: click in the text box, then press the Fn (globe) key twice, or choose Edit > Start Dictation, to speak with your Mac\'s own voice typing.'
-  : 'Free option: click in the text box, then press the Windows key + H to speak with Windows\' own voice typing.';
 function setMicBtn(b, on){ b.classList.toggle('on', on); b.innerHTML = on ? STOP_SVG : MIC_SVG;
   b.setAttribute('aria-label', on ? 'Stop listening' : 'Speak (free voice typing)'); }
 function putText(target, base, said){
@@ -466,25 +462,42 @@ function putText(target, base, said){
   target.value = base + (said ? sep + said.trim() : ''); target.dispatchEvent(new Event('input', {bubbles:true}));
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-mic]'); if (b) toggleMic(b); });
-function stopMic(){ if (mic) mic.rec.stop(); }
-// Free voice typing built into the browser (Chrome, Edge, Safari). Nothing is sent to OpenAI or Google AI Studio.
+function stopMic(){ if (mic){ mic.stopped = true; mic.rec.stop(); } }
+// Always uses the browser's built-in voice typing (Chrome, Edge, Safari): free, no key, nothing sent to OpenAI/Google AI Studio.
+// Like admin.html on myLucent: if the browser can't do it, the mic buttons are simply hidden.
+if (!SR) document.querySelectorAll('.mic').forEach(b => b.hidden = true);
 async function toggleMic(b){
+  if (!SR) return;
   const target = document.getElementById(b.dataset.mic);
-  if (!SR){ target.focus(); toast('This browser has no built-in voice typing (try Chrome, Edge or Safari). ' + OS_DICTATION); return; }
   if (mic && mic.btn === b){ stopMic(); return; }
   if (mic){ stopMic(); await new Promise(r => setTimeout(r, 300)); }
-  const base = target.value, rec = new SR();
-  rec.lang = navigator.language || 'en-AU'; rec.interimResults = true; rec.continuous = true;
-  mic = {btn: b, rec}; setMicBtn(b, true);
-  rec.onresult = e => { let said = ''; for (const r of e.results) said += r[0].transcript; putText(target, base, said); };
-  rec.onerror = e => {
-    if (e.error === 'no-speech' || e.error === 'aborted') return;
-    target.focus();
-    if (e.error === 'not-allowed') toast('The browser blocked the microphone. Allow it (look for the mic icon in the address bar) and try again. ' + OS_DICTATION);
-    else toast('Voice typing is not available right now (' + e.error + '). ' + OS_DICTATION);
+  const m = {btn: b, target, done: target.value, stopped: false};
+  mic = m; setMicBtn(b, true);
+  const startRec = () => {
+    const rec = new SR(); m.rec = rec;
+    rec.lang = navigator.language || 'en-AU'; rec.interimResults = true; rec.continuous = true;
+    rec.onresult = e => { let said = '', fin = '';
+      for (const r of e.results){ said += r[0].transcript; if (r.isFinal) fin += r[0].transcript; }
+      m.final = fin; putText(target, m.done, said); };
+    rec.onerror = e => {
+      if (e.error === 'no-speech' || e.error === 'aborted') return;
+      m.stopped = true;
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed')
+        toast(location.protocol === 'file:' ? 'Chrome blocks the microphone for files opened from your computer. Open Comic Studio from a website (e.g. Netlify) and it will work like myLucent admin.'
+          : 'The microphone is blocked. Click the mic icon in the address bar, choose Allow, then try again.');
+      else if (e.error === 'network') toast('Voice typing needs an internet connection.');
+      else if (e.error === 'audio-capture') toast('No microphone found.');
+      else toast('Voice typing stopped (' + e.error + ').');
+    };
+    rec.onend = () => {
+      if (m.final){ const sep = m.done && !/\s$/.test(m.done) ? ' ' : ''; m.done = m.done + sep + m.final.trim(); m.final = ''; }
+      if (!m.stopped && mic === m){ try { startRec(); return; } catch {} }   // keep listening through pauses
+      setMicBtn(b, false); if (mic === m) mic = null;
+      target.value = m.done; target.dispatchEvent(new Event('input', {bubbles:true})); target.dispatchEvent(new Event('change', {bubbles:true}));
+    };
+    rec.start();
   };
-  rec.onend = () => { setMicBtn(b, false); if (mic?.rec === rec) mic = null; target.dispatchEvent(new Event('change', {bubbles:true})); };
-  try { rec.start(); } catch { setMicBtn(b, false); mic = null; toast(OS_DICTATION); }
+  try { startRec(); } catch { setMicBtn(b, false); mic = null; toast('Could not start voice typing.'); }
 }
 
 /* ---------- cast ---------- */
