@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comic Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: loud, playful, but a real working tool
+IDEA: a comic artist's desk: approved character model sheets on the left, the page being drawn on the right
+PICTURE: the comic page itself, panels with thick ink gutters on halftone paper
+COLOUR and TYPE: newsprint white, black ink, comic yellow + red accent, green for "approved"; Bangers titles, Nunito Sans body
+LAYOUT: top bar, cast column left, book column right; stacks on phones
+*/
+:root{color-scheme:light dark;
+--bg:light-dark(#fffaf0,#16131c);--panel:light-dark(#ffffff,#221e2b);--ink:light-dark(#141414,#f4efe6);
+--muted:light-dark(#5b5560,#b5adbd);--line:light-dark(#141414,#f4efe6);--yel:#ffd43b;--red:#e8352e;--blue:#2e6fe8;--ok:#1f9d55;
+--dot:light-dark(rgba(0,0,0,.07),rgba(255,255,255,.06))}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);background-image:radial-gradient(var(--dot) 1.3px,transparent 1.4px);background-size:9px 9px;color:var(--ink);font:16px/1.5 "Nunito Sans",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Bangers,Impact,sans-serif;letter-spacing:.03em;font-weight:400;margin:0;line-height:1.05}
+h1{font-size:clamp(32px,5vw,46px)}h2{font-size:28px}h3{font-size:22px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px max(4vw,16px);background:var(--yel);color:#141414;border-bottom:4px solid #141414}
+header h1 span{color:var(--red);-webkit-text-stroke:1px #141414}
+main{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:24px;padding:24px max(4vw,16px);max-width:1440px;margin:0 auto}
+@media(max-width:900px){main{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:3px solid var(--line);border-radius:6px;box-shadow:6px 6px 0 var(--line);padding:18px}
+.stack{display:grid;gap:14px;align-content:start}
+button,.btn{font:800 15px/1 "Nunito Sans",sans-serif;min-height:44px;padding:0 16px;border:3px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);cursor:pointer;box-shadow:3px 3px 0 var(--line);display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--line)}
+button.primary{background:var(--red);color:#fff}button.okb{background:var(--ok);color:#fff}
+button.go{background:var(--yel);color:#141414;font-family:Bangers,sans-serif;font-size:22px;white-space:nowrap;letter-spacing:.05em;font-weight:400}
+button.small,.btn.small{min-height:36px;padding:0 10px;font-size:13px;box-shadow:2px 2px 0 var(--line)}
+button:disabled{opacity:.5;cursor:wait}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,.cell:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+header button{border-color:#141414;box-shadow:3px 3px 0 #141414;background:#fff;color:#141414}
+label{display:block;font-weight:800;font-size:14px;margin:0 0 4px}
+input,textarea,select{width:100%;font:16px "Nunito Sans",sans-serif;padding:10px 12px;border:2px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+textarea{resize:vertical;min-height:90px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}.row>*{flex:1 1 150px}.row>.fit{flex:0 0 auto}
+.hint{color:var(--muted);font-size:14px;margin:4px 0 0}
+.chars{display:grid;gap:10px}
+.char{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:center;padding:10px;border:2px solid var(--line);border-radius:6px;background:var(--bg)}
+.char img,.thumb{width:72px;height:72px;object-fit:cover;border-radius:4px;border:2px solid var(--line);background:#ddd}
+.char .code{font-family:Bangers,sans-serif;font-size:22px;letter-spacing:.04em}
+.badge{display:inline-block;font-size:12px;font-weight:800;border-radius:20px;padding:1px 8px;border:2px solid}
+.badge.ok{color:var(--ok);border-color:var(--ok)}.badge.no{color:var(--red);border-color:var(--red)}
+.char .acts{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.empty{border:2px dashed var(--muted);border-radius:6px;padding:18px;text-align:center;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-height:28px}
+.chip{background:var(--yel);color:#141414;border:2px solid #141414;border-radius:20px;padding:2px 10px;font-weight:800;font-size:13px}
+.chip.warn{background:#ffe0de;border-color:var(--red);color:#7a1410}
+.chip.off{background:transparent;color:var(--muted);border-color:var(--muted);border-style:dashed}
+.err{background:light-dark(#ffe3e1,#4a1d1b);border:2px solid var(--red);border-radius:6px;padding:10px 12px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.pages{display:flex;gap:8px;overflow-x:auto;padding:4px 4px 10px}
+.pages button{flex:none;min-width:52px}
+.pages button.on{background:var(--ink);color:var(--bg)}
+.paper{background:#fff;border:4px solid var(--line);padding:clamp(8px,1.6vw,18px);display:grid;gap:clamp(6px,1vw,12px);max-width:760px;margin:0 auto;box-shadow:8px 8px 0 var(--line)}
+.prow{display:flex;gap:clamp(6px,1vw,12px)}
+.cell{flex:1 1 0;position:relative;border:4px solid #141414;background:#f4f1ea;background-image:radial-gradient(rgba(0,0,0,.09) 1.6px,transparent 1.8px);background-size:10px 10px;cursor:pointer;padding:0;border-radius:0;box-shadow:none;overflow:hidden;color:#141414;display:grid;place-items:center;font:inherit}
+.cell:active{transform:none;box-shadow:none}
+.cell img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cell .lbl{font-family:Bangers,sans-serif;font-size:clamp(18px,2.6vw,28px);letter-spacing:.04em;padding:8px;text-align:center}
+.cell .lbl small{display:block;font:700 13px "Nunito Sans",sans-serif;color:#5b5560}
+.cell .num{position:absolute;top:6px;left:6px;background:var(--yel);border:2px solid #141414;font:800 12px "Nunito Sans";padding:0 6px;border-radius:4px;z-index:1}
+.cell.busy::after{content:"DRAWING…";position:absolute;inset:0;display:grid;place-items:center;background:rgba(255,212,59,.85);font-family:Bangers,sans-serif;font-size:28px;color:#e8352e;-webkit-text-stroke:1px #141414}
+.layouts{display:flex;gap:8px;flex-wrap:wrap}
+.lay{width:56px;min-height:64px;padding:6px;display:grid;gap:3px;box-shadow:2px 2px 0 var(--line);justify-content:stretch;align-content:center}
+.lay.on{background:var(--yel)}
+.lay .r{display:flex;gap:3px}.lay .r i{flex:1;background:#141414;opacity:.75;min-height:8px}
+dialog{border:4px solid var(--line);border-radius:8px;box-shadow:8px 8px 0 var(--line);background:var(--panel);color:var(--ink);padding:0;width:min(760px,95vw);max-height:94vh}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+dialog form{padding:20px;display:grid;gap:14px}
+.views{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
+.view{border:2px dashed var(--line);border-radius:6px;padding:6px;text-align:center;position:relative}
+.view img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:4px;display:block;margin-bottom:4px}
+.view select{font-size:13px;padding:4px}
+.view .x{position:absolute;top:2px;right:2px;min-height:28px;width:28px;padding:0;box-shadow:none;font-size:14px}
+.drop{border:3px dashed var(--line);border-radius:6px;padding:14px;text-align:center;cursor:pointer;font-weight:800}
+.drop.on{background:var(--yel);color:#141414}
+.sheet{border:3px solid var(--line);background:#fff;aspect-ratio:16/9;display:grid;place-items:center;overflow:hidden;position:relative;background-image:radial-gradient(rgba(0,0,0,.08) 1.6px,transparent 1.8px);background-size:10px 10px;color:#141414}
+.sheet img{width:100%;height:100%;object-fit:contain;background:#fff}
+.sheet .stamp{position:absolute;top:10px;right:10px;background:var(--ok);color:#fff;font-family:Bangers,sans-serif;font-size:22px;padding:2px 12px;border:3px solid #141414;transform:rotate(4deg)}
+.burst{font-family:Bangers,sans-serif;font-size:clamp(28px,5vw,48px);color:var(--red);-webkit-text-stroke:1.5px #141414;transform:rotate(-5deg);text-align:center;padding:16px}
+.burst small{display:block;font:700 15px "Nunito Sans",sans-serif;color:#5b5560;-webkit-text-stroke:0;transform:none;margin-top:6px}
+.spin{animation:pop .9s ease-in-out infinite alternate}
+@keyframes pop{to{transform:rotate(4deg) scale(1.08)}}
+@media(prefers-reduced-motion:reduce){.spin{animation:none}}
+.section{border-top:3px solid var(--line);padding-top:14px;display:grid;gap:10px}
+.pstage{border:4px solid var(--line);background:#f4f1ea;display:grid;place-items:center;overflow:hidden;max-height:60vh;margin:0 auto;width:100%;color:#141414}
+.pstage img{width:100%;height:100%;object-fit:contain;background:#fff}
+.takes{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.takes button{flex:none;width:72px;height:72px;padding:0;overflow:hidden}
+.takes button img{width:100%;height:100%;object-fit:cover}
+.takes button.on{outline:4px solid var(--red);outline-offset:1px}
+.end{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.micwrap{position:relative}
+.micwrap textarea,.micwrap input{padding-right:58px}
+.mic{position:absolute;right:6px;top:6px;width:44px;min-height:40px;padding:0;border-width:2px;box-shadow:2px 2px 0 var(--line);border-radius:50%}
+.mic svg{width:20px;height:20px}
+.mic.on{background:var(--red);color:#fff;animation:pulse 1s ease-in-out infinite alternate}
+.mic.wait{background:var(--yel);color:#141414}
+@keyframes pulse{to{box-shadow:0 0 0 6px rgba(232,53,46,.3)}}
+@media(prefers-reduced-motion:reduce){.mic.on{animation:none}}
+.toast{position:sticky;bottom:0;margin:0 -20px -20px;padding:10px 20px;background:#141414;color:#fff;font-weight:700;font-size:14px}
+body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radius:6px;z-index:9}
+#panelDlg{width:min(1140px,96vw)}
+.pgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:820px){.pgrid{grid-template-columns:minmax(0,1fr)}}
+.ov{border:3px solid var(--line);border-radius:6px;background:var(--bg);padding:14px;display:grid;gap:10px;position:sticky;top:0}
+.ov h3{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ov .st{font:800 12px "Nunito Sans";border-radius:20px;padding:2px 8px;border:2px solid var(--muted);color:var(--muted);white-space:nowrap}
+.ov .st.ok{border-color:var(--ok);color:var(--ok)}.ov .st.busy{border-color:var(--blue);color:var(--blue)}
+.ov .sum{font-size:17px;font-weight:700;margin:0}
+.ov dl{margin:0;display:grid;gap:8px}.ov dt{font-weight:800;font-size:13px;color:var(--muted)}.ov dd{margin:0}
+.ov ul{margin:0;padding-left:18px}
+.ov .q{background:light-dark(#fff3cd,#3d3416);border:2px solid #d9a400;border-radius:6px;padding:8px 10px;font-size:14px}
+.ov .better{border:2px dashed var(--line);border-radius:6px;padding:8px 10px;font-size:14px}
+.cropWrap{position:relative;display:block;width:fit-content;max-width:100%;margin:0 auto;overflow:hidden;touch-action:none;user-select:none;background:#000}
+.cropWrap img{display:block;max-width:100%;max-height:58vh;pointer-events:none}
+#cropBox{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.55);cursor:move;outline:1px dashed #141414}
+#cropBox i{position:absolute;width:22px;height:22px;background:var(--yel);border:2px solid #141414;border-radius:50%}
+#cropBox i[data-h=nw]{left:-11px;top:-11px;cursor:nwse-resize}#cropBox i[data-h=ne]{right:-11px;top:-11px;cursor:nesw-resize}
+#cropBox i[data-h=sw]{left:-11px;bottom:-11px;cursor:nesw-resize}#cropBox i[data-h=se]{right:-11px;bottom:-11px;cursor:nwse-resize}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg button.on{background:var(--ink);color:var(--bg)}
+.view .acts2{display:flex;gap:4px;margin-top:4px}.view .acts2>*{flex:1}
+#printArea{display:none}
+@media print{body{background:#fff}header,main,dialog{display:none!important}#printArea{display:block}#printArea img{width:100%;page-break-after:always;display:block}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Comic <span>Studio</span></h1>
+  <div class="row" style="flex:0 1 auto">
+    <button id="openSettings" type="button" class="fit">⚙ Settings &amp; API key</button>
+  </div>
+</header>
+
+<main>
+  <section class="stack">
+    <div class="card stack">
+      <div class="row" style="align-items:center"><h2>Your cast</h2><button class="primary fit" id="newChar" type="button">+ New character</button></div>
+      <p class="hint" style="margin:0">Add each person's photos and approve their comic look once. After that, their code word always brings in the approved look.</p>
+      <div class="chars" id="chars"></div>
+    </div>
+    <div class="card stack">
+      <h3>Book style</h3>
+      <div><label for="bookTitle">Comic title</label><input id="bookTitle" placeholder="My Comic"></div>
+      <div><label for="style">Art style for the whole book</label>
+        <select id="style">
+          <option value="classic">Classic American comic</option>
+          <option value="manga">Manga (black &amp; white)</option>
+          <option value="golden">Golden-age retro, halftone dots</option>
+          <option value="noir">Gritty noir graphic novel</option>
+          <option value="cartoon">Bright Saturday-morning cartoon</option>
+          <option value="euro">European bande dessinée (clean line)</option>
+        </select>
+        <p class="hint">Choose this before approving characters. Their model sheets are drawn in this style.</p></div>
+      <div><label for="styleNotes">Extra style notes (optional)</label><input id="styleNotes" placeholder="e.g. moody purple skies, lots of rain"></div>
+    </div>
+    <div class="card stack">
+      <h3>Back up</h3>
+      <p class="hint" style="margin:0">Everything is saved in this browser only. Export a backup now and then.</p>
+      <div class="row">
+        <button type="button" id="exportBtn">Export backup</button>
+        <button type="button" id="importBtn">Import backup</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+    </div>
+  </section>
+
+  <section class="stack">
+    <div class="card stack">
+      <div class="row" style="align-items:center">
+        <h2 id="pageTitle">Page 1</h2>
+        <button type="button" class="fit small" id="addPage">+ Add page</button>
+      </div>
+      <div class="pages" id="pages" aria-label="Pages"></div>
+      <div><label>Panel layout</label><div class="layouts" id="layouts"></div></div>
+      <div id="pageErr"></div>
+      <div class="paper" id="paper"></div>
+      <div class="end" style="justify-content:center">
+        <button type="button" id="movePrev" class="small">◀ Move page earlier</button>
+        <button type="button" id="moveNext" class="small">Move page later ▶</button>
+        <button type="button" id="delPage" class="small">Delete page</button>
+        <a class="btn small" id="dlPage">⬇ Download page</a>
+        <button type="button" id="printBook" class="small">🖨 Print / PDF whole book</button>
+      </div>
+      <p class="hint" style="text-align:center;margin:0">Click a panel to write what happens in it and draw it.</p>
+    </div>
+  </section>
+</main>
+
+<div id="printArea"></div>
+
+<!-- crop -->
+<dialog id="cropDlg">
+  <form method="dialog" id="cropForm">
+    <h2>Crop photo</h2>
+    <p class="hint" style="margin:0">Drag the box to move it and the yellow corners to resize. Keep just the person, close and clear.</p>
+    <div class="seg" id="cropAspect">
+      <button type="button" class="small on" data-ar="0">Free</button>
+      <button type="button" class="small" data-ar="1">Square</button>
+      <button type="button" class="small" data-ar="0.75">Portrait</button>
+    </div>
+    <div class="cropWrap" id="cropWrap"><img id="cropImg" alt="Photo to crop"><div id="cropBox"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div></div>
+    <div class="end">
+      <button type="button" id="cropSkip">Don't add this photo</button>
+      <button type="button" id="cropWhole">Use whole photo</button>
+      <button type="button" class="primary" id="cropOk">Crop &amp; use</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- character -->
+<dialog id="charDlg">
+  <form method="dialog" id="charForm">
+    <h2 id="charDlgTitle">New character</h2>
+    <div><label for="cName">Code word</label><input id="cName" required maxlength="30" placeholder="e.g. Dave" autocomplete="off"><p class="hint">One word. This is what you type in panel prompts.</p></div>
+    <div><label for="cDesc">Description</label>
+      <div class="micwrap"><textarea id="cDesc" placeholder="Man in his 30s, short curly brown hair, beard, round glasses, tall and broad. Always wears a green hoodie, jeans and red sneakers."></textarea><button type="button" class="mic" data-mic="cDesc" aria-label="Speak the description"></button></div>
+      <p class="hint">Describe their usual outfit too. It keeps clothes the same on every page.</p></div>
+    <div>
+      <label>Reference photos (front, side, back… up to 6)</label>
+      <div class="drop" id="drop" tabindex="0">Tap to choose photos, or drop them here</div>
+      <input type="file" id="cFiles" accept="image/*" multiple hidden>
+      <div class="views" id="views" style="margin-top:10px"></div>
+    </div>
+    <div class="section">
+      <h3>Approved comic look</h3>
+      <p class="hint" style="margin:0">The app draws a model sheet (front, side, back, face). Approve it, and every panel uses this exact look.</p>
+      <div class="sheet" id="sheetBox"></div>
+      <div id="sheetErr"></div>
+      <div><label for="sheetNotes">Changes for the next try (optional)</label><div class="micwrap"><input id="sheetNotes" placeholder="e.g. make the hair shorter, add a scar over the left eye"><button type="button" class="mic" data-mic="sheetNotes" aria-label="Speak the changes" style="top:3px"></button></div></div>
+      <div class="row">
+        <button type="button" id="genSheet" class="go">Draw model sheet</button>
+        <button type="button" id="approveSheet" class="okb" hidden>✓ Approve this look</button>
+        <button type="button" id="unapprove" hidden>Redo the look</button>
+      </div>
+    </div>
+    <div class="end">
+      <button type="button" id="cancelChar">Close</button>
+      <button type="submit" class="primary">Save character</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- panel -->
+<dialog id="panelDlg">
+  <form method="dialog" id="panelForm">
+    <h2 id="panelTitle">Panel</h2>
+    <div class="pgrid">
+      <div class="stack">
+        <div><label for="pPrompt">What happens in this panel? Type it or tap the mic.</label>
+          <div class="micwrap"><textarea id="pPrompt" placeholder="Dave and Mia sprint down a rainy alley, Dave looking back over his shoulder. Speech bubble from Mia: &quot;Faster!&quot;"></textarea><button type="button" class="mic" data-mic="pPrompt" aria-label="Speak the panel description"></button></div></div>
+        <div class="chips" id="pChips"></div>
+        <div class="chips" id="pInsert"></div>
+        <div id="panelErr"></div>
+        <div class="pstage" id="pStage"></div>
+        <div class="takes" id="takes"></div>
+      </div>
+      <aside class="ov" id="ov" aria-live="polite"></aside>
+    </div>
+    <div class="end">
+      <button type="button" id="clearPanel">Clear panel</button>
+      <button type="button" class="go" id="drawPanel">Draw it!</button>
+      <button type="submit" class="primary">Done</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- settings -->
+<dialog id="setDlg">
+  <form method="dialog" id="setForm">
+    <h2>Settings</h2>
+    <div><label for="provider">Image service</label>
+      <select id="provider">
+        <option value="openai">OpenAI (GPT Image)</option>
+        <option value="gemini">Google Gemini (Nano Banana)</option>
+      </select></div>
+    <div><label for="apiKey">API key</label><input id="apiKey" type="password" autocomplete="off" placeholder="Paste your key">
+      <p class="hint" id="keyHint"></p></div>
+    <div><label for="model">Image model</label><input id="model" autocomplete="off">
+      <p class="hint">Leave the default unless you want a newer model.</p></div>
+    <div><label for="tmodel">Text model (for the "AI understood" summary)</label><input id="tmodel" autocomplete="off">
+      <p class="hint">A cheap, fast model is all this needs.</p></div>
+    <p class="hint">Your key is stored only in this browser and sent only to the service you picked.</p>
+    <div class="end"><button type="submit" class="primary">Save</button></div>
+  </form>
+</dialog>
+
+<script>
+{
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DEFAULT_MODEL = {gemini:'gemini-3.1-flash-image', openai:'gpt-image-2'};
+const KEY_HINT = {
+  gemini:'Get one at aistudio.google.com → "Get API key". Image generation may need billing turned on.',
+  openai:'Get one at platform.openai.com/api-keys and add credit under Billing. OpenAI may ask you to verify your organization.'
+};
+const STYLES = {
+  classic:'classic American superhero comic book art: bold black ink outlines, dynamic composition, cel shading, vivid flat colours',
+  manga:'black and white Japanese manga art: clean ink lines, screentone shading, expressive faces, speed lines',
+  golden:'1950s golden-age comic book art: thick inks, limited CMYK palette, visible halftone dots, slightly aged newsprint',
+  noir:'gritty noir graphic novel art: heavy shadows, high contrast, muted palette with one accent colour',
+  cartoon:'bright Saturday-morning cartoon art: rounded shapes, thick clean outlines, saturated cheerful colours',
+  euro:'European bande dessinée ligne claire art: uniform clean lines, flat colours, detailed backgrounds'
+};
+const VIEWS = ['front','side','back','3/4','face close-up','full body'];
+const LAYOUTS = {
+  splash:{name:'1 big panel', rows:[[1,'3:4']]},
+  two:{name:'2 wide', rows:[[1,'4:3'],[1,'4:3']]},
+  three:{name:'1 wide + 2', rows:[[1,'16:9'],[2,'3:4']]},
+  strips:{name:'3 strips', rows:[[1,'16:9'],[1,'16:9'],[1,'16:9']]},
+  four:{name:'4 grid', rows:[[2,'3:4'],[2,'3:4']]},
+  six:{name:'6 grid', rows:[[2,'1:1'],[2,'1:1'],[2,'1:1']]}
+};
+const slots = lay => LAYOUTS[lay].rows.flatMap(([n,a]) => Array(n).fill(a));
+const ratio = a => { const [w,h] = a.split(':').map(Number); return w/h; };
+
+/* ---------- storage ---------- */
+let db = null; const mem = {chars:new Map(), pages:new Map(), meta:new Map()};
+function openDB(){ return new Promise(res => {
+  try { const r = indexedDB.open('comic-studio', 2);
+    r.onupgradeneeded = () => { const d = r.result;
+      for (const s of ['chars','comics','pages','meta']) if (!d.objectStoreNames.contains(s)) d.createObjectStore(s,{keyPath:'id'}); };
+    r.onsuccess = () => { db = r.result; res(); }; r.onerror = () => res();
+  } catch { res(); } }); }
+function tx(store, mode, fn){ return new Promise((res, rej) => {
+  try { const t = db.transaction(store, mode); const req = fn(t.objectStore(store));
+    t.oncomplete = () => res(req?.result); t.onerror = () => rej(t.error);
+  } catch (e) { rej(e); } }); }
+const all = s => db ? tx(s,'readonly',o=>o.getAll()) : Promise.resolve([...mem[s].values()]);
+const put = (s, v) => (db ? tx(s,'readwrite',o=>o.put(v)) : (mem[s].set(v.id, v), Promise.resolve())).catch(e => showTopErr('Could not save: ' + e?.message));
+const del = (s, id) => db ? tx(s,'readwrite',o=>o.delete(id)) : (mem[s].delete(id), Promise.resolve());
+const ls = {get(k,d){try{return localStorage.getItem(k) ?? d}catch{return d}}, set(k,v){try{localStorage.setItem(k,v)}catch{}}};
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+let chars = [], pages = [], book = {id:'book', title:'', style:'classic', styleNotes:''}, cur = 0;
+const page = () => pages[cur];
+const saveBook = () => put('meta', book);
+const savePage = p => put('pages', p);
+
+/* ---------- settings ---------- */
+const DEFAULT_TEXT = {gemini:'gemini-flash-latest', openai:'gpt-6-luna'};
+const settings = () => { const provider = ls.get('cs.provider','openai');
+  return {provider, key: ls.get('cs.key.'+provider,''), model: ls.get('cs.model.'+provider, DEFAULT_MODEL[provider]), tmodel: ls.get('cs.tmodel.'+provider, DEFAULT_TEXT[provider])}; };
+function fillSettings(p){ $('#provider').value = p; $('#apiKey').value = ls.get('cs.key.'+p,'');
+  $('#model').value = ls.get('cs.model.'+p, DEFAULT_MODEL[p]); $('#tmodel').value = ls.get('cs.tmodel.'+p, DEFAULT_TEXT[p]); $('#keyHint').textContent = KEY_HINT[p]; }
+$('#openSettings').onclick = () => { fillSettings(settings().provider); $('#setDlg').showModal(); };
+$('#provider').onchange = e => fillSettings(e.target.value);
+$('#setForm').onsubmit = () => { const p = $('#provider').value; ls.set('cs.provider', p);
+  ls.set('cs.key.'+p, $('#apiKey').value.trim()); ls.set('cs.model.'+p, $('#model').value.trim() || DEFAULT_MODEL[p]);
+  ls.set('cs.tmodel.'+p, $('#tmodel').value.trim() || DEFAULT_TEXT[p]); };
+
+/* ---------- images ---------- */
+// crop region {x,y,w,h} in natural pixels (optional), then fit inside max
+function shrink(src, max=1024, box=null){ return new Promise((res, rej) => {
+  const isFile = src instanceof Blob, url = isFile ? URL.createObjectURL(src) : src, img = new Image();
+  img.onload = () => { const b = box || {x:0, y:0, w:img.naturalWidth, h:img.naturalHeight};
+    const k = Math.min(1, max/Math.max(b.w, b.h));
+    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(b.w*k)); c.height = Math.max(1, Math.round(b.h*k));
+    c.getContext('2d').drawImage(img, b.x, b.y, b.w, b.h, 0, 0, c.width, c.height);
+    if (isFile) URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .9)); };
+  img.onerror = () => { if (isFile) URL.revokeObjectURL(url); rej(new Error('Could not read that photo')); };
+  img.src = url; }); }
+const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+const b64 = d => d.split(',')[1];
+const mimeOf = d => d.slice(5, d.indexOf(';'));
+const toBlob = async d => (await fetch(d)).blob();
+
+/* ---------- image service ---------- */
+// refs: [{label, data}]
+async function generateImage(text, refs, aspect){
+  const s = settings();
+  if (!s.key) { $('#openSettings').click(); throw new Error('Add your API key first (Settings & API key, top right).'); }
+  try { return await (s.provider === 'openai' ? callOpenAI : callGemini)(s, text, refs, aspect); }
+  catch (e) { const m = String(e.message || e);
+    throw new Error(/Failed to fetch|NetworkError|Load failed/i.test(m) ? 'Could not reach the image service. Check your internet connection and that this file is open in a normal browser.' : m); }
+}
+async function callGemini(s, text, refs, aspect){
+  const parts = [{text}];
+  refs.forEach(r => { parts.push({text: r.label}); parts.push({inline_data:{mime_type: mimeOf(r.data), data: b64(r.data)}}); });
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(s.model)}:generateContent`, {
+    method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key': s.key},
+    body: JSON.stringify({contents:[{role:'user', parts}], generationConfig:{responseModalities:['TEXT','IMAGE'], imageConfig:{aspectRatio: aspect}}})});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error?.message || ('Google returned error ' + r.status));
+  const ps = j.candidates?.[0]?.content?.parts || [];
+  const out = ps.find(p => p.inlineData || p.inline_data);
+  if (!out){ const why = j.candidates?.[0]?.finishReason || j.promptFeedback?.blockReason; const said = ps.map(p => p.text).filter(Boolean).join(' ');
+    throw new Error('No image came back' + (why ? ' (' + why + ')' : '') + (said ? ': ' + said : '.') + ' Try rewording.'); }
+  const d = out.inlineData || out.inline_data;
+  return `data:${d.mimeType || d.mime_type || 'image/png'};base64,${d.data}`;
+}
+async function callOpenAI(s, text, refs, aspect){
+  const size = ratio(aspect) > 1.05 ? '1536x1024' : ratio(aspect) < .95 ? '1024x1536' : '1024x1024';
+  let r;
+  if (refs.length){
+    const fd = new FormData();
+    for (const [i, ref] of refs.entries()) fd.append('image[]', await toBlob(ref.data), `ref${i+1}.${mimeOf(ref.data).split('/')[1] || 'png'}`);
+    text += '\n\nThe attached images, in order: ' + refs.map((ref,i) => `image ${i+1} = ${ref.label}`).join('; ');
+    fd.append('model', s.model); fd.append('prompt', text); fd.append('size', size); fd.append('n','1');
+    r = await fetch('https://api.openai.com/v1/images/edits', {method:'POST', headers:{Authorization:'Bearer ' + s.key}, body: fd});
+  } else {
+    r = await fetch('https://api.openai.com/v1/images/generations', {method:'POST', headers:{Authorization:'Bearer ' + s.key, 'Content-Type':'application/json'},
+      body: JSON.stringify({model: s.model, prompt: text, size, n:1})});
+  }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error?.message || ('OpenAI returned error ' + r.status));
+  const d = j.data?.[0]; if (!d) throw new Error('No image came back. Try rewording.');
+  if (d.b64_json) return 'data:image/png;base64,' + d.b64_json;
+  throw new Error('The service returned a link instead of an image. Try the default model.');
+}
+const styleText = () => STYLES[book.style] + (book.styleNotes ? '. ' + book.styleNotes : '');
+
+/* ---------- text model (summary + voice backup) ---------- */
+async function askText(system, user, json=true, audio=null){
+  const s = settings(); if (!s.key) throw new Error('Add your API key in Settings to turn this on.');
+  if (s.provider === 'gemini'){
+    const parts = [{text: user}]; if (audio) parts.push({inline_data:{mime_type: audio.type, data: audio.data}});
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(s.tmodel)}:generateContent`, {
+      method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key': s.key},
+      body: JSON.stringify({systemInstruction:{parts:[{text: system}]}, contents:[{role:'user', parts}], generationConfig: json ? {responseMimeType:'application/json'} : {}})});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error?.message || 'Google returned error ' + r.status);
+    return (j.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+  }
+  const r = await fetch('https://api.openai.com/v1/responses', {method:'POST',
+    headers:{Authorization:'Bearer ' + s.key, 'Content-Type':'application/json'},
+    body: JSON.stringify({model: s.tmodel, instructions: system, input: user, ...(json ? {text:{format:{type:'json_object'}}} : {})})});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error?.message || 'OpenAI returned error ' + r.status);
+  return j.output_text || (j.output || []).flatMap(o => o.content || []).filter(c => c.type === 'output_text').map(c => c.text).join('');
+}
+const parseJSON = t => { try { return JSON.parse(t); } catch { const m = t.match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; } };
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const host = [...document.querySelectorAll('dialog[open]')].pop()?.querySelector('form') || document.body;
+  const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role','status'); t.textContent = msg; host.append(t);
+  clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 5000);
+}
+
+/* ---------- microphone ---------- */
+const MIC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+const STOP_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>';
+document.querySelectorAll('.mic').forEach(b => b.innerHTML = MIC_SVG);
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+// (no paid fallback: voice typing is always free)
+let mic = null;
+const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+const OS_DICTATION = isMac
+  ? 'Free option: click in the text box, then press the Fn (globe) key twice, or choose Edit > Start Dictation, to speak with your Mac\'s own voice typing.'
+  : 'Free option: click in the text box, then press the Windows key + H to speak with Windows\' own voice typing.';
+function setMicBtn(b, on){ b.classList.toggle('on', on); b.innerHTML = on ? STOP_SVG : MIC_SVG;
+  b.setAttribute('aria-label', on ? 'Stop listening' : 'Speak (free voice typing)'); }
+function putText(target, base, said){
+  const sep = base && !/\s$/.test(base) ? ' ' : '';
+  target.value = base + (said ? sep + said.trim() : ''); target.dispatchEvent(new Event('input', {bubbles:true}));
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-mic]'); if (b) toggleMic(b); });
+function stopMic(){ if (mic) mic.rec.stop(); }
+// Free voice typing built into the browser (Chrome, Edge, Safari). Nothing is sent to OpenAI or Google AI Studio.
+async function toggleMic(b){
+  const target = document.getElementById(b.dataset.mic);
+  if (!SR){ target.focus(); toast('This browser has no built-in voice typing (try Chrome, Edge or Safari). ' + OS_DICTATION); return; }
+  if (mic && mic.btn === b){ stopMic(); return; }
+  if (mic){ stopMic(); await new Promise(r => setTimeout(r, 300)); }
+  const base = target.value, rec = new SR();
+  rec.lang = navigator.language || 'en-AU'; rec.interimResults = true; rec.continuous = true;
+  mic = {btn: b, rec}; setMicBtn(b, true);
+  rec.onresult = e => { let said = ''; for (const r of e.results) said += r[0].transcript; putText(target, base, said); };
+  rec.onerror = e => {
+    if (e.error === 'no-speech' || e.error === 'aborted') return;
+    target.focus();
+    if (e.error === 'not-allowed') toast('The browser blocked the microphone. Allow it (look for the mic icon in the address bar) and try again. ' + OS_DICTATION);
+    else toast('Voice typing is not available right now (' + e.error + '). ' + OS_DICTATION);
+  };
+  rec.onend = () => { setMicBtn(b, false); if (mic?.rec === rec) mic = null; target.dispatchEvent(new Event('change', {bubbles:true})); };
+  try { rec.start(); } catch { setMicBtn(b, false); mic = null; toast(OS_DICTATION); }
+}
+
+/* ---------- cast ---------- */
+function renderChars(){
+  $('#chars').innerHTML = chars.length ? chars.map(c => {
+    const thumb = c.sheet?.data || c.photos[0]?.data;
+    return `<div class="char">
+      ${thumb ? `<img src="${thumb}" alt="">` : '<div class="thumb"></div>'}
+      <div><div class="code">${esc(c.name)}</div>
+        ${c.sheet ? '<span class="badge ok">✓ Look approved</span>' : '<span class="badge no">Needs approval</span>'}
+        <div class="acts"><button class="small" type="button" data-edit="${esc(c.id)}">${c.sheet ? 'Open' : 'Approve look'}</button>
+        <button class="small" type="button" data-del="${esc(c.id)}">Delete</button></div></div></div>`; }).join('')
+    : '<div class="empty">No characters yet. Add up to 6 people with a few photos each.</div>';
+}
+$('#chars').onclick = async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const c = chars.find(x => x.id === (b.dataset.edit || b.dataset.del)); if (!c) return;
+  if (b.dataset.edit) openChar(c);
+  if (b.dataset.del){
+    if (b.dataset.sure){ await del('chars', c.id); chars = chars.filter(x => x !== c); renderChars(); }
+    else { b.dataset.sure = 1; b.textContent = 'Sure?'; setTimeout(() => { if (b.isConnected){ delete b.dataset.sure; b.textContent = 'Delete'; } }, 3000); }
+  }
+};
+
+/* ---------- character editor ---------- */
+let editing = null, draftPhotos = [], sheetBusy = false;
+function openChar(c){
+  editing = c || null; draftPhotos = c ? c.photos.map(p => ({...p})) : [];
+  $('#charDlgTitle').textContent = c ? c.name : 'New character';
+  $('#cName').value = c?.name || ''; $('#cDesc').value = c?.desc || ''; $('#sheetNotes').value = '';
+  $('#sheetErr').innerHTML = ''; renderViews(); renderSheet(); $('#charDlg').showModal();
+}
+function renderViews(){
+  $('#views').innerHTML = draftPhotos.map((p,i) => `<div class="view"><button type="button" class="x" data-rm="${i}" aria-label="Remove photo">✕</button>
+      <img src="${p.data}" alt=""><select data-v="${i}" aria-label="Which view">${VIEWS.map(v => `<option${v===p.view?' selected':''}>${v}</option>`).join('')}</select>
+      <div class="acts2"><button type="button" class="small" data-crop="${i}">Crop</button></div></div>`).join('');
+}
+function renderSheet(){
+  const c = editing, show = c?.sheet?.data || c?.sheetDraft;
+  if (sheetBusy) $('#sheetBox').innerHTML = '<div class="burst spin">DRAWING…<small>Usually 10–60 seconds</small></div>';
+  else if (show) $('#sheetBox').innerHTML = `<img src="${show}" alt="Model sheet">${c.sheet ? '<span class="stamp">APPROVED</span>' : ''}`;
+  else $('#sheetBox').innerHTML = '<div class="burst">NO LOOK YET<small>Add photos, then draw a model sheet</small></div>';
+  const approved = !!c?.sheet;
+  $('#genSheet').hidden = approved; $('#genSheet').textContent = c?.sheetDraft ? 'Try again' : 'Draw model sheet';
+  $('#approveSheet').hidden = approved || !c?.sheetDraft || sheetBusy; $('#unapprove').hidden = !approved;
+  $('#sheetNotes').closest('div').hidden = approved; $('#genSheet').disabled = sheetBusy;
+}
+$('#views').onclick = async e => {
+  const rm = e.target.closest('[data-rm]'); if (rm){ draftPhotos.splice(+rm.dataset.rm,1); renderViews(); return; }
+  const cb = e.target.closest('[data-crop]'); if (!cb) return;
+  const p = draftPhotos[+cb.dataset.crop], src = p.orig || p.data, r = await openCrop(src);
+  if (r && r !== 'skip'){ p.data = await shrink(src, 1024, r === 'whole' ? null : r); p.orig = src; renderViews(); }
+};
+$('#views').onchange = e => { const s = e.target.closest('[data-v]'); if (s) draftPhotos[+s.dataset.v].view = s.value; };
+async function addFiles(files){
+  const list = [...files].filter(f => f.type.startsWith('image/'));
+  for (const f of list){
+    if (draftPhotos.length >= 6){ toast('That is 6 photos, the most a character can have.'); break; }
+    try { const orig = await shrink(f, 1800); const r = await openCrop(orig);
+      if (!r || r === 'skip') continue;
+      draftPhotos.push({data: await shrink(orig, 1024, r === 'whole' ? null : r), orig, view: VIEWS[Math.min(draftPhotos.length, 2)]}); renderViews();
+    } catch { toast('Could not read one of those photos.'); }
+  }
+  renderViews();
+}
+
+/* ---------- crop tool ---------- */
+let crop = null; // {W,H,box,ar,resolve}
+function openCrop(src){ return new Promise(resolve => {
+  const im = $('#cropImg');
+  im.onload = () => { crop = {W: im.naturalWidth, H: im.naturalHeight, ar: 0, resolve};
+    setAspect(+(document.querySelector('#cropAspect .on')?.dataset.ar || 0)); $('#cropDlg').showModal(); };
+  im.onerror = () => resolve(null);
+  im.src = src; }); }
+function setAspect(ar){
+  crop.ar = ar; const {W,H} = crop;
+  document.querySelectorAll('#cropAspect button').forEach(b => b.classList.toggle('on', +b.dataset.ar === ar));
+  if (!ar){ const m = 0.04; crop.box = {x:W*m, y:H*m, w:W*(1-2*m), h:H*(1-2*m)}; }
+  else { let w = W*0.9, h = w/ar; if (h > H*0.9){ h = H*0.9; w = h*ar; } crop.box = {x:(W-w)/2, y:(H-h)/2, w, h}; }
+  drawCrop();
+}
+function drawCrop(){ const b = crop.box, s = $('#cropBox').style;
+  s.left = b.x/crop.W*100 + '%'; s.top = b.y/crop.H*100 + '%'; s.width = b.w/crop.W*100 + '%'; s.height = b.h/crop.H*100 + '%'; }
+$('#cropAspect').onclick = e => { const b = e.target.closest('[data-ar]'); if (b) setAspect(+b.dataset.ar); };
+let drag = null;
+$('#cropBox').onpointerdown = e => { e.preventDefault(); $('#cropBox').setPointerCapture(e.pointerId);
+  drag = {mode: e.target.dataset.h || 'move', sx: e.clientX, sy: e.clientY, start: {...crop.box}, k: crop.W / $('#cropImg').clientWidth}; };
+$('#cropBox').onpointermove = e => {
+  if (!drag) return; const dx = (e.clientX - drag.sx)*drag.k, dy = (e.clientY - drag.sy)*drag.k, s = drag.start, m = drag.mode, MIN = 40;
+  let {x,y,w,h} = s;
+  if (m === 'move'){ x = Math.min(Math.max(0, s.x+dx), crop.W - s.w); y = Math.min(Math.max(0, s.y+dy), crop.H - s.h); }
+  else {
+    if (m.includes('e')) w = s.w + dx; if (m.includes('w')) w = s.w - dx;
+    if (m.includes('s')) h = s.h + dy; if (m.includes('n')) h = s.h - dy;
+    if (crop.ar) h = w / crop.ar;
+    if (w < MIN || h < MIN) return;
+    x = m.includes('w') ? s.x + s.w - w : s.x; y = m.includes('n') ? s.y + s.h - h : s.y;
+    if (x < 0 || y < 0 || x + w > crop.W + 0.5 || y + h > crop.H + 0.5) return;
+  }
+  crop.box = {x,y,w,h}; drawCrop();
+};
+$('#cropBox').onpointerup = $('#cropBox').onpointercancel = () => { drag = null; };
+function endCrop(v){ const r = crop?.resolve; crop = null; $('#cropDlg').close(); r?.(v); }
+$('#cropOk').onclick = () => { const b = crop.box; endCrop({x:Math.round(b.x), y:Math.round(b.y), w:Math.round(b.w), h:Math.round(b.h)}); };
+$('#cropWhole').onclick = () => endCrop('whole');
+$('#cropSkip').onclick = () => endCrop('skip');
+$('#cropDlg').addEventListener('cancel', e => { e.preventDefault(); endCrop('skip'); });
+$('#drop').onclick = () => $('#cFiles').click();
+$('#drop').onkeydown = e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); $('#cFiles').click(); } };
+$('#cFiles').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+$('#drop').ondragover = e => { e.preventDefault(); $('#drop').classList.add('on'); };
+$('#drop').ondragleave = () => $('#drop').classList.remove('on');
+$('#drop').ondrop = e => { e.preventDefault(); $('#drop').classList.remove('on'); addFiles(e.dataTransfer.files); };
+$('#cName').oninput = () => $('#cName').setCustomValidity('');
+
+async function saveChar(){
+  const name = $('#cName').value.trim().replace(/\s+/g,'_');
+  const clash = chars.find(c => c.name.toLowerCase() === name.toLowerCase() && c !== editing);
+  if (!name || clash){ $('#cName').setCustomValidity(clash ? 'Another character already uses that code word' : 'Give them a code word'); $('#cName').reportValidity(); return false; }
+  const c = editing || {id: uid()};
+  Object.assign(c, {name, desc: $('#cDesc').value.trim(), photos: draftPhotos.map(p => ({...p}))});
+  if (!editing){ chars.push(c); editing = c; }
+  $('#charDlgTitle').textContent = c.name;
+  await put('chars', c); renderChars(); return true;
+}
+$('#charForm').onsubmit = async e => { e.preventDefault(); if (await saveChar()) $('#charDlg').close(); };
+$('#cancelChar').onclick = () => $('#charDlg').close();
+$('#newChar').onclick = () => openChar(null);
+
+$('#genSheet').onclick = async () => {
+  if (sheetBusy) return;
+  if (!draftPhotos.length){ $('#sheetErr').innerHTML = '<div class="err">Add at least one photo first.</div>'; return; }
+  if (!await saveChar()) return;
+  const c = editing, notes = $('#sheetNotes').value.trim();
+  sheetBusy = true; $('#sheetErr').innerHTML = ''; renderSheet();
+  let text = `Create a comic book CHARACTER MODEL SHEET (turnaround) for a character called "${c.name}", drawn in this style: ${styleText()}.
+Show the same character four times, side by side on a plain white background: full body front view, full body side view, full body back view, and a large face close-up. Neutral standing pose, arms slightly away from the body.
+The character must be clearly recognisable as the real person in the reference photos: same face shape, eyes, nose, mouth, hairstyle, hair colour, skin tone, body build and distinguishing features, translated into the comic style.
+Keep the outfit identical in every view. Small label under each view (FRONT, SIDE, BACK, FACE). No other text, no background scenery.`;
+  if (c.desc) text += `\nCharacter description: ${c.desc}`;
+  const refs = c.photos.map(p => ({label: `Reference photo of ${c.name} (${p.view} view)`, data: p.data}));
+  if (notes && c.sheetDraft){ text += `\nThe last attempt is attached as the final image. Keep everything about it the same EXCEPT these changes: ${notes}`; refs.push({label:'Previous model sheet attempt', data: c.sheetDraft}); }
+  else if (notes) text += `\nAlso: ${notes}`;
+  try { c.sheetDraft = await generateImage(text, refs, '16:9'); await put('chars', c); renderChars(); }
+  catch (e) { $('#sheetErr').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+  finally { sheetBusy = false; if (editing === c) renderSheet(); }
+};
+$('#approveSheet').onclick = async () => {
+  const c = editing; if (!c?.sheetDraft) return;
+  c.sheet = {data: c.sheetDraft, style: book.style, at: Date.now()}; delete c.sheetDraft;
+  await put('chars', c); renderChars(); renderSheet();
+};
+$('#unapprove').onclick = async e => {
+  const b = e.target;
+  if (!b.dataset.sure){ b.dataset.sure = 1; b.textContent = 'Sure? Future panels will need a new approval'; return; }
+  delete b.dataset.sure; b.textContent = 'Redo the look';
+  const c = editing; c.sheetDraft = c.sheet.data; delete c.sheet; await put('chars', c); renderChars(); renderSheet();
+};
+
+/* ---------- code word detection ---------- */
+const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const found = text => chars.filter(c => new RegExp('(^|[^\\p{L}\\p{N}_])@?' + reEsc(c.name) + '(?![\\p{L}\\p{N}_])', 'iu').test(text));
+
+/* ---------- pages ---------- */
+function newPage(){ return {id: uid(), order: pages.length, layout:'four', panels:[]}; }
+function ensurePanels(p){ const n = slots(p.layout).length; while (p.panels.length < n) p.panels.push({id: uid(), prompt:'', takes:[], pick:0}); }
+const panelImg = pn => pn.takes[pn.pick] || pn.takes[0] || '';
+const busyPanels = new Set();
+function showTopErr(m){ $('#pageErr').innerHTML = m ? `<div class="err">${esc(m)}</div>` : ''; }
+
+function renderPages(){
+  $('#pages').innerHTML = pages.map((p,i) => `<button type="button" class="small${i===cur?' on':''}" data-pg="${i}" aria-label="Page ${i+1}">${i+1}</button>`).join('');
+  $('#pageTitle').textContent = `Page ${cur+1} of ${pages.length}`;
+  $('#layouts').innerHTML = Object.entries(LAYOUTS).map(([k,l]) => `<button type="button" class="lay${page().layout===k?' on':''}" data-lay="${k}" title="${l.name}" aria-label="${l.name}">
+      ${l.rows.map(([n]) => `<span class="r">${'<i></i>'.repeat(n)}</span>`).join('')}</button>`).join('');
+  renderPaper();
+  $('#movePrev').disabled = cur === 0; $('#moveNext').disabled = cur === pages.length-1; $('#delPage').disabled = pages.length < 2;
+}
+function renderPaper(){
+  const p = page(); ensurePanels(p); let i = 0;
+  $('#paper').innerHTML = LAYOUTS[p.layout].rows.map(([n,a]) => `<div class="prow">${Array.from({length:n}, () => {
+      const idx = i++, pn = p.panels[idx], img = panelImg(pn);
+      return `<button type="button" class="cell${busyPanels.has(pn.id)?' busy':''}" data-cell="${idx}" style="aspect-ratio:${a.replace(':','/')}">
+        <span class="num">${idx+1}</span>
+        ${img ? `<img src="${img}" alt="${esc(pn.prompt)}">` : `<span class="lbl">Panel ${idx+1}<small>${pn.prompt ? esc(pn.prompt.slice(0,60)) + '…' : 'Click to write'}</small></span>`}</button>`; }).join('')}</div>`).join('');
+}
+$('#pages').onclick = e => { const b = e.target.closest('[data-pg]'); if (b){ cur = +b.dataset.pg; ls.set('cs.cur', cur); renderPages(); } };
+$('#layouts').onclick = async e => { const b = e.target.closest('[data-lay]'); if (!b) return; page().layout = b.dataset.lay; await savePage(page()); renderPages(); };
+$('#addPage').onclick = async () => { const p = newPage(); ensurePanels(p); pages.push(p); cur = pages.length-1; await savePage(p); renderPages(); };
+async function reorder(){ pages.forEach((p,i) => p.order = i); for (const p of pages) await savePage(p); }
+$('#movePrev').onclick = async () => { if (cur < 1) return; [pages[cur-1], pages[cur]] = [pages[cur], pages[cur-1]]; cur--; await reorder(); renderPages(); };
+$('#moveNext').onclick = async () => { if (cur >= pages.length-1) return; [pages[cur+1], pages[cur]] = [pages[cur], pages[cur+1]]; cur++; await reorder(); renderPages(); };
+$('#delPage').onclick = async e => {
+  const b = e.target; if (pages.length < 2) return;
+  if (!b.dataset.sure){ b.dataset.sure = 1; b.textContent = 'Really delete this page?'; setTimeout(() => { delete b.dataset.sure; b.textContent = 'Delete page'; }, 3000); return; }
+  delete b.dataset.sure; b.textContent = 'Delete page';
+  await del('pages', page().id); pages.splice(cur, 1); cur = Math.max(0, cur-1); await reorder(); renderPages();
+};
+
+/* ---------- page image (download + print) ---------- */
+async function renderPagePNG(p){
+  ensurePanels(p);
+  const W = 1600, M = 40, G = 24, B = 8, rows = LAYOUTS[p.layout].rows;
+  const heights = rows.map(([n,a]) => ((W - 2*M - (n-1)*G)/n)/ratio(a));
+  const H = Math.round(2*M + heights.reduce((s,h) => s+h, 0) + G*(rows.length-1));
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0,0,W,H);
+  let y = M, idx = 0;
+  for (const [r, [n]] of rows.entries()){
+    const cw = (W - 2*M - (n-1)*G)/n, ch = heights[r];
+    for (let k = 0; k < n; k++){
+      const px = M + k*(cw+G), src = panelImg(p.panels[idx++]);
+      x.fillStyle = '#f4f1ea'; x.fillRect(px, y, cw, ch);
+      if (src){ const im = await loadImg(src); const s = Math.max(cw/im.width, ch/im.height), dw = im.width*s, dh = im.height*s;
+        x.save(); x.beginPath(); x.rect(px, y, cw, ch); x.clip(); x.drawImage(im, px + (cw-dw)/2, y + (ch-dh)/2, dw, dh); x.restore(); }
+      x.lineWidth = B; x.strokeStyle = '#141414'; x.strokeRect(px + B/2, y + B/2, cw - B, ch - B);
+    }
+    y += ch + G;
+  }
+  return c.toDataURL('image/png');
+}
+const fileBase = () => (book.title || 'comic').replace(/[^\w-]+/g,'-').toLowerCase();
+$('#dlPage').onclick = async e => {
+  const a = e.currentTarget; if (a.dataset.ready){ delete a.dataset.ready; return; }
+  e.preventDefault(); a.textContent = 'Preparing…';
+  try { a.href = await renderPagePNG(page()); a.download = `${fileBase()}-page-${cur+1}.png`; a.dataset.ready = 1; a.click(); }
+  catch { showTopErr('Could not build the page image.'); }
+  a.textContent = '⬇ Download page';
+};
+$('#printBook').onclick = async () => {
+  $('#printBook').textContent = 'Preparing…';
+  try { const imgs = []; for (const p of pages) imgs.push(await renderPagePNG(p));
+    $('#printArea').innerHTML = imgs.map(s => `<img src="${s}" alt="">`).join('');
+    await Promise.all([...$('#printArea').images].map(i => i.decode().catch(()=>{})));
+    window.print();
+  } catch { showTopErr('Could not prepare the book for printing.'); }
+  $('#printBook').textContent = '🖨 Print / PDF whole book';
+};
+
+/* ---------- panel editor ---------- */
+let pIdx = 0;
+const curPanel = () => page().panels[pIdx];
+$('#paper').onclick = e => { const b = e.target.closest('[data-cell]'); if (b) openPanel(+b.dataset.cell); };
+function openPanel(i){
+  pIdx = i; const pn = curPanel();
+  $('#panelTitle').textContent = `Page ${cur+1} · Panel ${i+1}`;
+  $('#pPrompt').value = pn.prompt; $('#panelErr').innerHTML = '';
+  $('#pInsert').innerHTML = chars.map(c => `<button type="button" class="small" data-ins="${esc(c.id)}">+ ${esc(c.name)}</button>`).join('');
+  panelChips(); renderPanelStage(); $('#panelDlg').showModal(); checkOverview(true);
+}
+
+/* ---------- AI understood ---------- */
+let ovTimer = null, ovSeq = 0;
+const OV_SYSTEM = `You help someone make a comic book. They describe one panel; you explain back, briefly and plainly, what will be drawn so they can check you understood them.
+Known characters are listed with their code words. Only those names are known characters. Anyone else mentioned is an unnamed extra.
+If something is ambiguous (who says a line, where the scene is, what someone is doing), make the most sensible assumption and list it under "unclear" as a short question or assumption.
+Reply with JSON only, in this shape:
+{"summary":"one plain sentence of what the panel shows",
+ "characters":[{"name":"code word or short description","known":true,"doing":"action/pose","expression":"face/emotion"}],
+ "setting":"where and when, lighting/weather",
+ "shot":"camera framing, e.g. wide shot, close-up, low angle",
+ "dialogue":[{"speaker":"name","type":"speech|thought|caption|sound effect","text":"exact words"}],
+ "unclear":["short question or assumption"],
+ "clearer_prompt":"the same panel rewritten as a clear, specific description, keeping every character code word exactly as written and every line of dialogue word for word"}`;
+function ovContext(pg, idx){
+  const cast = chars.length ? chars.map(c => `- ${c.name}${c.desc ? ': ' + c.desc : ''}`).join('\n') : '(none yet)';
+  const prev = pg.panels.slice(0, idx).map(p => p.prompt).filter(Boolean).slice(-2);
+  return `Known characters:\n${cast}\n\n` + (prev.length ? `Earlier panels on this page, for context:\n${prev.map(p => '- ' + p).join('\n')}\n\n` : '');
+}
+function checkOverview(now){
+  clearTimeout(ovTimer);
+  const pn = curPanel(), prompt = $('#pPrompt').value.trim();
+  if (pn.overview && pn.overview.forPrompt === prompt){ renderOverview(pn.overview.data, 'ok'); return; }
+  if (prompt.length < 12){ renderOverview(null, 'empty'); return; }
+  renderOverview(pn.overview?.data, 'stale');
+  ovTimer = setTimeout(runOverview, now ? 50 : 1600);
+}
+async function runOverview(){
+  const pg = page(), idx = pIdx, pn = curPanel(), prompt = $('#pPrompt').value.trim();
+  if (prompt.length < 12) return;
+  if (!settings().key){ renderOverview(null, 'nokey'); return; }
+  const seq = ++ovSeq; renderOverview(pn.overview?.data, 'busy');
+  try {
+    const data = parseJSON(await askText(OV_SYSTEM, ovContext(pg, idx) + 'Panel description:\n' + prompt));
+    if (!data || typeof data !== 'object') throw new Error('The AI reply was not readable. Try again.');
+    pn.overview = {forPrompt: prompt, data}; await savePage(pg);
+    if (seq === ovSeq && curPanel() === pn) renderOverview(data, $('#pPrompt').value.trim() === prompt ? 'ok' : 'stale');
+  } catch (e) { if (seq === ovSeq && curPanel() === pn) renderOverview(pn.overview?.data, 'error', e.message); }
+}
+const list = a => Array.isArray(a) ? a.filter(Boolean) : [];
+function renderOverview(d, state, err){
+  const st = {ok:['ok','✓ Up to date'], busy:['busy','Thinking…'], stale:['','Updating soon'], error:['','Not updated'], empty:['',''], nokey:['','']}[state];
+  let h = `<h3>AI understood${st[1] ? ` <span class="st ${st[0]}">${st[1]}</span>` : ''}</h3>`;
+  if (state === 'empty' && !d) h += '<p class="hint" style="margin:0">Start describing the panel. A short summary of what the AI thinks you mean shows up here, so you can catch mix-ups before drawing.</p>';
+  if (state === 'nokey') h += '<p class="hint" style="margin:0">Add your API key in Settings to turn this on.</p>';
+  if (state === 'error') h += `<div class="err">${esc(err)}</div><button type="button" class="small" id="ovRetry">Try again</button>`;
+  if (d){
+    const cs = list(d.characters), dl = list(d.dialogue), uq = list(d.unclear);
+    h += `<p class="sum">${esc(d.summary)}</p><dl>`;
+    if (cs.length) h += `<dt>Who</dt><dd><ul>${cs.map(c => { const known = chars.find(x => x.name.toLowerCase() === String(c.name||'').toLowerCase());
+      return `<li><b>${esc(c.name)}</b>${known ? (known.sheet ? ' ✓' : ' (look not approved)') : ''}: ${esc(c.doing)}${c.expression ? `, <i>${esc(c.expression)}</i>` : ''}</li>`; }).join('')}</ul></dd>`;
+    if (d.setting) h += `<dt>Where</dt><dd>${esc(d.setting)}</dd>`;
+    if (d.shot) h += `<dt>Camera</dt><dd>${esc(d.shot)}</dd>`;
+    if (dl.length) h += `<dt>Words on the page</dt><dd><ul>${dl.map(x => `<li><b>${esc(x.speaker)}</b> (${esc(x.type || 'speech')}): "${esc(x.text)}"</li>`).join('')}</ul></dd>`;
+    h += '</dl>';
+    if (uq.length) h += `<div class="q"><b>Check this:</b><ul>${uq.map(q => `<li>${esc(q)}</li>`).join('')}</ul></div>`;
+    if (d.clearer_prompt && d.clearer_prompt.trim() !== $('#pPrompt').value.trim())
+      h += `<div class="better"><b>Clearer wording:</b> ${esc(d.clearer_prompt)}<div style="margin-top:8px"><button type="button" class="small" id="ovUse">Use this wording</button></div></div>`;
+    if (state === 'ok') h += '<p class="hint" style="margin:0">If this is wrong, change your description and the summary updates.</p>';
+  }
+  $('#ov').innerHTML = h;
+}
+$('#ov').onclick = async e => {
+  if (e.target.id === 'ovRetry') runOverview();
+  if (e.target.id === 'ovUse'){ const pn = curPanel(), d = pn.overview?.data; if (!d?.clearer_prompt) return;
+    $('#pPrompt').value = d.clearer_prompt; pn.prompt = d.clearer_prompt; pn.overview.forPrompt = d.clearer_prompt.trim();
+    await savePage(page()); panelChips(); renderOverview(d, 'ok'); }
+};
+function breakdownText(pn, prompt){
+  const d = pn.overview?.forPrompt === prompt ? pn.overview.data : null; if (!d) return '';
+  const cs = list(d.characters), dl = list(d.dialogue);
+  let t = '\n\nScene breakdown checked by the artist:';
+  if (cs.length) t += '\n' + cs.map(c => `- ${c.name}: ${c.doing || ''}${c.expression ? ', ' + c.expression : ''}`).join('\n');
+  if (d.setting) t += `\n- Setting: ${d.setting}`;
+  if (d.shot) t += `\n- Camera: ${d.shot}`;
+  if (dl.length) t += '\n- Lettering (draw exactly, nothing else): ' + dl.map(x => `${x.type || 'speech'} from ${x.speaker}: "${x.text}"`).join('; ');
+  return t;
+}
+document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', stopMic));
+function panelChips(){
+  const f = found($('#pPrompt').value);
+  $('#pChips').innerHTML = f.length ? f.map(c => c.sheet ? `<span class="chip">★ ${esc(c.name)} ✓</span>` : `<span class="chip warn">⚠ ${esc(c.name)}: look not approved</span>`).join('')
+    : (chars.length ? '<span class="chip off">No characters in this panel yet. Type a code word or tap + below.</span>' : '');
+}
+function renderPanelStage(){
+  const pn = curPanel(), a = slots(page().layout)[pIdx], img = panelImg(pn);
+  $('#pStage').style.aspectRatio = a.replace(':','/');
+  $('#pStage').innerHTML = busyPanels.has(pn.id) ? '<div class="burst spin">DRAWING…<small>Usually 10–60 seconds</small></div>'
+    : img ? `<img src="${img}" alt="">` : '<div class="burst">POW!<small>Your panel appears here</small></div>';
+  $('#takes').innerHTML = pn.takes.length > 1 ? pn.takes.map((t,i) => `<button type="button" class="${i===pn.pick?'on':''}" data-take="${i}" aria-label="Take ${i+1}"><img src="${t}" alt=""></button>`).join('') : '';
+  $('#drawPanel').textContent = pn.takes.length ? 'Draw another take' : 'Draw it!';
+  $('#drawPanel').disabled = busyPanels.has(pn.id);
+}
+$('#pPrompt').oninput = async () => { curPanel().prompt = $('#pPrompt').value; panelChips(); checkOverview(false); };
+$('#pPrompt').onchange = () => savePage(page());
+$('#pInsert').onclick = e => { const b = e.target.closest('[data-ins]'); if (!b) return; const c = chars.find(x => x.id === b.dataset.ins);
+  const t = $('#pPrompt'), p = t.selectionStart ?? t.value.length; t.value = t.value.slice(0,p) + c.name + ' ' + t.value.slice(p);
+  curPanel().prompt = t.value; savePage(page()); panelChips(); checkOverview(false); t.focus(); };
+$('#takes').onclick = async e => { const b = e.target.closest('[data-take]'); if (!b) return; curPanel().pick = +b.dataset.take; await savePage(page()); renderPanelStage(); renderPaper(); };
+$('#panelForm').onsubmit = async () => { curPanel().prompt = $('#pPrompt').value; await savePage(page()); renderPaper(); };
+$('#clearPanel').onclick = async e => {
+  const b = e.target; if (!b.dataset.sure){ b.dataset.sure = 1; b.textContent = 'Clear all takes?'; setTimeout(() => { delete b.dataset.sure; b.textContent = 'Clear panel'; }, 3000); return; }
+  delete b.dataset.sure; b.textContent = 'Clear panel'; const pn = curPanel(); pn.takes = []; pn.pick = 0; await savePage(page()); renderPanelStage(); renderPaper();
+};
+$('#drawPanel').onclick = async () => {
+  const pg = page(), idx = pIdx, pn = pg.panels[idx], prompt = $('#pPrompt').value.trim();
+  if (busyPanels.has(pn.id)) return;
+  pn.prompt = prompt; await savePage(pg);
+  if (!prompt){ $('#panelErr').innerHTML = '<div class="err">Describe what happens in this panel first.</div>'; return; }
+  const cast = found(prompt), notOk = cast.filter(c => !c.sheet);
+  if (notOk.length){ $('#panelErr').innerHTML = `<div class="err">Approve ${esc(notOk.map(c => c.name).join(' and '))}'s look first (Your cast → Approve look). That's what keeps them consistent.</div>`; return; }
+  const aspect = slots(pg.layout)[idx];
+  const prev = pg.panels[idx-1], prevImg = prev && panelImg(prev);
+  let text = `Draw ONE comic book panel in this style: ${styleText()}. Panel shape ${aspect}. Fill the whole frame with artwork; no panel borders, no page layout, no extra panels.
+Scene: ${prompt}`;
+  if (cast.length) text += `\n\nCharacters in this panel: ${cast.map(c => c.name).join(', ')}. Each one has an APPROVED model sheet attached. Draw each character exactly as on their model sheet: same face, hair, body build, skin tone and outfit. Pose and expression should fit the scene; do not copy the model-sheet poses. Do not draw anyone else who looks like them.` +
+    cast.filter(c => c.desc).map(c => `\n${c.name}: ${c.desc}`).join('');
+  text += breakdownText(pn, prompt);
+  text += '\nDraw any speech bubbles or captions mentioned with clean, correctly spelled comic lettering, with each bubble\'s tail pointing at the right speaker. Do not add text that was not asked for.';
+  const refs = [];
+  cast.forEach(c => { refs.push({label:`APPROVED model sheet for ${c.name}: this is exactly how ${c.name} looks`, data: c.sheet.data});
+    const face = c.photos.find(p => /face|front/.test(p.view)) || c.photos[0]; if (face && cast.length <= 4) refs.push({label:`Photo of the real ${c.name}, for face likeness only`, data: face.data}); });
+  if (prevImg && refs.length < 12){ refs.push({label:'Previous panel on this page, for matching colours, lighting and art style only', data: prevImg}); }
+  busyPanels.add(pn.id); $('#panelErr').innerHTML = ''; renderPanelStage(); renderPaper();
+  try { const img = await generateImage(text, refs, aspect); pn.takes.push(img); if (pn.takes.length > 6) pn.takes.shift(); pn.pick = pn.takes.length-1; await savePage(pg); }
+  catch (e) { if (curPanel() === pn) $('#panelErr').innerHTML = `<div class="err">${esc(e.message)}</div>`; else showTopErr(`Page ${pages.indexOf(pg)+1}, panel ${idx+1}: ${e.message}`); }
+  finally { busyPanels.delete(pn.id); if (curPanel() === pn && $('#panelDlg').open) renderPanelStage(); renderPaper(); }
+};
+
+/* ---------- book settings ---------- */
+$('#bookTitle').oninput = () => { book.title = $('#bookTitle').value; saveBook(); };
+$('#style').onchange = () => { book.style = $('#style').value; saveBook();
+  const old = chars.filter(c => c.sheet && c.sheet.style !== book.style);
+  showTopErr(old.length ? `Heads up: ${old.map(c => c.name).join(', ')} ${old.length===1?'was':'were'} approved in a different style. Redo their look so they match the new style.` : ''); };
+$('#styleNotes').onchange = () => { book.styleNotes = $('#styleNotes').value.trim(); saveBook(); };
+
+/* ---------- backup ---------- */
+$('#exportBtn').onclick = () => {
+  const blob = new Blob([JSON.stringify({app:'comic-studio', v:2, book, chars, pages})], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileBase() + '-backup.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+};
+$('#importBtn').onclick = () => $('#importFile').click();
+$('#importFile').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { const j = JSON.parse(await f.text()); if (j.app !== 'comic-studio') throw 0;
+    for (const c of j.chars || []){ if (!c.id || !Array.isArray(c.photos)) continue; await put('chars', c); chars = chars.filter(x => x.id !== c.id).concat(c); }
+    if (Array.isArray(j.pages) && j.pages.length){ for (const p of pages) await del('pages', p.id);
+      pages = j.pages.filter(p => p.id && LAYOUTS[p.layout] && Array.isArray(p.panels)).sort((a,b) => a.order - b.order);
+      for (const p of pages) await put('pages', p); cur = 0; }
+    if (j.book){ book = {...book, ...j.book, id:'book'}; await saveBook(); fillBook(); }
+    if (!pages.length){ const p = newPage(); ensurePanels(p); pages.push(p); await savePage(p); }
+    renderChars(); renderPages(); showTopErr('');
+  } catch { showTopErr('That file is not a Comic Studio backup.'); }
+};
+function fillBook(){ $('#bookTitle').value = book.title || ''; $('#style').value = STYLES[book.style] ? book.style : 'classic'; $('#styleNotes').value = book.styleNotes || ''; }
+
+/* ---------- start ---------- */
+(async () => {
+  await openDB();
+  try { chars = await all('chars'); pages = (await all('pages')).sort((a,b) => a.order - b.order);
+    const m = (await all('meta')).find(x => x.id === 'book'); if (m) book = {...book, ...m}; } catch {}
+  if (!pages.length){ const p = newPage(); ensurePanels(p); pages.push(p); await savePage(p); }
+  cur = Math.min(+ls.get('cs.cur', 0) || 0, pages.length-1);
+  fillBook(); renderChars(); renderPages();
+  if (!settings().key) setTimeout(() => $('#openSettings').click(), 400);
+})();
+}
+</script>
+</body>
+</html>
