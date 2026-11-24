@@ -1650,7 +1650,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
           }
         ],
         success_url: baseUrlEarly + '/?order=success&ref=' + encodeURIComponent(reference),
-        cancel_url: baseUrlEarly + '/checkout.html?order=cancelled&ref=' + encodeURIComponent(reference)
+        cancel_url: baseUrlEarly + '/checkout.html?order=cancelled&p=' + encodeURIComponent(order.product) + '&ref=' + encodeURIComponent(reference)
       });
       return res.status(200).json({ success: true, url: session.url });
     } catch (err) {

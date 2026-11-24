@@ -76,6 +76,18 @@ module.exports = {
         'design-2': 'Design 2 (Key pattern)',
         'design-3': 'Design 3 (Shards)'
       }
+    },
+    'shabbos-napkin-holder': {
+      label: 'Shabbos Kodesh Napkin Holder',
+      unitPrice: 40
+    },
+    'engraved-portrait': {
+      label: 'Engraved Portrait',
+      unitPrice: 250
+    },
+    'bottle-nut-tray': {
+      label: 'Bottle & Nut Serving Tray',
+      unitPrice: 55
     }
   }
 };

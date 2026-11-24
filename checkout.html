@@ -123,6 +123,7 @@
 <header id="site-header">
   <a href="./index.html"><img src="logo.svg" alt="myLucent.co" style="height:26px;width:94px;display:block;"></a>
   <nav class="desktop-nav">
+    <a href="./shop.html" class="nav-link">SHOP</a>
     <a href="./index.html#how" class="nav-link">HOW IT WORKS</a>
     <a href="./about.html" class="nav-link">ABOUT</a>
     <a href="./contact.html" class="nav-link">CONTACT</a>
@@ -131,6 +132,7 @@
     <span class="bg-icon" aria-hidden="true"><i></i><i></i><i></i></span>
   </button>
   <div class="mobile-dropdown" id="mobileDropdown">
+    <a href="./shop.html">SHOP</a>
     <a href="./index.html#how">HOW IT WORKS</a>
     <a href="./about.html">ABOUT</a>
     <a href="./contact.html">CONTACT</a>
@@ -193,7 +195,8 @@
           <div class="kv"><span>Name</span><span id="rvName"></span></div>
           <div class="kv"><span>Mobile</span><span id="rvPhone"></span></div>
           <div class="kv"><span>Email</span><span id="rvEmail"></span></div>
-          <div class="kv"><span>Preferred design</span><span id="rvDesign"></span></div>
+          <div class="kv"><span>Product</span><span id="rvProduct"></span></div>
+          <div class="kv" id="rvDesignRow"><span>Preferred design</span><span id="rvDesign"></span></div>
           <div class="kv" style="border-bottom:none;"><span>Pickup</span><span>Confirmed by phone</span></div>
         </div>
         <button type="button" class="stripe-btn" id="payBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="payLabel">Pay with Stripe</span></button>
@@ -205,7 +208,7 @@
 
     <aside aria-label="Order summary">
       <div style="border-radius:14px;overflow:hidden;aspect-ratio:4 / 3;background:#2A3742;">
-        <img src="assets/chanukah-stand.jpg" alt="Chanukah brachos stand" style="width:100%;height:100%;object-fit:cover;object-position:50% 55%;display:block;">
+        <img id="prodImg" src="assets/prod-chanukah-stand.jpg" alt="Chanukah Brachos Stand" style="width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;">
       </div>
       <div style="padding:0 8px;display:flex;flex-direction:column;gap:18px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
@@ -236,6 +239,7 @@
 <footer>
   <div class="footer-inner">
     <a href="index.html">Home</a>
+    <a href="shop.html">Shop</a>
     <a href="index.html#how">How It Works</a>
     <a href="about.html">About</a>
     <a href="contact.html">Contact</a>
@@ -260,9 +264,24 @@
   // The price shown here is for display only. The server (pricing.js →
   // products) decides what Stripe actually charges.
   (function(){
-    var PRODUCT = 'chanukah-brachos-stand';
+    // Products this page can sell. The shop links here with ?p=<id>.
+    // Names and prices are refreshed from the server (pricing.js) below.
+    var PRODUCTS = {
+      'chanukah-brachos-stand': { name: 'Chanukah Brachos Stand', price: 45, img: 'assets/prod-chanukah-stand.jpg', designs: true },
+      'shabbos-napkin-holder':  { name: 'Shabbos Kodesh Napkin Holder', price: 40, img: 'assets/prod-napkin-holder.jpg', designs: false },
+      'engraved-portrait':      { name: 'Engraved Portrait', price: 250, img: 'assets/prod-portrait.jpg', designs: false },
+      'bottle-nut-tray':        { name: 'Bottle & Nut Serving Tray', price: 55, img: 'assets/prod-serving-tray.jpg', designs: false }
+    };
+    var pid = new URLSearchParams(location.search).get('p');
+    if (!PRODUCTS[pid]) pid = 'chanukah-brachos-stand';
+    var PRODUCT = pid, P = PRODUCTS[pid];
     var MAX_QTY = 20;
-    var unit = 45;          // replaced by the live price from /api/pricing below
+    var unit = P.price;     // replaced by the live price from /api/pricing below
+    document.getElementById('prodName').textContent = P.name;
+    document.getElementById('prodImg').src = P.img;
+    document.getElementById('prodImg').alt = P.name;
+    document.getElementById('fDesign').hidden = !P.designs;
+    document.getElementById('rvDesignRow').hidden = !P.designs;
     var qty = 1, ref = '';
     var $ = function(id){ return document.getElementById(id); };
     function money(n){ return '$' + n.toFixed(2); }
@@ -309,11 +328,11 @@
       if (!name){ mark('fName', true); bad = true; }
       if (!validMobile(phone)){ mark('fPhone', true); bad = true; }
       if (!validEmail(email)){ mark('fEmail', true); bad = true; }
-      var pick = document.querySelector('input[name="design"]:checked');
-      if (!pick){ mark('fDesign', true); bad = true; }
+      var pick = P.designs ? document.querySelector('input[name="design"]:checked') : null;
+      if (P.designs && !pick){ mark('fDesign', true); bad = true; }
       if (bad){ var first = document.querySelector('.bad'); if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-      var designValue = pick.value;
-      var designLabel = pick.closest('.dz').querySelector('.dz-name').innerText.replace(/\s*\n\s*/, ' — ');
+      var designValue = pick ? pick.value : null;
+      var designLabel = pick ? pick.closest('.dz').querySelector('.dz-name').innerText.replace(/\s*\n\s*/, ' — ') : '';
       ref = 'ML-' + Date.now().toString(36).toUpperCase();
       var btn = $('toPayBtn'); btn.disabled = true;
       $('regErr').hidden = true;
@@ -324,7 +343,7 @@
         .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
         .then(function(res){
           if (!res.ok || !res.d.success) throw new Error(res.d.error || 'Could not save your order.');
-          $('rvRef').textContent = ref; $('rvName').textContent = name; $('rvPhone').textContent = phone; $('rvEmail').textContent = email; $('rvDesign').textContent = designLabel + ' (preference)';
+          $('rvRef').textContent = ref; $('rvName').textContent = name; $('rvPhone').textContent = phone; $('rvEmail').textContent = email; $('rvProduct').textContent = $('prodName').textContent; if (pick) $('rvDesign').textContent = designLabel + ' (preference)';
           setStep(true);
         })
         .catch(function(err){ $('regErr').textContent = (err && err.message) || 'Something went wrong. Please try again.'; $('regErr').hidden = false; })
@@ -354,7 +373,7 @@
 
     if (new URLSearchParams(location.search).get('order') === 'cancelled'){
       $('cancelNote').hidden = false;
-      if (history.replaceState) history.replaceState(null, '', location.pathname);
+      if (history.replaceState) history.replaceState(null, '', location.pathname + '?p=' + encodeURIComponent(PRODUCT));
     }
     render();
   })();
