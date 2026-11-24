@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Comic Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 /*
 VOICE: loud, playful, but a real working tool
@@ -137,6 +137,50 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 #cropBox i[data-h=sw]{left:-11px;bottom:-11px;cursor:nesw-resize}#cropBox i[data-h=se]{right:-11px;bottom:-11px;cursor:nwse-resize}
 .seg{display:flex;gap:6px;flex-wrap:wrap}.seg button.on{background:var(--ink);color:var(--bg)}
 .view .acts2{display:flex;gap:4px;margin-top:4px}.view .acts2>*{flex:1}
+/* page editor */
+.edtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.edtools .tool{min-height:44px;padding:0 12px;gap:6px}
+.edtools .tool svg{width:20px;height:20px}
+.edtools .tool.on{background:var(--yel);color:#141414}
+.edtools .sep{width:3px;align-self:stretch;background:var(--line);border-radius:2px;margin:0 2px}
+.edmain{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;align-items:start}
+@media(max-width:1100px){.edmain{grid-template-columns:minmax(0,1fr)}}
+.edstage{position:relative;width:100%;max-width:560px;margin:0 auto;border:4px solid #141414;box-shadow:8px 8px 0 var(--line);background:#fff;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.edpage{position:absolute;left:0;top:0;width:540px;height:720px;transform-origin:0 0}
+.edpage svg{position:absolute;left:0;top:0;display:block}
+.edpage .lbl2{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;text-align:center;color:#141414}
+.edpage .lbl2 b{background:var(--yel);border:2px solid #141414;border-radius:4px;padding:0 8px;font:400 20px Bangers,Impact,sans-serif;letter-spacing:.04em}
+.edpage .lbl2 small{font:700 13px "Nunito Sans",sans-serif;color:#4d4752;max-width:180px}
+.edpage .busy2{position:absolute;transform:translate(-50%,-50%);background:rgba(255,212,59,.95);border:3px solid #141414;border-radius:8px;padding:8px 12px;font:400 22px Bangers,Impact,sans-serif;color:#e8352e;text-align:center;pointer-events:none;min-width:150px}
+.bub{position:absolute;display:grid;place-items:center;outline-offset:4px}
+.bta{display:block;margin:0;padding:0;border:0;outline:0;background:transparent;resize:none;overflow:hidden;text-align:center;text-transform:uppercase;color:#141414;box-shadow:none;min-height:0!important;border-radius:0}
+.bta:focus,.bta:focus-visible{outline:none!important}
+.hdl{position:absolute;width:14px;height:14px;background:#fff;border:3px solid var(--blue);z-index:3}
+.tip{position:absolute;width:22px;height:22px;transform:translate(-50%,-50%);border-radius:50%;background:var(--red);border:4px solid #fff;box-shadow:0 0 0 2px #141414;cursor:grab;z-index:3}
+.qbar{position:absolute;display:flex;gap:6px;padding:5px;background:#141414;border-radius:8px;z-index:4;white-space:nowrap}
+.qbar button,.qbar select{min-height:40px;height:40px;border:2px solid #141414;border-radius:6px;background:#fff;color:#141414;font:800 14px "Nunito Sans",sans-serif;padding:0 8px;box-shadow:none;width:auto}
+.edside{display:grid;gap:12px;align-content:start}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tiles button{flex-direction:column;gap:2px;min-height:64px;padding:6px;cursor:grab;font-size:12px;box-shadow:2px 2px 0 var(--line)}
+.tiles button span{font:400 21px Bangers,Impact,sans-serif;letter-spacing:.04em}
+.tray{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tray button{padding:0;aspect-ratio:1/1;overflow:hidden;min-height:0;box-shadow:2px 2px 0 var(--line);cursor:grab}
+.tray img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.laybtns{display:flex;flex-wrap:wrap;gap:6px}
+.pstage{position:relative}
+.pstage .mask{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.pstage>img{object-fit:cover!important}
+.idrow{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:10px 12px;border:2px solid var(--line);border-radius:6px;background:var(--bg)}
+.idrow input{width:22px;height:22px;margin:2px 0 0;accent-color:#e8352e}
+.idrow .old{color:var(--muted);text-decoration:line-through;font-size:14px}
+.idrow .new{font-weight:700}
+.idrow .lab{font:800 12px "Nunito Sans",sans-serif;color:var(--muted);text-transform:uppercase;letter-spacing:.02em}
+.opt{display:block;width:100%;text-align:left;justify-content:flex-start;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px;min-height:0;height:auto;line-height:1.35}
+.opt b{font:800 12px "Nunito Sans",sans-serif;color:var(--muted);text-transform:uppercase}
+.opt span{font:700 17px "Comic Neue","Comic Sans MS",cursive;text-transform:uppercase}
+.ver{border:3px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:8px;background:var(--bg)}
+.ver ol{margin:0;padding-left:20px;display:grid;gap:4px}
+.ver li{font:700 15px "Comic Neue","Comic Sans MS",cursive;text-transform:uppercase}
 #printArea{display:none}
 @media print{body{background:#fff}header,main,dialog{display:none!important}#printArea{display:block}#printArea img{width:100%;page-break-after:always;display:block}}
 </style>
@@ -170,6 +214,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
         </select>
         <p class="hint">Choose this before approving characters. Their model sheets are drawn in this style.</p></div>
       <div><label for="styleNotes">Extra style notes (optional)</label><input id="styleNotes" placeholder="e.g. moody purple skies, lots of rain"></div>
+      <label style="display:flex;gap:10px;align-items:flex-start;font-weight:700;font-size:15px;cursor:pointer"><input type="checkbox" id="blurBg" checked style="width:22px;height:22px;flex:none;margin-top:2px;accent-color:#e8352e"><span>Soft blurred background<span class="hint" style="display:block;font-weight:400;margin-top:2px">Characters and action stay sharp in the middle; the background is softly out of focus, so pictures crop easily into any panel shape.</span></span></label>
     </div>
     <div class="card stack">
       <h3>Back up</h3>
@@ -189,9 +234,28 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
         <button type="button" class="fit small" id="addPage">+ Add page</button>
       </div>
       <div class="pages" id="pages" aria-label="Pages"></div>
-      <div><label>Panel layout</label><div class="layouts" id="layouts"></div></div>
       <div id="pageErr"></div>
-      <div class="paper" id="paper"></div>
+      <div class="edtools" id="edTools">
+        <button type="button" class="tool" data-tool="panels"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg>Panels</button>
+        <button type="button" class="tool" data-tool="slice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.1 8.1L20 20M8.1 15.9L20 4"/></svg>Slice</button>
+        <button type="button" class="tool" data-tool="bubbles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v10H10l-5 4v-4H4z"/></svg>Bubbles</button>
+        <span class="sep"></span>
+        <button type="button" class="tool" id="edUndo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>Undo</button>
+        <button type="button" class="tool" id="edRedo" aria-label="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg>Redo</button>
+        <span class="sep"></span>
+        <button type="button" class="tool" id="edPolishPage" title="Fix spelling and punctuation in every bubble and panel description"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>Polish page</button>
+        <button type="button" class="tool" id="edIdeas" title="Suggest different ways of writing this page's dialogue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Rewrite ideas</button>
+      </div>
+      <div class="edmain">
+        <div class="edstage" id="edStage">
+          <div class="edpage" id="edPage">
+            <svg id="edSvg" width="540" height="720" viewBox="0 0 540 720" aria-hidden="true"><defs><pattern id="edDots" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="1.6" fill="rgba(20,20,20,.13)"/></pattern></defs><g id="gPanels"></g><g id="gCut"></g></svg>
+            <div id="edLabels"></div><svg width="540" height="720" viewBox="0 0 540 720" aria-hidden="true" style="pointer-events:none"><g id="gBubbles"></g></svg><div id="edText"></div><div id="edHandles"></div>
+          </div>
+        </div>
+        <aside class="edside" id="edSide"></aside>
+      </div>
+      <p class="hint" id="edHint" style="text-align:center;margin:0"></p>
       <div class="end" style="justify-content:center">
         <button type="button" id="movePrev" class="small">◀ Move page earlier</button>
         <button type="button" id="moveNext" class="small">Move page later ▶</button>
@@ -199,7 +263,6 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
         <a class="btn small" id="dlPage">⬇ Download page</a>
         <button type="button" id="printBook" class="small">🖨 Print / PDF whole book</button>
       </div>
-      <p class="hint" style="text-align:center;margin:0">Click a panel to write what happens in it and draw it.</p>
     </div>
   </section>
 </main>
@@ -270,6 +333,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
         <div class="chips" id="pInsert"></div>
         <div id="panelErr"></div>
         <div class="pstage" id="pStage"></div>
+        <p class="hint" id="pShape" style="margin:0;text-align:center"></p>
         <div class="takes" id="takes"></div>
       </div>
       <aside class="ov" id="ov" aria-live="polite"></aside>
@@ -277,8 +341,18 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
     <div class="end">
       <button type="button" id="clearPanel">Clear panel</button>
       <button type="button" class="go" id="drawPanel">Draw it!</button>
-      <button type="submit" class="primary">Done</button>
+      <button type="button" class="okb" id="putPanel" disabled>✓ Put in panel</button>
+      <button type="submit">Close</button>
     </div>
+  </form>
+</dialog>
+
+<!-- writing help -->
+<dialog id="ideasDlg">
+  <form method="dialog" id="ideasForm">
+    <h2 id="idTitle">Ideas</h2>
+    <div id="idBody" class="stack"></div>
+    <div class="end" id="idFoot"><button type="submit">Close</button></div>
   </form>
 </dialog>
 
@@ -328,7 +402,6 @@ const LAYOUTS = {
   four:{name:'4 grid', rows:[[2,'3:4'],[2,'3:4']]},
   six:{name:'6 grid', rows:[[2,'1:1'],[2,'1:1'],[2,'1:1']]}
 };
-const slots = lay => LAYOUTS[lay].rows.flatMap(([n,a]) => Array(n).fill(a));
 const ratio = a => { const [w,h] = a.split(':').map(Number); return w/h; };
 
 /* ---------- storage ---------- */
@@ -441,7 +514,7 @@ async function askText(system, user, json=true, audio=null){
   }
   const r = await fetch('https://api.openai.com/v1/responses', {method:'POST',
     headers:{Authorization:'Bearer ' + s.key, 'Content-Type':'application/json'},
-    body: JSON.stringify({model: s.tmodel, instructions: system, input: user, ...(json ? {text:{format:{type:'json_object'}}} : {})})});
+    body: JSON.stringify({model: s.tmodel, instructions: system, input: json ? user + '\n\nReply with a JSON object only.' : user, ...(json ? {text:{format:{type:'json_object'}}} : {})})});
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error?.message || 'OpenAI returned error ' + r.status);
   return j.output_text || (j.output || []).flatMap(o => o.content || []).filter(c => c.type === 'output_text').map(c => c.text).join('');
@@ -520,7 +593,7 @@ const POLISH = {
     system: `You polish descriptions of single comic book panels so an image-generating AI understands them exactly.
 Rewrite the user's text into one clear, specific description (at most about 90 words) that states: who is in the panel and what each is doing (pose, action), their expressions, the setting and time/lighting, the camera framing, and any speech bubbles, thought bubbles, captions or sound effects with the exact words and who says them.
 Rules: keep every character code word exactly as written (these are the known characters: ${chars.map(c => c.name).join(', ') || 'none'}). Keep all dialogue word for word. Keep the user's meaning; fill only small gaps sensibly and never add major new events or characters. Fix spelling and speech-to-text mistakes. Reply with only the rewritten description, no quotes, no preamble.`,
-    user: ovContext(page(), pIdx) + 'Panel description to polish:\n' }),
+    user: ovContext(page(), curPanel()) + 'Panel description to polish:\n' }),
   cDesc: () => ({
     system: `You polish character descriptions for a comic book, so an image AI draws the character the same way every time.
 Rewrite the user's text as one clear visual description: approximate age, build and height, face shape and features, skin tone, hair (style, length, colour), facial hair, glasses or other distinguishing features, and the usual outfit with colours and shoes.
@@ -729,31 +802,413 @@ const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const found = text => chars.filter(c => new RegExp('(^|[^\\p{L}\\p{N}_])@?' + reEsc(c.name) + '(?![\\p{L}\\p{N}_])', 'iu').test(text));
 
 /* ---------- pages ---------- */
-function newPage(){ return {id: uid(), order: pages.length, layout:'four', panels:[]}; }
-function ensurePanels(p){ const n = slots(p.layout).length; while (p.panels.length < n) p.panels.push({id: uid(), prompt:'', takes:[], pick:0}); }
+const PW = 540, PH = 720;
+function layoutPolys(key){
+  const rows = (LAYOUTS[key] || LAYOUTS.four).rows, W = 524, X0 = 8, Y0 = 8, H = 704;
+  const nat = rows.map(([n,a]) => (W/n)/ratio(a)), k = H / nat.reduce((s,h) => s+h, 0), out = [];
+  let y = Y0;
+  rows.forEach(([n], r) => { const h = nat[r]*k, w = W/n; for (let i = 0; i < n; i++) out.push([[X0+i*w,y],[X0+(i+1)*w,y],[X0+(i+1)*w,y+h],[X0+i*w,y+h]]); y += h; });
+  return out;
+}
+const newPanel = pts => ({id: uid(), pts, prompt:'', takes:[], pick:0, img:null});
+function newPage(){ return {id: uid(), order: pages.length, v:3, gutter:12, panels: layoutPolys('four').map(newPanel), bubbles:[]}; }
+function migratePage(p){
+  if (p.v === 3){ p.bubbles = p.bubbles || []; if (p.gutter == null) p.gutter = 12; p.panels = (p.panels || []).filter(x => Array.isArray(x.pts) && x.pts.length > 2); if (!p.panels.length) p.panels = layoutPolys('four').map(newPanel); return p; }
+  const polys = layoutPolys(LAYOUTS[p.layout] ? p.layout : 'four'), old = Array.isArray(p.panels) ? p.panels : [];
+  p.panels = polys.map((pts, i) => { const o = old[i] || {}; return {id: o.id || uid(), pts, prompt: o.prompt || '', takes: o.takes || [], pick: o.pick || 0, overview: o.overview, img: null, autoPlace: !!(o.takes && o.takes.length)}; });
+  delete p.layout; p.v = 3; p.gutter = 12; p.bubbles = [];
+  return p;
+}
 const panelImg = pn => pn.takes[pn.pick] || pn.takes[0] || '';
+const srcOf = pn => pn.img ? (pn.img.upload || pn.takes[pn.img.take] || '') : '';
 const busyPanels = new Map(); // panel id -> start time
 function showTopErr(m){ $('#pageErr').innerHTML = m ? `<div class="err">${esc(m)}</div>` : ''; }
+
+/* ---------- geometry ---------- */
+const G = {
+  side: (a, b, p) => (b[0]-a[0])*(p[1]-a[1]) - (b[1]-a[1])*(p[0]-a[0]),
+  area(pts){ let s = 0; pts.forEach((p,i) => { const q = pts[(i+1)%pts.length]; s += p[0]*q[1] - q[0]*p[1]; }); return s/2; },
+  centroid(pts){ let x = 0, y = 0; pts.forEach(p => { x += p[0]; y += p[1]; }); return [x/pts.length, y/pts.length]; },
+  bbox(pts){ let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; pts.forEach(p => { x0 = Math.min(x0,p[0]); y0 = Math.min(y0,p[1]); x1 = Math.max(x1,p[0]); y1 = Math.max(y1,p[1]); }); return {x0, y0, x1, y1, w: x1-x0, h: y1-y0}; },
+  inside(pts, p){ let pos = false, neg = false; pts.forEach((a,i) => { const s = G.side(a, pts[(i+1)%pts.length], p); if (s > 0) pos = true; if (s < 0) neg = true; }); return !(pos && neg); },
+  segX(a, b, c, d){ const d1 = G.side(c,d,a), d2 = G.side(c,d,b), d3 = G.side(a,b,c), d4 = G.side(a,b,d); return ((d1>0&&d2<0)||(d1<0&&d2>0)) && ((d3>0&&d4<0)||(d3<0&&d4>0)); },
+  hits(pts, a, b){ if (G.inside(pts,a) || G.inside(pts,b)) return true; return pts.some((p,i) => G.segX(a, b, p, pts[(i+1)%pts.length])); },
+  split(pts, a, b){
+    const L = [], R = [];
+    pts.forEach((P,i) => { const Q = pts[(i+1)%pts.length], dP = G.side(a,b,P), dQ = G.side(a,b,Q);
+      if (dP >= 0) L.push(P); if (dP <= 0) R.push(P);
+      if ((dP>0&&dQ<0)||(dP<0&&dQ>0)){ const t = dP/(dP-dQ), I = [P[0]+(Q[0]-P[0])*t, P[1]+(Q[1]-P[1])*t]; L.push(I); R.push(I); } });
+    return [L, R];
+  },
+  inset(pts, d){
+    const n = pts.length, c = G.centroid(pts), lines = [];
+    for (let i = 0; i < n; i++){ const P = pts[i], Q = pts[(i+1)%n]; let ex = Q[0]-P[0], ey = Q[1]-P[1]; const len = Math.hypot(ex,ey) || 1; ex /= len; ey /= len;
+      let nx = -ey, ny = ex; if ((c[0]-P[0])*nx + (c[1]-P[1])*ny < 0){ nx = -nx; ny = -ny; } lines.push({px: P[0]+nx*d, py: P[1]+ny*d, ex, ey}); }
+    return lines.map((B,i) => { const A = lines[(i-1+n)%n], den = A.ex*B.ey - A.ey*B.ex;
+      if (Math.abs(den) < 1e-6) return [B.px, B.py];
+      const t = ((B.px-A.px)*B.ey - (B.py-A.py)*B.ex)/den; return [A.px+A.ex*t, A.py+A.ey*t]; });
+  },
+  pts: pts => pts.map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' '),
+  path: pts => 'M' + pts.map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join('L') + 'Z'
+};
+function cutPanels(panels, a, b, preview){
+  const out = [];
+  panels.forEach(p => {
+    if (!G.hits(p.pts, a, b)){ out.push(p); return; }
+    const [L, R] = G.split(p.pts, a, b);
+    if (L.length < 3 || R.length < 3 || Math.abs(G.area(L)) < 900 || Math.abs(G.area(R)) < 900){ out.push(p); return; }
+    // the first piece keeps the panel's drawing and words; the second starts empty but shows the same picture
+    out.push(Object.assign({}, p, {pts: L, fresh: 1, img: p.img && {...p.img}}));
+    out.push({id: preview ? 'pv' + p.id : uid(), pts: R, prompt: '', takes: [], pick: 0, fresh: 2,
+      img: p.img ? Object.assign({}, p.img, {upload: p.img.upload || srcOf(p) || null, take: undefined}) : null});
+  });
+  return out;
+}
+function ordered(pg){
+  return pg.panels.map(p => ({p, c: G.centroid(p.pts)}))
+    .sort((a,b) => (Math.round(a.c[1]/60) - Math.round(b.c[1]/60)) || (a.c[0] - b.c[0])).map(x => x.p);
+}
+const panelNo = (pg, pn) => ordered(pg).indexOf(pn) + 1;
+
+/* ---------- picture placement ---------- */
+const dims = new Map(); // src -> [w,h]
+function dimsOf(src){ return dims.get(src) || null; }
+function loadDims(src){ return new Promise(res => { if (dims.has(src)) return res(dims.get(src)); const i = new Image(); i.onload = () => { dims.set(src, [i.naturalWidth, i.naturalHeight]); res(dims.get(src)); }; i.onerror = () => res(null); i.src = src; }); }
+function coverPlace(pg, pn, w, h){
+  const bb = G.bbox(G.inset(pn.pts, (pg.gutter || 12)/2)), fit = Math.max(bb.w/w, bb.h/h);
+  return {cx: bb.x0 + bb.w/2, cy: bb.y0 + bb.h/2, s: fit, fit, w, h};
+}
+async function putPicture(pg, pn, from){ // from: {take} or {upload}
+  const src = from.upload || pn.takes[from.take]; if (!src) return;
+  const d = await loadDims(src); if (!d) return;
+  pn.img = Object.assign(coverPlace(pg, pn, d[0], d[1]), from.upload ? {upload: from.upload} : {take: from.take, upload: null});
+  delete pn.autoPlace;
+}
+async function autoPlace(pg){
+  let changed = false;
+  for (const pn of pg.panels) if (pn.autoPlace && !pn.img && pn.takes.length){ await putPicture(pg, pn, {take: pn.pick || 0}); changed = true; }
+  if (changed){ await savePage(pg); if (pg === page()) renderEditor(); }
+}
+
+/* ---------- speech bubbles ---------- */
+const BUB_TYPES = [['speech','Speech','HI!'],['thought','Thought','HMM…'],['shout','Shout','STOP!'],['whisper','Whisper','psst'],['caption','Caption','LATER…'],['narration','Narration','MEANWHILE'],['sfx','Sound effect','KRAK!'],['radio','Radio / phone','COPY?']];
+const BUB_TEXT = {speech:'Type here', thought:'Hmm…', shout:'Stop!', whisper:'psst…', caption:'Later that night…', narration:'Meanwhile…', sfx:'KRAK!', radio:'Copy that?'};
+let mctx = null;
+function wrapText(text, font, maxW){
+  mctx = mctx || document.createElement('canvas').getContext('2d'); mctx.font = font;
+  const lines = [];
+  String(text || ' ').toUpperCase().split('\n').forEach(par => { let line = '';
+    par.split(' ').forEach(w => { const t = line ? line + ' ' + w : w; if (mctx.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t; });
+    lines.push(line); });
+  let width = 0; lines.forEach(l => { width = Math.max(width, mctx.measureText(l || ' ').width); });
+  return {lines, width: Math.max(width, 24)};
+}
+function bGeo(b){
+  const sfx = b.type === 'sfx', fs = sfx ? b.fs * 2.4 : b.fs;
+  const font = sfx ? `400 ${fs}px Bangers, Impact, sans-serif` : `700 ${fs}px "Comic Neue", "Comic Sans MS", cursive`;
+  const lh = Math.round(fs * 1.12), m = wrapText(b.text, font, b.tw || (sfx ? 320 : 190));
+  const taW = Math.ceil(m.width) + 8, taH = m.lines.length * lh + 2;
+  const K = {caption:[1,26,1,20], narration:[1,26,1,20], sfx:[1,16,1,8], shout:[1.55,50,1.7,50], thought:[1.45,56,1.5,54]}[b.type] || [1.36,34,1.38,30];
+  return {font, fs, lh, lines: m.lines, taW, taH, w: Math.round(taW*K[0] + K[1]), h: Math.round(taH*K[2] + K[3]), kx: K[0], px: K[1]};
+}
+function tailGeo(cx, cy, rx, ry, tx, ty, spread){
+  const dx = (tx-cx)/rx, dy = (ty-cy)/ry; if (dx*dx + dy*dy < 1.15) return null;
+  const a = Math.atan2(dy, dx), p1 = [cx + rx*Math.cos(a-spread), cy + ry*Math.sin(a-spread)], p2 = [cx + rx*Math.cos(a+spread), cy + ry*Math.sin(a+spread)], f = n => n.toFixed(1);
+  return {d: `M${f(p1[0])},${f(p1[1])}Q${f((p1[0]+tx)/2)},${f((p1[1]+ty)/2)} ${f(tx)},${f(ty)}Q${f((p2[0]+tx)/2)},${f((p2[1]+ty)/2)} ${f(p2[0])},${f(p2[1])}Z`, p1, p2, edge: [cx + rx*Math.cos(a), cy + ry*Math.sin(a)]};
+}
+const ellD = (cx, cy, a, c) => `M${(cx-a).toFixed(1)},${cy.toFixed(1)}A${a.toFixed(1)},${c.toFixed(1)} 0 1,0 ${(cx+a).toFixed(1)},${cy.toFixed(1)}A${a.toFixed(1)},${c.toFixed(1)} 0 1,0 ${(cx-a).toFixed(1)},${cy.toFixed(1)}Z`;
+// Draw steps shared by the editor (SVG) and page export (canvas), so both look identical.
+function bubbleOps(b){
+  const g = bGeo(b), rx = g.w/2, ry = g.h/2, x = b.x, y = b.y, t = b.type, S = '#141414', ops = [];
+  const dash = t === 'whisper' ? '9 7' : null, fill = t === 'narration' ? '#ffd43b' : '#fff';
+  let tail = null, radio = null, shape = null, hasTip = false;
+  if (['speech','whisper','radio','shout'].includes(t)){
+    const k = t === 'shout' ? 0.78 : 1, tg = tailGeo(x, y, rx*k, ry*k, b.tx, b.ty, t === 'radio' ? 0.22 : 0.3); hasTip = true;
+    if (tg){
+      if (t === 'radio'){ const cx = (tg.p1[0]+tg.p2[0])/2, cy = (tg.p1[1]+tg.p2[1])/2, dx = b.tx-cx, dy = b.ty-cy, len = Math.hypot(dx,dy) || 1, nx = -dy/len, ny = dx/len, P = (k2, o) => [cx+dx*k2+nx*o, cy+dy*k2+ny*o];
+        radio = G.path([tg.p1, P(0.38,16), P(0.66,-10), [b.tx,b.ty], P(0.66,2), P(0.38,2), tg.p2]); }
+      else tail = tg.d;
+    }
+  }
+  if (t === 'speech' || t === 'whisper' || t === 'radio') shape = ellD(x, y, rx, ry);
+  if (t === 'shout'){ const pts = []; for (let i = 0; i < 32; i++){ const a = Math.PI*i/16, r = i % 2 ? 0.78 : 1; pts.push([x + rx*r*Math.cos(a), y + ry*r*Math.sin(a)]); } shape = G.path(pts); }
+  if (t === 'caption' || t === 'narration') shape = G.path([[x-rx,y-ry],[x+rx,y-ry],[x+rx,y+ry],[x-rx,y+ry]]);
+  if (tail) ops.push({d: tail, fill: '#fff', stroke: S, sw: 3.5, dash});
+  if (radio) ops.push({d: radio, fill: '#fff', stroke: S, sw: 3.5});
+  if (shape) ops.push({d: shape, fill, stroke: S, sw: 3.5, dash});
+  if (t === 'thought'){
+    hasTip = true;
+    const crx = rx*0.82, cry = ry*0.78, pr = Math.min(rx, ry)*0.36, puffs = [];
+    for (let i = 0; i < 12; i++){ const a = 2*Math.PI*i/12; puffs.push([x + crx*Math.cos(a), y + cry*Math.sin(a), pr*(i % 2 ? 0.86 : 1)]); }
+    puffs.forEach(c => ops.push({d: ellD(c[0], c[1], c[2], c[2]), fill: '#fff', stroke: S, sw: 7}));
+    ops.push({d: ellD(x, y, crx, cry), fill: '#fff'});
+    puffs.forEach(c => ops.push({d: ellD(c[0], c[1], c[2], c[2]), fill: '#fff'}));
+    const tg = tailGeo(x, y, rx, ry, b.tx, b.ty, 0.2);
+    if (tg){ const E = tg.edge; [[0.35,9],[0.7,6],[1,3.5]].forEach(([k,r]) => ops.push({d: ellD(E[0]+(b.tx-E[0])*k, E[1]+(b.ty-E[1])*k, r, r), fill: '#fff', stroke: S, sw: 3.5})); }
+  }
+  if (tail) ops.push({d: tail, fill: '#fff'});
+  if (radio) ops.push({d: radio, fill: '#fff'});
+  return {ops, g, hasTip};
+}
+const opSVG = o => `<path d="${o.d}" fill="${o.fill || 'none'}"${o.stroke ? ` stroke="${o.stroke}" stroke-width="${o.sw}" stroke-linejoin="round"` : ''}${o.dash ? ` stroke-dasharray="${o.dash}"` : ''}/>`;
+/* ---------- page editor ---------- */
+const ed = {tool: 'panels', cut: null, sel: null, editing: null, panelSel: null, past: [], future: [], drag: null, pageId: null};
+let tray = []; // pictures you uploaded: [{id, src}]
+function snapPage(pg){ return {panels: pg.panels.map(p => ({...p, img: p.img && {...p.img}})), bubbles: pg.bubbles.map(b => ({...b})), gutter: pg.gutter}; }
+function pushHist(){ ed.past.push(snapPage(page())); if (ed.past.length > 60) ed.past.shift(); ed.future = []; }
+let saveT = null;
+function saveSoon(){ const pg = page(); clearTimeout(saveT); saveT = setTimeout(() => savePage(pg), 400); }
+function edScale(){ const st = $('#edStage'), k = st.clientWidth / PW; $('#edPage').style.transform = `scale(${k})`; st.style.height = (PH * k + 8) + 'px'; }
+new ResizeObserver(edScale).observe($('#edStage'));
+function edPt(e){ const r = $('#edPage').getBoundingClientRect(); return [(e.clientX - r.left) * PW / r.width, (e.clientY - r.top) * PH / r.height]; }
+const panelAt = p => page().panels.find(x => G.inside(x.pts, p));
 
 function renderPages(){
   $('#pages').innerHTML = pages.map((p,i) => `<button type="button" class="small${i===cur?' on':''}" data-pg="${i}" aria-label="Page ${i+1}">${i+1}</button>`).join('');
   $('#pageTitle').textContent = `Page ${cur+1} of ${pages.length}`;
-  $('#layouts').innerHTML = Object.entries(LAYOUTS).map(([k,l]) => `<button type="button" class="lay${page().layout===k?' on':''}" data-lay="${k}" title="${l.name}" aria-label="${l.name}">
-      ${l.rows.map(([n]) => `<span class="r">${'<i></i>'.repeat(n)}</span>`).join('')}</button>`).join('');
-  renderPaper();
   $('#movePrev').disabled = cur === 0; $('#moveNext').disabled = cur === pages.length-1; $('#delPage').disabled = pages.length < 2;
+  if (ed.pageId !== page().id){ ed.pageId = page().id; ed.past = []; ed.future = []; ed.sel = ed.editing = ed.panelSel = null; $('#edText').innerHTML = ''; }
+  renderEditor(); autoPlace(page());
 }
-function renderPaper(){
-  const p = page(); ensurePanels(p); let i = 0;
-  $('#paper').innerHTML = LAYOUTS[p.layout].rows.map(([n,a]) => `<div class="prow">${Array.from({length:n}, () => {
-      const idx = i++, pn = p.panels[idx], img = panelImg(pn);
-      return `<button type="button" class="cell${busyPanels.has(pn.id)?' busy':''}" data-cell="${idx}" style="aspect-ratio:${a.replace(':','/')}">
-        <span class="num">${idx+1}</span>${busyPanels.has(pn.id) ? `<span class="cellbusy">DRAWING…${progHTML('panel', busyPanels.get(pn.id), false)}</span>` : ''}
-        ${img ? `<img src="${img}" alt="${esc(pn.prompt)}">` : `<span class="lbl">Panel ${idx+1}<small>${pn.prompt ? esc(pn.prompt.slice(0,60)) + '…' : 'Click to write'}</small></span>`}</button>`; }).join('')}</div>`).join('');
+function renderEditor(){ edScale(); renderPanels(); renderCut(); renderBubbles(); renderSide(); renderTools(); }
+const renderPaper = () => renderEditor(); // older code calls this name
+
+function renderTools(){
+  document.querySelectorAll('#edTools [data-tool]').forEach(b => { b.classList.toggle('on', b.dataset.tool === ed.tool); b.setAttribute('aria-pressed', b.dataset.tool === ed.tool); });
+  $('#edUndo').disabled = !ed.past.length; $('#edRedo').disabled = !ed.future.length;
+  $('#edStage').style.cursor = ed.tool === 'slice' ? 'crosshair' : 'default';
+  $('#edHint').textContent = {
+    panels: 'Click an empty panel to draw it. Click a panel with a picture to select it, drag to move the picture, scroll to zoom, double-click to redraw.',
+    slice: 'Press and drag across the page to cut. Hold Shift for a straight line. Only panels your line touches get cut.',
+    bubbles: 'Drag a bubble from the right onto the page. Drag to move · click the words to type · blue corners stretch · red dot aims the tail.'
+  }[ed.tool];
 }
+function renderPanels(){
+  const pg = page(), half = (pg.gutter || 12)/2, sliceLen = ed.cut ? Math.hypot(ed.cut.x2-ed.cut.x1, ed.cut.y2-ed.cut.y1) : 0;
+  const list = sliceLen > 24 ? cutPanels(pg.panels, [ed.cut.x1, ed.cut.y1], [ed.cut.x2, ed.cut.y2], true) : pg.panels;
+  let svg = '', labels = '';
+  const order = ordered({panels: list});
+  list.forEach(p => {
+    const ins = G.inset(p.pts, half), pts = G.pts(ins), cid = 'edc-' + String(p.id).replace(/[^\w-]/g,''), src = srcOf(p), c = G.centroid(p.pts);
+    const tint = sliceLen > 24 && p.fresh === 1 ? '#fff4c2' : sliceLen > 24 && p.fresh === 2 ? '#ffe0de' : '#f4f1ea';
+    svg += `<clipPath id="${cid}"><polygon points="${pts}"/></clipPath><polygon points="${pts}" fill="${tint}"/>`;
+    if (src && p.img){ const im = p.img; svg += `<image id="edimg-${esc(p.id)}" href="${src}" x="${(im.cx - im.w*im.s/2).toFixed(1)}" y="${(im.cy - im.h*im.s/2).toFixed(1)}" width="${(im.w*im.s).toFixed(1)}" height="${(im.h*im.s).toFixed(1)}" preserveAspectRatio="none" clip-path="url(#${cid})"/>`; }
+    else svg += `<polygon points="${pts}" fill="url(#edDots)"/>`;
+    svg += `<polygon points="${pts}" fill="none" stroke="#141414" stroke-width="5" stroke-linejoin="round"/>`;
+    if (ed.tool === 'panels' && ed.panelSel === p.id) svg += `<polygon points="${pts}" fill="none" stroke="#2e6fe8" stroke-width="3" stroke-dasharray="9 6"/>`;
+    const n = order.indexOf(p) + 1;
+    if (busyPanels.has(p.id)) labels += `<div class="busy2" style="left:${c[0].toFixed(0)}px;top:${c[1].toFixed(0)}px">DRAWING…${progHTML('panel', busyPanels.get(p.id), false)}</div>`;
+    else if (!src) labels += `<div class="lbl2" style="left:${c[0].toFixed(0)}px;top:${c[1].toFixed(0)}px"><b>Panel ${n}</b><small>${p.prompt ? esc(p.prompt.slice(0,50)) + (p.prompt.length > 50 ? '…' : '') : (p.takes.length ? 'Picture ready: click to put it in' : 'Click to draw')}</small></div>`;
+  });
+  $('#gPanels').innerHTML = svg; $('#edLabels').innerHTML = labels; tickProg();
+}
+function renderCut(){
+  const c = ed.cut;
+  $('#gCut').innerHTML = c && Math.hypot(c.x2-c.x1, c.y2-c.y1) > 6 ? `<line x1="${c.x1}" y1="${c.y1}" x2="${c.x2}" y2="${c.y2}" stroke="#2e6fe8" stroke-width="4" stroke-dasharray="10 8" stroke-linecap="round"/><circle cx="${c.x1}" cy="${c.y1}" r="7" fill="#2e6fe8" stroke="#fff" stroke-width="3"/><circle cx="${c.x2}" cy="${c.y2}" r="7" fill="#2e6fe8" stroke="#fff" stroke-width="3"/>` : '';
+}
+function renderBubbles(){
+  const pg = page(), bt = ed.tool === 'bubbles';
+  let svg = '', hd = '';
+  const seen = new Set();
+  pg.bubbles.forEach(b => {
+    const {ops, g, hasTip} = bubbleOps(b); seen.add(String(b.id));
+    svg += ops.map(opSVG).join('');
+    let el = $('#edText').querySelector(`[data-b="${CSS.escape(String(b.id))}"]`);
+    if (!el){ el = document.createElement('div'); el.className = 'bub'; el.dataset.b = b.id; el.innerHTML = `<textarea class="bta" aria-label="Bubble text" spellcheck="false" id="bta-${esc(b.id)}"></textarea>`; $('#edText').append(el); }
+    const ta = el.firstElementChild, sel = ed.sel === b.id;
+    Object.assign(el.style, {left: (b.x - g.w/2) + 'px', top: (b.y - g.h/2) + 'px', width: g.w + 'px', height: g.h + 'px', pointerEvents: bt ? 'auto' : 'none', cursor: ed.editing === b.id ? 'text' : 'move', outline: sel && bt ? '2px dashed #2e6fe8' : 'none'});
+    if (document.activeElement !== ta || ta.value !== b.text) { if (ta.value !== b.text) ta.value = b.text; }
+    Object.assign(ta.style, {width: g.taW + 'px', height: g.taH + 'px', font: g.font, lineHeight: g.lh + 'px', color: b.type === 'sfx' ? '#e8352e' : '#141414', webkitTextStroke: b.type === 'sfx' ? '1.5px #141414' : '0', pointerEvents: ed.editing === b.id ? 'auto' : 'none'});
+    if (sel && bt){
+      const L = b.x - g.w/2, T = b.y - g.h/2;
+      [[L,T,'nwse'],[L+g.w,T,'nesw'],[L,T+g.h,'nesw'],[L+g.w,T+g.h,'nwse']].forEach(([x,y,c]) => { hd += `<span class="hdl" data-corner="${esc(b.id)}" style="left:${x-8}px;top:${y-8}px;cursor:${c}-resize"></span>`; });
+      if (hasTip) hd += `<span class="tip" data-tip="${esc(b.id)}" title="Drag to aim the tail" style="left:${b.tx}px;top:${b.ty}px"></span>`;
+      hd += `<div class="qbar" data-qbar="${esc(b.id)}" style="left:${Math.max(-90, Math.min(PW-390, b.x-190))}px;top:${Math.max(-56, T-58)}px">
+        <select data-q="type" aria-label="Bubble type">${BUB_TYPES.map(([v,n]) => `<option value="${v}"${v===b.type?' selected':''}>${n}</option>`).join('')}</select>
+        <button type="button" data-q="smaller" aria-label="Smaller text">A−</button><button type="button" data-q="bigger" aria-label="Bigger text">A+</button>
+        <button type="button" data-q="ideas" aria-label="Suggest better lines for this bubble">Ideas</button><button type="button" data-q="front" aria-label="Bring to front">Front</button><button type="button" data-q="delete" aria-label="Delete bubble" style="color:#a3241e">Delete</button></div>`;
+    }
+  });
+  $('#edText').querySelectorAll('.bub').forEach(el => { if (!seen.has(el.dataset.b)) el.remove(); });
+  // keep stacking order the same as the bubble list
+  pg.bubbles.forEach(b => { const el = $('#edText').querySelector(`[data-b="${CSS.escape(String(b.id))}"]`); if (el && el.nextSibling && document.activeElement !== el.firstElementChild) $('#edText').append(el); });
+  $('#gBubbles').innerHTML = svg; $('#edHandles').innerHTML = hd;
+  $('#edUndo').disabled = !ed.past.length; $('#edRedo').disabled = !ed.future.length;
+}
+function allPictures(){
+  const seen = new Set(), out = [];
+  tray.forEach(t => { if (!seen.has(t.src)){ seen.add(t.src); out.push({src: t.src, kind: 'upload', id: t.id}); } });
+  pages.forEach(pg => pg.panels.forEach(pn => pn.takes.forEach(src => { if (!seen.has(src)){ seen.add(src); out.push({src, kind: 'take'}); } })));
+  return out.slice(0, 60);
+}
+function renderSide(){
+  const pg = page(); let h = '';
+  if (ed.tool === 'slice'){
+    h = `<h3>Slice the page</h3><p class="hint" style="margin:0">Drag a line across the page to cut panels at any angle.</p>
+      <label for="edGutter" style="margin:0">Gap between panels: ${pg.gutter}px</label><input type="range" id="edGutter" min="4" max="30" value="${pg.gutter}" style="accent-color:#e8352e;padding:0">
+      <h3 style="margin-top:6px">Start from a layout</h3><p class="hint" style="margin:0">Replaces this page's panels (pictures and bubbles stay in your tray).</p>
+      <div class="laybtns">${Object.entries(LAYOUTS).map(([k,l]) => `<button type="button" class="lay" data-lay="${k}" title="${l.name}" aria-label="${l.name}">${l.rows.map(([n]) => `<span class="r">${'<i></i>'.repeat(n)}</span>`).join('')}</button>`).join('')}</div>`;
+  } else if (ed.tool === 'bubbles'){
+    h = `<h3>Speech bubbles</h3><p class="hint" style="margin:0">Drag one onto the page, or click to add it in the middle.</p>
+      <div class="tiles">${BUB_TYPES.map(([v,n,sm]) => `<button type="button" draggable="true" data-btype="${v}"><span style="color:${v==='sfx'?'#e8352e':v==='narration'?'#8a5a00':'#141414'}">${sm}</span>${n}</button>`).join('')}</div>
+      <p class="hint" style="margin:0">Bubbles sit on top of the pictures, so your words are always spelled exactly right.</p>`;
+  } else {
+    const pn = pg.panels.find(p => p.id === ed.panelSel);
+    if (pn){
+      const n = panelNo(pg, pn);
+      h += `<h3>Panel ${n}</h3><button type="button" class="go" id="edDraw">${pn.takes.length ? '✏ Open drawing window' : '✏ Draw this panel'}</button>`;
+      if (pn.img){ const z = Math.round(pn.img.s / pn.img.fit * 100);
+        h += `<label for="edZoom" style="margin:0">Zoom: ${z}%</label><input type="range" id="edZoom" min="50" max="400" value="${z}" style="accent-color:#e8352e;padding:0">
+          <div class="row"><button type="button" class="small" id="edFit">Fit to panel</button><button type="button" class="small" id="edRemoveImg">Remove picture</button></div>`; }
+    } else h += `<h3>Panels</h3><p class="hint" style="margin:0">Click a panel on the page to draw it or adjust its picture.</p>`;
+    const pics = allPictures();
+    h += `<h3 style="margin-top:6px">Your pictures</h3><p class="hint" style="margin:0">Drag onto a panel, or select a panel and click a picture.</p>
+      <label class="btn small" style="cursor:pointer;position:relative">+ Add pictures<input type="file" id="edUpload" accept="image/*" multiple style="position:absolute;opacity:0;width:1px;height:1px"></label>
+      ${pics.length ? `<div class="tray">${pics.map((t,i) => `<button type="button" draggable="true" data-pic="${i}" aria-label="Use picture ${i+1}"><img src="${t.src}" alt=""></button>`).join('')}</div>` : '<p class="hint" style="margin:0">No pictures yet. Draw a panel, or add your own.</p>'}`;
+  }
+  $('#edSide').innerHTML = h;
+}
+
+/* tools & history */
+$('#edTools').onclick = e => {
+  const t = e.target.closest('[data-tool]'); if (t){ ed.tool = t.dataset.tool; ed.sel = ed.editing = null; if (ed.tool !== 'panels') ed.panelSel = null; renderEditor(); }
+};
+function restore(snap){ const pg = page(); pg.panels = snap.panels; pg.bubbles = snap.bubbles; pg.gutter = snap.gutter; ed.sel = ed.editing = ed.panelSel = null; $('#edText').innerHTML = ''; saveSoon(); renderEditor(); }
+$('#edUndo').onclick = () => { if (!ed.past.length) return; ed.future.push(snapPage(page())); restore(ed.past.pop()); };
+$('#edRedo').onclick = () => { if (!ed.future.length) return; ed.past.push(snapPage(page())); restore(ed.future.pop()); };
+
+/* sidebar */
+$('#edSide').addEventListener('input', e => {
+  const pg = page();
+  if (e.target.id === 'edGutter'){ pg.gutter = +e.target.value; e.target.previousElementSibling.textContent = `Gap between panels: ${pg.gutter}px`; renderPanels(); saveSoon(); }
+  if (e.target.id === 'edZoom'){ const pn = pg.panels.find(p => p.id === ed.panelSel); if (!pn?.img) return; pn.img.s = pn.img.fit * e.target.value / 100; e.target.previousElementSibling.textContent = `Zoom: ${e.target.value}%`; updateImg(pn); saveSoon(); }
+});
+$('#edSide').addEventListener('pointerdown', e => { if (e.target.id === 'edGutter' || e.target.id === 'edZoom') pushHist(); });
+$('#edSide').addEventListener('change', e => { if (e.target.id === 'edUpload'){ addTray(e.target.files); e.target.value = ''; } });
+$('#edSide').addEventListener('click', async e => {
+  const pg = page(), pn = pg.panels.find(p => p.id === ed.panelSel);
+  const lay = e.target.closest('[data-lay]'); if (lay){ pushHist(); pg.panels = layoutPolys(lay.dataset.lay).map(newPanel); ed.panelSel = null; saveSoon(); renderEditor(); return; }
+  const bt = e.target.closest('[data-btype]'); if (bt){ addBubble(bt.dataset.btype, PW/2, PH*0.28); return; }
+  if (e.target.id === 'edDraw' && pn){ openPanel(pn.id); return; }
+  if (e.target.id === 'edFit' && pn?.img){ pushHist(); Object.assign(pn.img, coverPlace(pg, pn, pn.img.w, pn.img.h)); saveSoon(); renderEditor(); return; }
+  if (e.target.id === 'edRemoveImg' && pn){ pushHist(); pn.img = null; saveSoon(); renderEditor(); return; }
+  const pic = e.target.closest('[data-pic]');
+  if (pic){ const t = allPictures()[+pic.dataset.pic]; const target = pn || ordered(pg).find(p => !srcOf(p)); if (!t || !target) return;
+    pushHist(); await putPicture(pg, target, {upload: t.src}); ed.panelSel = target.id; saveSoon(); renderEditor(); }
+});
+$('#edSide').addEventListener('dragstart', e => {
+  const bt = e.target.closest('[data-btype]'), pic = e.target.closest('[data-pic]');
+  try { if (bt) e.dataTransfer.setData('text/plain', 'cs-bubble:' + bt.dataset.btype); if (pic) e.dataTransfer.setData('text/plain', 'cs-pic:' + pic.dataset.pic); e.dataTransfer.effectAllowed = 'copy'; } catch {}
+});
+function addTray(files){
+  [...files].filter(f => /^image\//.test(f.type)).forEach(async f => {
+    try { const src = await shrink(f, 1600); const t = {id: uid(), src}; tray.unshift(t); await put('meta', {id: 'tray', items: tray.slice(0, 60)}); renderSide(); } catch { toast('Could not read one of those pictures.'); }
+  });
+}
+function addBubble(type, x, y){
+  const pg = page(); pushHist();
+  const b = {id: uid(), type, x: Math.round(x), y: Math.round(y), tx: Math.round(x - 40), ty: Math.round(y + 110), text: BUB_TEXT[type] || 'Type here', fs: 18, tw: null};
+  pg.bubbles.push(b); ed.tool = 'bubbles'; ed.sel = b.id; ed.editing = null; saveSoon(); renderEditor();
+}
+function updateImg(pn){
+  const el = document.getElementById('edimg-' + pn.id), im = pn.img; if (!el || !im) return;
+  el.setAttribute('x', (im.cx - im.w*im.s/2).toFixed(1)); el.setAttribute('y', (im.cy - im.h*im.s/2).toFixed(1));
+  el.setAttribute('width', (im.w*im.s).toFixed(1)); el.setAttribute('height', (im.h*im.s).toFixed(1));
+}
+
+/* pointer handling on the page */
+const stage = $('#edStage');
+stage.addEventListener('pointerdown', e => {
+  if (e.button) return;
+  const p = edPt(e), pg = page(), corner = e.target.closest('[data-corner]'), tip = e.target.closest('[data-tip]'), q = e.target.closest('.qbar'), bub = e.target.closest('.bub');
+  if (q) return;
+  if (corner || tip){ e.preventDefault(); pushHist(); stage.setPointerCapture(e.pointerId); ed.drag = {kind: corner ? 'corner' : 'tip', id: (corner || tip).dataset[corner ? 'corner' : 'tip']}; return; }
+  if (ed.tool === 'bubbles' && bub){
+    const b = pg.bubbles.find(x => String(x.id) === bub.dataset.b); if (!b) return;
+    if (ed.editing === b.id && e.target.tagName === 'TEXTAREA') return;
+    e.preventDefault(); pushHist(); stage.setPointerCapture(e.pointerId);
+    ed.drag = {kind: 'move', id: b.id, start: p, b: {...b}, moved: false};
+    if (ed.sel !== b.id){ ed.sel = b.id; ed.editing = null; renderBubbles(); }
+    return;
+  }
+  if (ed.tool === 'slice'){ e.preventDefault(); stage.setPointerCapture(e.pointerId); ed.drag = {kind: 'slice', a: p}; ed.cut = {x1: p[0], y1: p[1], x2: p[0], y2: p[1]}; return; }
+  if (ed.tool === 'bubbles'){ ed.sel = ed.editing = null; renderBubbles(); return; }
+  const pn = panelAt(p);
+  if (!pn){ ed.panelSel = null; renderEditor(); return; }
+  if (!srcOf(pn)){ ed.panelSel = pn.id; renderEditor(); openPanel(pn.id); return; }
+  e.preventDefault(); pushHist(); stage.setPointerCapture(e.pointerId);
+  ed.drag = {kind: 'pan', id: pn.id, start: p, img: {...pn.img}, moved: false};
+  if (ed.panelSel !== pn.id){ ed.panelSel = pn.id; renderPanels(); renderSide(); }
+});
+stage.addEventListener('pointermove', e => {
+  const d = ed.drag; if (!d) return;
+  let p = edPt(e); p = [Math.max(0, Math.min(PW, p[0])), Math.max(0, Math.min(PH, p[1]))];
+  const pg = page();
+  if (d.kind === 'slice'){
+    if (e.shiftKey){ if (Math.abs(p[0]-d.a[0]) > Math.abs(p[1]-d.a[1])) p[1] = d.a[1]; else p[0] = d.a[0]; }
+    ed.cut = {x1: d.a[0], y1: d.a[1], x2: p[0], y2: p[1]}; renderCut(); renderPanels(); return;
+  }
+  if (d.kind === 'pan'){ const pn = pg.panels.find(x => x.id === d.id); if (!pn?.img) return; const dx = p[0]-d.start[0], dy = p[1]-d.start[1]; if (Math.abs(dx)+Math.abs(dy) > 2) d.moved = true; pn.img.cx = d.img.cx + dx; pn.img.cy = d.img.cy + dy; updateImg(pn); return; }
+  const b = pg.bubbles.find(x => String(x.id) === String(d.id)); if (!b) return;
+  if (d.kind === 'move'){ const dx = p[0]-d.start[0], dy = p[1]-d.start[1]; if (Math.abs(dx)+Math.abs(dy) > 3) d.moved = true; Object.assign(b, {x: d.b.x+dx, y: d.b.y+dy, tx: d.b.tx+dx, ty: d.b.ty+dy}); }
+  if (d.kind === 'tip'){ b.tx = p[0]; b.ty = p[1]; }
+  if (d.kind === 'corner'){ const g = bGeo(b); b.tw = Math.max(40, Math.min(460, (Math.abs(p[0]-b.x)*2 - g.px)/g.kx - 8)); }
+  renderBubbles();
+});
+function endDrag(){
+  const d = ed.drag; ed.drag = null; if (!d) return;
+  const pg = page();
+  if (d.kind === 'slice'){
+    const c = ed.cut; ed.cut = null;
+    if (c && Math.hypot(c.x2-c.x1, c.y2-c.y1) > 24){ pushHist(); pg.panels = cutPanels(pg.panels, [c.x1, c.y1], [c.x2, c.y2], false).map(p => { delete p.fresh; return p; }); saveSoon(); }
+    renderEditor(); return;
+  }
+  if (d.kind === 'move' && !d.moved){ ed.past.pop(); ed.editing = d.id; renderBubbles(); const ta = document.getElementById('bta-' + d.id); if (ta){ ta.focus(); ta.select(); } return; }
+  if (d.kind === 'pan' && !d.moved){ ed.past.pop(); return; }
+  saveSoon(); renderSide();
+}
+stage.addEventListener('pointerup', endDrag); stage.addEventListener('pointercancel', endDrag);
+stage.addEventListener('dblclick', e => { if (ed.tool !== 'panels') return; const pn = panelAt(edPt(e)); if (pn) openPanel(pn.id); });
+stage.addEventListener('wheel', e => {
+  if (ed.tool !== 'panels') return; const pn = page().panels.find(p => p.id === ed.panelSel); if (!pn?.img) return;
+  e.preventDefault(); const k = e.deltaY < 0 ? 1.06 : 1/1.06; pn.img.s = Math.max(pn.img.fit*0.5, Math.min(pn.img.fit*4, pn.img.s*k)); updateImg(pn); saveSoon();
+  const z = $('#edZoom'); if (z){ z.value = Math.round(pn.img.s/pn.img.fit*100); z.previousElementSibling.textContent = `Zoom: ${z.value}%`; }
+}, {passive: false});
+stage.addEventListener('dragover', e => e.preventDefault());
+stage.addEventListener('drop', async e => {
+  e.preventDefault(); const p = edPt(e), pg = page(); let v = ''; try { v = e.dataTransfer.getData('text/plain'); } catch {}
+  if (v.startsWith('cs-bubble:')){ addBubble(v.slice(10), p[0], p[1]); return; }
+  const pn = panelAt(p);
+  if (v.startsWith('cs-pic:')){ const t = allPictures()[+v.slice(7)]; if (!t || !pn) return; pushHist(); await putPicture(pg, pn, {upload: t.src}); ed.tool = 'panels'; ed.panelSel = pn.id; saveSoon(); renderEditor(); return; }
+  const files = [...(e.dataTransfer.files || [])].filter(f => /^image\//.test(f.type));
+  if (files.length && pn){ try { const src = await shrink(files[0], 1600); tray.unshift({id: uid(), src}); put('meta', {id: 'tray', items: tray.slice(0, 60)}); pushHist(); await putPicture(pg, pn, {upload: src}); ed.tool = 'panels'; ed.panelSel = pn.id; saveSoon(); renderEditor(); } catch {} }
+});
+/* bubble text + quick bar */
+$('#edText').addEventListener('input', e => {
+  const el = e.target.closest('.bub'); if (!el) return; const b = page().bubbles.find(x => String(x.id) === el.dataset.b); if (!b) return;
+  b.text = e.target.value; renderBubbles(); saveSoon();
+});
+$('#edText').addEventListener('focusout', e => { const el = e.target.closest('.bub'); if (el && String(ed.editing) === el.dataset.b){ ed.editing = null; setTimeout(renderBubbles, 0); } });
+$('#edHandles').addEventListener('pointerdown', e => { if (e.target.closest('.qbar')) e.stopPropagation(); });
+$('#edHandles').addEventListener('click', e => {
+  const q = e.target.closest('[data-q]'), bar = e.target.closest('[data-qbar]'); if (!q || !bar || q.tagName === 'SELECT') return;
+  const pg = page(), b = pg.bubbles.find(x => String(x.id) === bar.dataset.qbar); if (!b) return;
+  if (q.dataset.q === 'ideas'){ bubbleIdeas(b); return; }
+  pushHist();
+  if (q.dataset.q === 'smaller') b.fs = Math.max(10, b.fs - 2);
+  if (q.dataset.q === 'bigger') b.fs = Math.min(44, b.fs + 2);
+  if (q.dataset.q === 'front'){ pg.bubbles = pg.bubbles.filter(x => x !== b).concat([b]); }
+  if (q.dataset.q === 'delete'){ pg.bubbles = pg.bubbles.filter(x => x !== b); ed.sel = ed.editing = null; }
+  saveSoon(); renderBubbles();
+});
+$('#edHandles').addEventListener('change', e => {
+  const bar = e.target.closest('[data-qbar]'); if (!bar || e.target.dataset.q !== 'type') return;
+  const b = page().bubbles.find(x => String(x.id) === bar.dataset.qbar); if (!b) return; pushHist(); b.type = e.target.value; saveSoon(); renderBubbles();
+});
+
+/* page list */
 $('#pages').onclick = e => { const b = e.target.closest('[data-pg]'); if (b){ cur = +b.dataset.pg; ls.set('cs.cur', cur); renderPages(); } };
-$('#layouts').onclick = async e => { const b = e.target.closest('[data-lay]'); if (!b) return; page().layout = b.dataset.lay; await savePage(page()); renderPages(); };
-$('#addPage').onclick = async () => { const p = newPage(); ensurePanels(p); pages.push(p); cur = pages.length-1; await savePage(p); renderPages(); };
+$('#addPage').onclick = async () => { const p = newPage(); pages.push(p); cur = pages.length-1; await savePage(p); renderPages(); };
 async function reorder(){ pages.forEach((p,i) => p.order = i); for (const p of pages) await savePage(p); }
 $('#movePrev').onclick = async () => { if (cur < 1) return; [pages[cur-1], pages[cur]] = [pages[cur], pages[cur-1]]; cur--; await reorder(); renderPages(); };
 $('#moveNext').onclick = async () => { if (cur >= pages.length-1) return; [pages[cur+1], pages[cur]] = [pages[cur], pages[cur+1]]; cur++; await reorder(); renderPages(); };
@@ -765,24 +1220,23 @@ $('#delPage').onclick = async e => {
 };
 
 /* ---------- page image (download + print) ---------- */
-async function renderPagePNG(p){
-  ensurePanels(p);
-  const W = 1600, M = 40, G = 24, B = 8, rows = LAYOUTS[p.layout].rows;
-  const heights = rows.map(([n,a]) => ((W - 2*M - (n-1)*G)/n)/ratio(a));
-  const H = Math.round(2*M + heights.reduce((s,h) => s+h, 0) + G*(rows.length-1));
-  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
-  x.fillStyle = '#fff'; x.fillRect(0,0,W,H);
-  let y = M, idx = 0;
-  for (const [r, [n]] of rows.entries()){
-    const cw = (W - 2*M - (n-1)*G)/n, ch = heights[r];
-    for (let k = 0; k < n; k++){
-      const px = M + k*(cw+G), src = panelImg(p.panels[idx++]);
-      x.fillStyle = '#f4f1ea'; x.fillRect(px, y, cw, ch);
-      if (src){ const im = await loadImg(src); const s = Math.max(cw/im.width, ch/im.height), dw = im.width*s, dh = im.height*s;
-        x.save(); x.beginPath(); x.rect(px, y, cw, ch); x.clip(); x.drawImage(im, px + (cw-dw)/2, y + (ch-dh)/2, dw, dh); x.restore(); }
-      x.lineWidth = B; x.strokeStyle = '#141414'; x.strokeRect(px + B/2, y + B/2, cw - B, ch - B);
-    }
-    y += ch + G;
+async function renderPagePNG(pg){
+  try { await Promise.all([document.fonts.load('700 20px "Comic Neue"'), document.fonts.load('20px Bangers')]); } catch {}
+  const W = 1600, k = W / PW, c = document.createElement('canvas'); c.width = W; c.height = Math.round(PH * k);
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.scale(k, k);
+  for (const pn of pg.panels){
+    const ins = G.inset(pn.pts, (pg.gutter || 12)/2), path = new Path2D(G.path(ins)), src = srcOf(pn);
+    if (src && pn.img){ const im = await loadImg(src), m = pn.img; x.save(); x.clip(path); x.drawImage(im, m.cx - m.w*m.s/2, m.cy - m.h*m.s/2, m.w*m.s, m.h*m.s); x.restore(); }
+    x.lineWidth = 5; x.lineJoin = 'round'; x.strokeStyle = '#141414'; x.stroke(path);
+  }
+  for (const b of pg.bubbles){
+    const {ops, g} = bubbleOps(b);
+    ops.forEach(o => { const p = new Path2D(o.d); if (o.fill){ x.fillStyle = o.fill; x.fill(p); } if (o.stroke){ x.lineWidth = o.sw; x.strokeStyle = o.stroke; x.lineJoin = 'round'; x.setLineDash(o.dash ? o.dash.split(' ').map(Number) : []); x.stroke(p); x.setLineDash([]); } });
+    x.font = g.font; x.textAlign = 'center'; x.textBaseline = 'middle';
+    const top = b.y - (g.lines.length * g.lh)/2;
+    g.lines.forEach((l, i) => { const ly = top + g.lh*(i + 0.5);
+      if (b.type === 'sfx'){ x.lineWidth = 3; x.strokeStyle = '#141414'; x.strokeText(l, b.x, ly); x.fillStyle = '#e8352e'; } else x.fillStyle = '#141414';
+      x.fillText(l, b.x, ly); });
   }
   return c.toDataURL('image/png');
 }
@@ -804,16 +1258,18 @@ $('#printBook').onclick = async () => {
   $('#printBook').textContent = '🖨 Print / PDF whole book';
 };
 
-/* ---------- panel editor ---------- */
-let pIdx = 0;
-const curPanel = () => page().panels[pIdx];
-$('#paper').onclick = e => { const b = e.target.closest('[data-cell]'); if (b) openPanel(+b.dataset.cell); };
-function openPanel(i){
-  pIdx = i; const pn = curPanel();
-  $('#panelTitle').textContent = `Page ${cur+1} · Panel ${i+1}`;
-  $('#pPrompt').value = pn.prompt; $('#panelErr').innerHTML = '';
+/* ---------- panel drawing window ---------- */
+let pId = null;
+const curPanel = () => page().panels.find(p => p.id === pId) || page().panels[0];
+const ASPECTS = {openai: ['1:1','2:3','3:2'], gemini: ['1:1','2:3','3:2','3:4','4:3','4:5','5:4','9:16','16:9','21:9']};
+function panelBox(pg, pn){ return G.bbox(G.inset(pn.pts, (pg.gutter || 12)/2)); }
+function bestAspect(r){ const list = ASPECTS[settings().provider] || ASPECTS.openai; let best = list[0], bd = 1e9; list.forEach(a => { const d = Math.abs(Math.log(ratio(a)) - Math.log(r)); if (d < bd){ bd = d; best = a; } }); return best; }
+function openPanel(id){
+  pId = id; const pg = page(), pn = curPanel();
+  $('#panelTitle').textContent = `Page ${cur+1} · Panel ${panelNo(pg, pn)}`;
+  $('#pPrompt').value = pn.prompt || ''; $('#panelErr').innerHTML = '';
   $('#pInsert').innerHTML = chars.map(c => `<button type="button" class="small" data-ins="${esc(c.id)}">+ ${esc(c.name)}</button>`).join('');
-  panelChips(); renderPanelStage(); $('#panelDlg').showModal(); checkOverview(true);
+  panelChips(); renderPanelStage(); if (!$('#panelDlg').open) $('#panelDlg').showModal(); checkOverview(true);
 }
 
 /* ---------- AI understood ---------- */
@@ -829,9 +1285,10 @@ Reply with JSON only, in this shape:
  "dialogue":[{"speaker":"name","type":"speech|thought|caption|sound effect","text":"exact words"}],
  "unclear":["short question or assumption"],
  "clearer_prompt":"the same panel rewritten as a clear, specific description, keeping every character code word exactly as written and every line of dialogue word for word"}`;
-function ovContext(pg, idx){
+function ovContext(pg, pn){
   const cast = chars.length ? chars.map(c => `- ${c.name}${c.desc ? ': ' + c.desc : ''}`).join('\n') : '(none yet)';
-  const prev = pg.panels.slice(0, idx).map(p => p.prompt).filter(Boolean).slice(-2);
+  const ord = ordered(pg), i = ord.indexOf(pn);
+  const prev = ord.slice(0, Math.max(0, i)).map(p => p.prompt).filter(Boolean).slice(-2);
   return `Known characters:\n${cast}\n\n` + (prev.length ? `Earlier panels on this page, for context:\n${prev.map(p => '- ' + p).join('\n')}\n\n` : '');
 }
 function checkOverview(now){
@@ -843,12 +1300,12 @@ function checkOverview(now){
   ovTimer = setTimeout(runOverview, now ? 50 : 1600);
 }
 async function runOverview(){
-  const pg = page(), idx = pIdx, pn = curPanel(), prompt = $('#pPrompt').value.trim();
+  const pg = page(), pn = curPanel(), prompt = $('#pPrompt').value.trim();
   if (prompt.length < 12) return;
   if (!settings().key){ renderOverview(null, 'nokey'); return; }
   const seq = ++ovSeq; renderOverview(pn.overview?.data, 'busy');
   try {
-    const data = parseJSON(await askText(OV_SYSTEM, ovContext(pg, idx) + 'Panel description:\n' + prompt));
+    const data = parseJSON(await askText(OV_SYSTEM, ovContext(pg, pn) + 'Panel description:\n' + prompt));
     if (!data || typeof data !== 'object') throw new Error('The AI reply was not readable. Try again.');
     pn.overview = {forPrompt: prompt, data}; await savePage(pg);
     if (seq === ovSeq && curPanel() === pn) renderOverview(data, $('#pPrompt').value.trim() === prompt ? 'ok' : 'stale');
@@ -890,7 +1347,7 @@ function breakdownText(pn, prompt){
   if (cs.length) t += '\n' + cs.map(c => `- ${c.name}: ${c.doing || ''}${c.expression ? ', ' + c.expression : ''}`).join('\n');
   if (d.setting) t += `\n- Setting: ${d.setting}`;
   if (d.shot) t += `\n- Camera: ${d.shot}`;
-  if (dl.length) t += '\n- Lettering (draw exactly, nothing else): ' + dl.map(x => `${x.type || 'speech'} from ${x.speaker}: "${x.text}"`).join('; ');
+  if (dl.length) t += '\n- What is being said (for acting and expressions only; do not draw any text): ' + dl.map(x => `${x.speaker}: "${x.text}"`).join('; ');
   return t;
 }
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', stopMic));
@@ -900,49 +1357,176 @@ function panelChips(){
     : (chars.length ? '<span class="chip off">No characters in this panel yet. Type a code word or tap + below.</span>' : '');
 }
 function renderPanelStage(){
-  const pn = curPanel(), a = slots(page().layout)[pIdx], img = panelImg(pn);
-  $('#pStage').style.aspectRatio = a.replace(':','/');
+  const pg = page(), pn = curPanel(), bb = panelBox(pg, pn), img = panelImg(pn), asp = bestAspect(bb.w / bb.h);
+  const ins = G.inset(pn.pts, (pg.gutter || 12)/2);
+  $('#pStage').style.aspectRatio = `${bb.w.toFixed(1)} / ${bb.h.toFixed(1)}`;
+  $('#pStage').style.maxWidth = `min(100%, calc(60vh * ${(bb.w / bb.h).toFixed(3)}))`;
+  const mask = `<svg class="mask" viewBox="${bb.x0.toFixed(1)} ${bb.y0.toFixed(1)} ${bb.w.toFixed(1)} ${bb.h.toFixed(1)}" preserveAspectRatio="none" aria-hidden="true">
+    <path fill-rule="evenodd" fill="rgba(20,20,20,.55)" d="M${bb.x0-2},${bb.y0-2}H${bb.x1+2}V${bb.y1+2}H${bb.x0-2}Z ${G.path(ins)}"/>
+    <path d="${G.path(ins)}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"/></svg>`;
   $('#pStage').innerHTML = busyPanels.has(pn.id) ? `<div class="burst">DRAWING…${progHTML('panel', busyPanels.get(pn.id))}</div>`
-    : img ? `<img src="${img}" alt="">` : '<div class="burst">POW!<small>Your panel appears here</small></div>';
+    : img ? `<img src="${img}" alt="" style="width:100%;height:100%">${mask}` : `<div class="burst">POW!<small>Your panel appears here, in this exact shape</small></div>${mask}`;
+  const slanted = ins.length !== 4 || ins.some((q, i) => { const r = ins[(i+1)%4]; return Math.abs(q[0]-r[0]) > 0.5 && Math.abs(q[1]-r[1]) > 0.5; });
+  $('#pShape').textContent = `Drawn as a ${asp} picture to fit this panel${slanted ? '. The shaded corners get trimmed' : ''}.`;
   $('#takes').innerHTML = pn.takes.length > 1 ? pn.takes.map((t,i) => `<button type="button" class="${i===pn.pick?'on':''}" data-take="${i}" aria-label="Take ${i+1}"><img src="${t}" alt=""></button>`).join('') : '';
   $('#drawPanel').textContent = pn.takes.length ? 'Draw another take' : 'Draw it!';
   $('#drawPanel').disabled = busyPanels.has(pn.id);
+  const inPlace = pn.img && !pn.img.upload && pn.img.take === pn.pick;
+  $('#putPanel').disabled = !img || busyPanels.has(pn.id);
+  $('#putPanel').textContent = inPlace ? '✓ In the panel' : '✓ Put in panel';
 }
 $('#pPrompt').oninput = async () => { curPanel().prompt = $('#pPrompt').value; panelChips(); checkOverview(false); };
 $('#pPrompt').onchange = () => savePage(page());
 $('#pInsert').onclick = e => { const b = e.target.closest('[data-ins]'); if (!b) return; const c = chars.find(x => x.id === b.dataset.ins);
   const t = $('#pPrompt'), p = t.selectionStart ?? t.value.length; t.value = t.value.slice(0,p) + c.name + ' ' + t.value.slice(p);
   curPanel().prompt = t.value; savePage(page()); panelChips(); checkOverview(false); t.focus(); };
-$('#takes').onclick = async e => { const b = e.target.closest('[data-take]'); if (!b) return; curPanel().pick = +b.dataset.take; await savePage(page()); renderPanelStage(); renderPaper(); };
-$('#panelForm').onsubmit = async () => { curPanel().prompt = $('#pPrompt').value; await savePage(page()); renderPaper(); };
+$('#takes').onclick = async e => { const b = e.target.closest('[data-take]'); if (!b) return; curPanel().pick = +b.dataset.take; await savePage(page()); renderPanelStage(); };
+$('#panelForm').onsubmit = async () => { curPanel().prompt = $('#pPrompt').value; await savePage(page()); renderEditor(); };
+$('#putPanel').onclick = async () => {
+  const pg = page(), pn = curPanel(); if (!panelImg(pn)) return;
+  if (pg === page()) pushHist();
+  await putPicture(pg, pn, {take: pn.pick});
+  await savePage(pg); ed.tool = 'panels'; ed.panelSel = pn.id; $('#panelDlg').close(); renderEditor();
+  toast(`Picture put in panel ${panelNo(pg, pn)}. Drag it to move, scroll to zoom.`);
+};
 $('#clearPanel').onclick = async e => {
   const b = e.target; if (!b.dataset.sure){ b.dataset.sure = 1; b.textContent = 'Clear all takes?'; setTimeout(() => { delete b.dataset.sure; b.textContent = 'Clear panel'; }, 3000); return; }
-  delete b.dataset.sure; b.textContent = 'Clear panel'; const pn = curPanel(); pn.takes = []; pn.pick = 0; await savePage(page()); renderPanelStage(); renderPaper();
+  delete b.dataset.sure; b.textContent = 'Clear panel'; const pn = curPanel(); pn.takes = []; pn.pick = 0; if (pn.img && !pn.img.upload) pn.img = null; await savePage(page()); renderPanelStage(); renderEditor();
 };
+const BLUR_TEXT = `\nComposition for easy cropping: keep the characters and the main action sharp and inside the central 70% of the frame. Draw the background softly blurred and out of focus (shallow depth of field, gentle bokeh-like softness in the comic style), and keep faces, hands, dialogue and important objects away from the edges so the picture can be trimmed into any panel shape without losing anything important.`;
 $('#drawPanel').onclick = async () => {
-  const pg = page(), idx = pIdx, pn = pg.panels[idx], prompt = $('#pPrompt').value.trim();
+  const pg = page(), pn = curPanel(), prompt = $('#pPrompt').value.trim();
   if (busyPanels.has(pn.id)) return;
   pn.prompt = prompt; await savePage(pg);
   if (!prompt){ $('#panelErr').innerHTML = '<div class="err">Describe what happens in this panel first.</div>'; return; }
   const cast = found(prompt), notOk = cast.filter(c => !c.sheet);
   if (notOk.length){ $('#panelErr').innerHTML = `<div class="err">Approve ${esc(notOk.map(c => c.name).join(' and '))}'s look first (Your cast → Approve look). That's what keeps them consistent.</div>`; return; }
-  const aspect = slots(pg.layout)[idx];
-  const prev = pg.panels[idx-1], prevImg = prev && panelImg(prev);
-  let text = `Draw ONE comic book panel in this style: ${styleText()}. Panel shape ${aspect}. Fill the whole frame with artwork; no panel borders, no page layout, no extra panels.
+  const bb = panelBox(pg, pn), aspect = bestAspect(bb.w / bb.h);
+  const ord = ordered(pg), prev = ord[ord.indexOf(pn) - 1], prevImg = prev && (srcOf(prev) || panelImg(prev));
+  let text = `Draw ONE comic book panel in this style: ${styleText()}. Panel shape ${aspect} (${bb.w > bb.h * 1.15 ? 'wide' : bb.h > bb.w * 1.15 ? 'tall' : 'square-ish'}). Fill the whole frame with artwork; no panel borders, no page layout, no extra panels.
 Scene: ${prompt}`;
   if (cast.length) text += `\n\nCharacters in this panel: ${cast.map(c => c.name).join(', ')}. Each one has an APPROVED model sheet attached. Draw each character exactly as on their model sheet: same face, hair, body build, skin tone and outfit. Pose and expression should fit the scene; do not copy the model-sheet poses. Do not draw anyone else who looks like them.` +
     cast.filter(c => c.desc).map(c => `\n${c.name}: ${c.desc}`).join('');
   text += breakdownText(pn, prompt);
-  text += '\nDraw any speech bubbles or captions mentioned with clean, correctly spelled comic lettering, with each bubble\'s tail pointing at the right speaker. Do not add text that was not asked for.';
+  if (book.blurBg !== false) text += BLUR_TEXT;
+  text += '\nDo NOT draw speech bubbles, captions or any lettering: those are added separately on the page. Leave a little calm space where a speech bubble could sit.';
   const refs = [];
   cast.forEach(c => { refs.push({label:`APPROVED model sheet for ${c.name}: this is exactly how ${c.name} looks`, data: c.sheet.data});
     const face = c.photos.find(p => /face|front/.test(p.view)) || c.photos[0]; if (face && cast.length <= 4) refs.push({label:`Photo of the real ${c.name}, for face likeness only`, data: face.data}); });
   if (prevImg && refs.length < 12){ refs.push({label:'Previous panel on this page, for matching colours, lighting and art style only', data: prevImg}); }
-  busyPanels.set(pn.id, Date.now()); $('#panelErr').innerHTML = ''; renderPanelStage(); renderPaper(); tickProg();
-  try { const img = await generateImage(text, refs, aspect); recordSecs('panel', (Date.now() - busyPanels.get(pn.id))/1000); pn.takes.push(img); if (pn.takes.length > 6) pn.takes.shift(); pn.pick = pn.takes.length-1; await savePage(pg); }
-  catch (e) { if (curPanel() === pn) $('#panelErr').innerHTML = `<div class="err">${esc(e.message)}</div>`; else showTopErr(`Page ${pages.indexOf(pg)+1}, panel ${idx+1}: ${e.message}`); }
-  finally { busyPanels.delete(pn.id); if (curPanel() === pn) renderPanelStage(); renderPaper(); }
+  busyPanels.set(pn.id, Date.now()); $('#panelErr').innerHTML = ''; renderPanelStage(); renderPanels(); tickProg();
+  try {
+    const img = await generateImage(text, refs, aspect); recordSecs('panel', (Date.now() - busyPanels.get(pn.id))/1000);
+    pn.takes.push(img);
+    if (pn.takes.length > 6){ pn.takes.shift(); if (pn.img && !pn.img.upload){ pn.img.take--; if (pn.img.take < 0){ pn.img.upload = null; pn.img = null; } } }
+    pn.pick = pn.takes.length-1; await savePage(pg);
+  }
+  catch (e) { if (curPanel() === pn && $('#panelDlg').open) $('#panelErr').innerHTML = `<div class="err">${esc(e.message)}</div>`; else showTopErr(`Page ${pages.indexOf(pg)+1}, panel ${panelNo(pg, pn)}: ${e.message}`); }
+  finally { busyPanels.delete(pn.id); if (curPanel() === pn) renderPanelStage(); if (pg === page()) { renderPanels(); renderSide(); } }
 };
+
+
+/* ---------- writing help: polish page, bubble ideas, page rewrites ---------- */
+const BUB_NAME = Object.fromEntries(BUB_TYPES.map(([v,n]) => [v, n.toLowerCase()]));
+function pageScript(pg){
+  const ord = ordered(pg), bubs = pg.bubbles.map(b => ({b, pi: ord.findIndex(p => G.inside(p.pts, [b.x, b.y]))}))
+    .sort((a,c) => (a.pi - c.pi) || (a.b.y - c.b.y) || (a.b.x - c.b.x));
+  const bRef = new Map(), pRef = new Map();
+  bubs.forEach((x,i) => bRef.set('B' + (i+1), x.b));
+  ord.forEach((p,i) => pRef.set('P' + (i+1), p));
+  const cast = chars.length ? chars.map(c => `- ${c.name}${c.desc ? ': ' + c.desc : ''}`).join('\n') : '(none)';
+  let t = `Book: ${book.title || 'untitled comic'}. Page ${cur+1} of ${pages.length}.\nKnown characters (code words):\n${cast}\n\nThe page, in reading order:\n`;
+  ord.forEach((p,i) => {
+    t += `P${i+1} (panel ${i+1}) description: ${p.prompt ? p.prompt : '(not written yet)'}\n`;
+    bubs.forEach((x,j) => { if (x.pi === i) t += `   B${j+1} [${BUB_NAME[x.b.type] || x.b.type} bubble]: "${x.b.text}"\n`; });
+  });
+  const loose = bubs.filter(x => x.pi < 0); if (loose.length) t += 'Bubbles outside panels:\n' + loose.map(x => `   B${bubs.indexOf(x)+1} [${BUB_NAME[x.b.type] || x.b.type} bubble]: "${x.b.text}"\n`).join('');
+  const prevPg = pages[cur-1]; if (prevPg){ const lines = prevPg.bubbles.map(b => `"${b.text}"`).slice(0, 12); if (lines.length) t += `\nFor story context, the previous page's dialogue was: ${lines.join(' / ')}\n`; }
+  return {text: t, bRef, pRef};
+}
+function idOpen(title, body){ $('#idTitle').textContent = title; $('#idBody').innerHTML = body; $('#idFoot').innerHTML = '<button type="submit">Close</button>'; if (!$('#ideasDlg').open) $('#ideasDlg').showModal(); }
+const idBusy = msg => `<div class="burst spin" style="font-size:30px">THINKING…<small>${esc(msg)}</small></div>`;
+const idErr = (m, retry) => `<div class="err">${esc(m)}</div>${retry ? `<button type="button" class="small" id="idRetry">Try again</button>` : ''}`;
+let idRetry = null;
+$('#idBody').addEventListener('click', e => { if (e.target.id === 'idRetry' && idRetry) idRetry(); });
+function needKey(){ if (settings().key) return false; toast('Add your API key in Settings first.'); return true; }
+
+// 1) Polish the whole page
+const POLISH_PAGE_SYS = `You proofread one page of a comic book. Fix spelling, punctuation, capitalisation and grammar in every speech bubble, and lightly tidy every panel description so an image AI understands it.
+Rules: keep each line's meaning, voice, slang and length. Keep character code words exactly as written. Comic dialogue style: short and punchy; use "…" for trailing off, "—" for interruptions, and keep "!" and "?" where they fit. Do not add new lines, jokes or events. Fix speech-to-text mistakes.
+Return a JSON object: {"bubbles":[{"ref":"B1","text":"corrected line"}],"panels":[{"ref":"P1","prompt":"tidied description"}]}. Include every bubble and every panel that has a description, even if unchanged.`;
+async function polishPage(){
+  if (needKey()) return;
+  const pg = page(), sc = pageScript(pg);
+  if (!pg.bubbles.length && !pg.panels.some(p => p.prompt)){ toast('Nothing to polish yet. Write a panel or add a bubble first.'); return; }
+  idRetry = polishPage; idOpen('Polish page', idBusy('Checking every bubble and panel on this page'));
+  try {
+    const d = parseJSON(await askText(POLISH_PAGE_SYS, sc.text));
+    if (!d) throw new Error('The AI reply was not readable. Try again.');
+    const changes = [];
+    list(d.bubbles).forEach(x => { const b = sc.bRef.get(x.ref); const t = String(x.text || '').trim(); if (b && t && t !== b.text.trim()) changes.push({kind: 'b', target: b, from: b.text, to: t, label: `Bubble ${x.ref.slice(1)}`}); });
+    list(d.panels).forEach(x => { const p = sc.pRef.get(x.ref); const t = String(x.prompt || '').trim(); if (p && p.prompt && t && t !== p.prompt.trim()) changes.push({kind: 'p', target: p, from: p.prompt, to: t, label: `Panel ${x.ref.slice(1)} description`}); });
+    if (!changes.length){ idOpen('Polish page', '<p style="margin:0;font-size:17px;font-weight:700">Everything already looks good. No changes needed.</p>'); return; }
+    idOpen('Polish page', `<p class="hint" style="margin:0">${changes.length} suggested fix${changes.length === 1 ? '' : 'es'}. Untick any you don't want.</p>` +
+      changes.map((c,i) => `<label class="idrow"><input type="checkbox" data-ch="${i}" checked><span><span class="lab">${esc(c.label)}</span><br><span class="old">${esc(c.from)}</span><br><span class="new">${esc(c.to)}</span></span></label>`).join(''));
+    $('#idFoot').innerHTML = '<button type="submit">Cancel</button><button type="button" class="primary" id="idApply">Apply fixes</button>';
+    $('#idApply').onclick = () => {
+      pushHist(); let n = 0;
+      document.querySelectorAll('#idBody [data-ch]').forEach(cb => { if (!cb.checked) return; const c = changes[+cb.dataset.ch]; if (c.kind === 'b') c.target.text = c.to; else { c.target.prompt = c.to; delete c.target.overview; } n++; });
+      saveSoon(); renderEditor(); $('#ideasDlg').close(); toast(`Applied ${n} fix${n === 1 ? '' : 'es'}. Undo puts them back.`);
+    };
+  } catch (e) { idOpen('Polish page', idErr(e.message, true)); }
+}
+$('#edPolishPage').onclick = polishPage;
+
+// 2) Better lines for one bubble
+const BUB_IDEAS_SYS = `You are a sharp comic book writer helping with dialogue. You get a whole comic page (panel descriptions and every bubble) and one bubble to improve.
+Suggest 5 different alternative lines for that bubble that fit the story so far, the characters, the panel and the bubble type (speech, thought, shout, whisper, caption, narration, sound effect, radio). Vary them: e.g. punchier, funnier, more dramatic, more natural, more mysterious. Keep each about as short as comic lettering needs (usually under 15 words; sound effects 1–2 words). Keep character code words exactly as written. Do not repeat the current line.
+Return a JSON object: {"options":[{"tone":"Punchier","text":"…"}]}`;
+async function bubbleIdeas(b){
+  if (needKey()) return;
+  const pg = page(), sc = pageScript(pg), ref = [...sc.bRef].find(([,x]) => x === b)?.[0] || 'B?';
+  idRetry = () => bubbleIdeas(b); idOpen('Ideas for this bubble', idBusy('Reading the whole page for context'));
+  try {
+    const d = parseJSON(await askText(BUB_IDEAS_SYS, sc.text + `\nImprove bubble ${ref}. Its current line is: "${b.text}"`));
+    const opts = list(d?.options).filter(o => o.text);
+    if (!opts.length) throw new Error('No suggestions came back. Try again.');
+    idOpen('Ideas for this bubble', `<p class="hint" style="margin:0">Now: <b>${esc(b.text)}</b>. Click a line to use it.</p>` +
+      opts.map((o,i) => `<button type="button" class="opt" data-opt="${i}"><b>${esc(o.tone || 'Option ' + (i+1))}</b><span>${esc(o.text)}</span></button>`).join(''));
+    $('#idFoot').innerHTML = '<button type="submit">Keep mine</button><button type="button" id="idMore">More ideas</button>';
+    $('#idMore').onclick = () => bubbleIdeas(b);
+    $('#idBody').querySelectorAll('[data-opt]').forEach(el => el.onclick = () => { pushHist(); b.text = String(opts[+el.dataset.opt].text).trim(); saveSoon(); renderBubbles(); $('#ideasDlg').close(); toast('Line updated. Undo puts the old one back.'); });
+  } catch (e) { idOpen('Ideas for this bubble', idErr(e.message, true)); }
+}
+
+// 3) Different ways of writing the whole page
+const PAGE_IDEAS_SYS = `You are a sharp comic book writer. You get one comic page: panel descriptions and every speech bubble in reading order.
+Suggest 3 clearly different ways of writing ALL the dialogue on this page, each with its own approach (for example: punchier and shorter; funnier; more dramatic or emotional; more mysterious). Each version must give a new line for EVERY bubble, keep the same story events, fit each bubble's type and stay short enough for comic lettering. Keep character code words exactly as written.
+Return a JSON object: {"versions":[{"title":"Punchier","note":"one short sentence on the approach","bubbles":[{"ref":"B1","text":"…"}]}]}`;
+async function pageIdeas(){
+  if (needKey()) return;
+  const pg = page(); if (!pg.bubbles.length){ toast('Add some speech bubbles to this page first, then ask for rewrite ideas.'); return; }
+  const sc = pageScript(pg);
+  idRetry = pageIdeas; idOpen('Rewrite ideas for this page', idBusy('Reading the whole page and writing three versions'));
+  try {
+    const d = parseJSON(await askText(PAGE_IDEAS_SYS, sc.text));
+    const vers = list(d?.versions).filter(v => list(v.bubbles).length);
+    if (!vers.length) throw new Error('No versions came back. Try again.');
+    const refs = [...sc.bRef.keys()];
+    idOpen('Rewrite ideas for this page', `<p class="hint" style="margin:0">Each version rewrites every bubble on the page. Using one replaces the words in your bubbles; Undo brings yours back.</p>` +
+      vers.map((v,i) => { const m = new Map(list(v.bubbles).map(x => [x.ref, x.text]));
+        return `<div class="ver"><h3>${esc(v.title || 'Version ' + (i+1))}</h3>${v.note ? `<p class="hint" style="margin:0">${esc(v.note)}</p>` : ''}
+          <ol>${refs.map(r => `<li>${esc(m.get(r) ?? sc.bRef.get(r).text)}</li>`).join('')}</ol>
+          <div><button type="button" class="small primary" data-ver="${i}">Use this version</button></div></div>`; }).join(''));
+    $('#idFoot').innerHTML = '<button type="submit">Keep mine</button><button type="button" id="idMore">Three more</button>';
+    $('#idMore').onclick = pageIdeas;
+    $('#idBody').querySelectorAll('[data-ver]').forEach(el => el.onclick = () => {
+      pushHist(); list(vers[+el.dataset.ver].bubbles).forEach(x => { const b = sc.bRef.get(x.ref); if (b && x.text) b.text = String(x.text).trim(); });
+      saveSoon(); renderEditor(); $('#ideasDlg').close(); toast('Page dialogue updated. Undo brings yours back.');
+    });
+  } catch (e) { idOpen('Rewrite ideas for this page', idErr(e.message, true)); }
+}
+$('#edIdeas').onclick = pageIdeas;
 
 /* ---------- book settings ---------- */
 $('#bookTitle').oninput = () => { book.title = $('#bookTitle').value; saveBook(); };
@@ -950,10 +1534,11 @@ $('#style').onchange = () => { book.style = $('#style').value; saveBook();
   const old = chars.filter(c => c.sheet && c.sheet.style !== book.style);
   showTopErr(old.length ? `Heads up: ${old.map(c => c.name).join(', ')} ${old.length===1?'was':'were'} approved in a different style. Redo their look so they match the new style.` : ''); };
 $('#styleNotes').onchange = () => { book.styleNotes = $('#styleNotes').value.trim(); saveBook(); };
+$('#blurBg').onchange = () => { book.blurBg = $('#blurBg').checked; saveBook(); };
 
 /* ---------- backup ---------- */
 $('#exportBtn').onclick = () => {
-  const blob = new Blob([JSON.stringify({app:'comic-studio', v:2, book, chars, pages})], {type:'application/json'});
+  const blob = new Blob([JSON.stringify({app:'comic-studio', v:3, book, chars, pages, tray})], {type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileBase() + '-backup.json'; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 };
@@ -963,21 +1548,25 @@ $('#importFile').onchange = async e => {
   try { const j = JSON.parse(await f.text()); if (j.app !== 'comic-studio') throw 0;
     for (const c of j.chars || []){ if (!c.id || !Array.isArray(c.photos)) continue; await put('chars', c); chars = chars.filter(x => x.id !== c.id).concat(c); }
     if (Array.isArray(j.pages) && j.pages.length){ for (const p of pages) await del('pages', p.id);
-      pages = j.pages.filter(p => p.id && LAYOUTS[p.layout] && Array.isArray(p.panels)).sort((a,b) => a.order - b.order);
+      pages = j.pages.filter(p => p.id && Array.isArray(p.panels)).map(migratePage).sort((a,b) => a.order - b.order);
       for (const p of pages) await put('pages', p); cur = 0; }
     if (j.book){ book = {...book, ...j.book, id:'book'}; await saveBook(); fillBook(); }
-    if (!pages.length){ const p = newPage(); ensurePanels(p); pages.push(p); await savePage(p); }
+    if (Array.isArray(j.tray)){ tray = j.tray.concat(tray.filter(t => !j.tray.some(x => x.id === t.id))).slice(0, 60); await put('meta', {id:'tray', items: tray}); }
+    if (!pages.length){ const p = newPage(); pages.push(p); await savePage(p); }
     renderChars(); renderPages(); showTopErr('');
   } catch { showTopErr('That file is not a Comic Studio backup.'); }
 };
-function fillBook(){ $('#bookTitle').value = book.title || ''; $('#style').value = STYLES[book.style] ? book.style : 'classic'; $('#styleNotes').value = book.styleNotes || ''; }
+function fillBook(){ $('#blurBg').checked = book.blurBg !== false; $('#bookTitle').value = book.title || ''; $('#style').value = STYLES[book.style] ? book.style : 'classic'; $('#styleNotes').value = book.styleNotes || ''; }
 
+window.__cs = {get pages(){ return pages; }, get cur(){ return cur; }, renderPagePNG}; // handy for testing
 /* ---------- start ---------- */
 (async () => {
   await openDB();
-  try { chars = await all('chars'); pages = (await all('pages')).sort((a,b) => a.order - b.order);
-    const m = (await all('meta')).find(x => x.id === 'book'); if (m) book = {...book, ...m}; } catch {}
-  if (!pages.length){ const p = newPage(); ensurePanels(p); pages.push(p); await savePage(p); }
+  try { chars = await all('chars'); pages = (await all('pages')).map(migratePage).sort((a,b) => a.order - b.order);
+    const meta = await all('meta'), m = meta.find(x => x.id === 'book'); if (m) book = {...book, ...m};
+    const t = meta.find(x => x.id === 'tray'); if (t && Array.isArray(t.items)) tray = t.items;
+    for (const p of pages) if (p.v === 3 && !p._saved) { await savePage(p); } } catch {}
+  if (!pages.length){ const p = newPage(); pages.push(p); await savePage(p); }
   cur = Math.min(+ls.get('cs.cur', 0) || 0, pages.length-1);
   fillBook(); renderChars(); renderPages();
   if (!settings().key) setTimeout(() => $('#openSettings').click(), 400);
