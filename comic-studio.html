@@ -67,7 +67,10 @@ textarea{resize:vertical;min-height:90px}
 .cell .lbl{font-family:Bangers,sans-serif;font-size:clamp(18px,2.6vw,28px);letter-spacing:.04em;padding:8px;text-align:center}
 .cell .lbl small{display:block;font:700 13px "Nunito Sans",sans-serif;color:#5b5560}
 .cell .num{position:absolute;top:6px;left:6px;background:var(--yel);border:2px solid #141414;font:800 12px "Nunito Sans";padding:0 6px;border-radius:4px;z-index:1}
-.cell.busy::after{content:"DRAWING…";position:absolute;inset:0;display:grid;place-items:center;background:rgba(255,212,59,.85);font-family:Bangers,sans-serif;font-size:28px;color:#e8352e;-webkit-text-stroke:1px #141414}
+.cellbusy{position:absolute;inset:0;z-index:2;display:grid;place-content:center;justify-items:center;background:rgba(255,212,59,.9);font-family:Bangers,sans-serif;font-size:clamp(18px,2.4vw,28px);color:#e8352e;-webkit-text-stroke:1px #141414;padding:8px}
+.prog{display:block;width:min(320px,80%);min-width:90px;height:14px;margin:10px auto 0;border:2px solid #141414;border-radius:8px;background:#fff;overflow:hidden;transform:none}
+.prog i{display:block;height:100%;width:0;background:repeating-linear-gradient(45deg,#e8352e 0 10px,#ff6b5e 10px 20px);transition:width .35s linear}
+.progt{display:block;font:700 13px "Nunito Sans",sans-serif;color:#5b5560;-webkit-text-stroke:0;margin-top:6px;text-align:center}
 .layouts{display:flex;gap:8px;flex-wrap:wrap}
 .lay{width:56px;min-height:64px;padding:6px;display:grid;gap:3px;box-shadow:2px 2px 0 var(--line);justify-content:stretch;align-content:center}
 .lay.on{background:var(--yel)}
@@ -99,7 +102,13 @@ dialog form{padding:20px;display:grid;gap:14px}
 .takes button.on{outline:4px solid var(--red);outline-offset:1px}
 .end{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .micwrap{position:relative}
-.micwrap textarea,.micwrap input{padding-right:58px}
+.micwrap textarea,.micwrap input{padding-right:110px}
+.polish{position:absolute;right:56px;top:6px;width:44px;min-height:40px;padding:0;border-width:2px;box-shadow:2px 2px 0 var(--line);border-radius:50%;background:var(--yel);color:#141414}
+.polish svg{width:20px;height:20px}
+.polish.wait svg{animation:spinr 1s linear infinite}
+@keyframes spinr{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.polish.wait svg{animation:none}}
+.toast button{margin-left:12px;min-height:32px;padding:0 10px;font-size:13px;background:#fff;color:#141414;border-color:#fff;box-shadow:none}
 .mic{position:absolute;right:6px;top:6px;width:44px;min-height:40px;padding:0;border-width:2px;box-shadow:2px 2px 0 var(--line);border-radius:50%}
 .mic svg{width:20px;height:20px}
 .mic.on{background:var(--red);color:#fff;animation:pulse 1s ease-in-out infinite alternate}
@@ -222,7 +231,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
     <h2 id="charDlgTitle">New character</h2>
     <div><label for="cName">Code word</label><input id="cName" required maxlength="30" placeholder="e.g. Dave" autocomplete="off"><p class="hint">One word. This is what you type in panel prompts.</p></div>
     <div><label for="cDesc">Description</label>
-      <div class="micwrap"><textarea id="cDesc" placeholder="Man in his 30s, short curly brown hair, beard, round glasses, tall and broad. Always wears a green hoodie, jeans and red sneakers."></textarea><button type="button" class="mic" data-mic="cDesc" aria-label="Speak the description"></button></div>
+      <div class="micwrap"><textarea id="cDesc" placeholder="Man in his 30s, short curly brown hair, beard, round glasses, tall and broad. Always wears a green hoodie, jeans and red sneakers."></textarea><button type="button" class="polish" data-polish="cDesc" aria-label="Polish the description" title="Polish: rewrite so the AI understands it clearly"></button><button type="button" class="mic" data-mic="cDesc" aria-label="Speak the description"></button></div>
       <p class="hint">Describe their usual outfit too. It keeps clothes the same on every page.</p></div>
     <div>
       <label>Reference photos (front, side, back… up to 6)</label>
@@ -235,7 +244,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
       <p class="hint" style="margin:0">The app draws a model sheet (front, side, back, face). Approve it, and every panel uses this exact look.</p>
       <div class="sheet" id="sheetBox"></div>
       <div id="sheetErr"></div>
-      <div><label for="sheetNotes">Changes for the next try (optional)</label><div class="micwrap"><input id="sheetNotes" placeholder="e.g. make the hair shorter, add a scar over the left eye"><button type="button" class="mic" data-mic="sheetNotes" aria-label="Speak the changes" style="top:3px"></button></div></div>
+      <div><label for="sheetNotes">Changes for the next try (optional)</label><div class="micwrap"><input id="sheetNotes" placeholder="e.g. make the hair shorter, add a scar over the left eye"><button type="button" class="polish" data-polish="sheetNotes" aria-label="Polish the changes" title="Polish: rewrite so the AI understands it clearly" style="top:3px"></button><button type="button" class="mic" data-mic="sheetNotes" aria-label="Speak the changes" style="top:3px"></button></div></div>
       <div class="row">
         <button type="button" id="genSheet" class="go">Draw model sheet</button>
         <button type="button" id="approveSheet" class="okb" hidden>✓ Approve this look</button>
@@ -256,7 +265,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
     <div class="pgrid">
       <div class="stack">
         <div><label for="pPrompt">What happens in this panel? Type it or tap the mic.</label>
-          <div class="micwrap"><textarea id="pPrompt" placeholder="Dave and Mia sprint down a rainy alley, Dave looking back over his shoulder. Speech bubble from Mia: &quot;Faster!&quot;"></textarea><button type="button" class="mic" data-mic="pPrompt" aria-label="Speak the panel description"></button></div></div>
+          <div class="micwrap"><textarea id="pPrompt" placeholder="Dave and Mia sprint down a rainy alley, Dave looking back over his shoulder. Speech bubble from Mia: &quot;Faster!&quot;"></textarea><button type="button" class="polish" data-polish="pPrompt" aria-label="Polish the panel description" title="Polish: rewrite so the AI understands it clearly"></button><button type="button" class="mic" data-mic="pPrompt" aria-label="Speak the panel description"></button></div></div>
         <div class="chips" id="pChips"></div>
         <div class="chips" id="pInsert"></div>
         <div id="panelErr"></div>
@@ -441,11 +450,13 @@ const parseJSON = t => { try { return JSON.parse(t); } catch { const m = t.match
 
 /* ---------- toast ---------- */
 let toastT;
-function toast(msg){
+function toast(msg, action, onAction){
   document.querySelectorAll('.toast').forEach(t => t.remove());
   const host = [...document.querySelectorAll('dialog[open]')].pop()?.querySelector('form') || document.body;
-  const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role','status'); t.textContent = msg; host.append(t);
-  clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 5000);
+  const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role','status'); t.textContent = msg;
+  if (action){ const b = document.createElement('button'); b.type = 'button'; b.textContent = action; b.onclick = () => { t.remove(); onAction(); }; t.append(b); }
+  host.append(t);
+  clearTimeout(toastT); toastT = setTimeout(() => t.remove(), action ? 12000 : 5000);
 }
 
 /* ---------- microphone ---------- */
@@ -500,6 +511,62 @@ async function toggleMic(b){
   try { startRec(); } catch { setMicBtn(b, false); mic = null; toast('Could not start voice typing.'); }
 }
 
+/* ---------- polish ---------- */
+const SPARK_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>';
+document.querySelectorAll('.polish').forEach(b => b.innerHTML = SPARK_SVG);
+const castList = () => chars.length ? chars.map(c => `- ${c.name}${c.desc ? ': ' + c.desc : ''}`).join('\n') : '(none yet)';
+const POLISH = {
+  pPrompt: () => ({
+    system: `You polish descriptions of single comic book panels so an image-generating AI understands them exactly.
+Rewrite the user's text into one clear, specific description (at most about 90 words) that states: who is in the panel and what each is doing (pose, action), their expressions, the setting and time/lighting, the camera framing, and any speech bubbles, thought bubbles, captions or sound effects with the exact words and who says them.
+Rules: keep every character code word exactly as written (these are the known characters: ${chars.map(c => c.name).join(', ') || 'none'}). Keep all dialogue word for word. Keep the user's meaning; fill only small gaps sensibly and never add major new events or characters. Fix spelling and speech-to-text mistakes. Reply with only the rewritten description, no quotes, no preamble.`,
+    user: ovContext(page(), pIdx) + 'Panel description to polish:\n' }),
+  cDesc: () => ({
+    system: `You polish character descriptions for a comic book, so an image AI draws the character the same way every time.
+Rewrite the user's text as one clear visual description: approximate age, build and height, face shape and features, skin tone, hair (style, length, colour), facial hair, glasses or other distinguishing features, and the usual outfit with colours and shoes.
+Keep every fact the user gave. Do not invent features they did not mention; if something important is missing, leave it out. Fix spelling and speech-to-text mistakes. Reply with only the description, no quotes, no preamble, at most about 70 words.`,
+    user: `Character code word: ${$('#cName').value.trim() || '(not named yet)'}\nDescription to polish:\n` }),
+  sheetNotes: () => ({
+    system: `You polish change requests for redrawing a comic character's model sheet.
+Rewrite the user's text as short, precise instructions an image AI will follow, e.g. "Make the hair shorter: cropped above the ears. Add a thin scar over the left eyebrow." Keep only what the user asked for; do not add other changes. Fix spelling and speech-to-text mistakes. Reply with only the instructions, no quotes, no preamble.`,
+    user: `Character: ${$('#cName').value.trim()}${$('#cDesc').value.trim() ? ' (' + $('#cDesc').value.trim() + ')' : ''}\nChanges to polish:\n` })
+};
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-polish]'); if (!b || b.classList.contains('wait')) return;
+  const id = b.dataset.polish, target = document.getElementById(id);
+  if (mic && mic.target === target){ stopMic(); for (let i = 0; i < 20 && mic; i++) await new Promise(r => setTimeout(r, 50)); }
+  const before = target.value, text = before.trim();
+  if (!text){ toast('Type or say something first, then polish it.'); target.focus(); return; }
+  if (!settings().key){ toast('Add your API key in Settings to use Polish.'); return; }
+  b.classList.add('wait'); b.disabled = true;
+  try {
+    const p = POLISH[id]();
+    let out = (await askText(p.system, p.user + text, false)).trim(); if (/^["“][^"“”]*["”]$/.test(out)) out = out.slice(1, -1).trim();
+    if (!out) throw new Error('The AI sent back an empty answer.');
+    if (target.value !== before){ toast('You changed the text while it was polishing, so I left your version.'); return; }
+    target.value = out; target.dispatchEvent(new Event('input', {bubbles:true})); target.dispatchEvent(new Event('change', {bubbles:true}));
+    toast('Polished.', 'Undo', () => { target.value = before; target.dispatchEvent(new Event('input', {bubbles:true})); target.dispatchEvent(new Event('change', {bubbles:true})); });
+  } catch (err) { toast('Could not polish: ' + err.message); }
+  finally { b.classList.remove('wait'); b.disabled = false; }
+});
+
+/* ---------- progress bars (estimated; drawing time is not affected) ---------- */
+const DEFAULT_SECS = {sheet: 60, panel: 45};
+const estSecs = kind => +ls.get('cs.avg.' + settings().provider + '.' + kind, 0) || DEFAULT_SECS[kind];
+function recordSecs(kind, secs){ const k = 'cs.avg.' + settings().provider + '.' + kind, old = +ls.get(k, 0);
+  ls.set(k, String(Math.round(old ? old*0.6 + secs*0.4 : secs))); }
+const progHTML = (kind, start, big) => `<span class="prog" data-kind="${kind}" data-start="${start}"><i></i></span>${big !== false ? '<span class="progt" data-progt></span>' : ''}`;
+function tickProg(){
+  document.querySelectorAll('.prog[data-start]').forEach(el => {
+    const t = (Date.now() - +el.dataset.start) / 1000, est = estSecs(el.dataset.kind);
+    const pct = t < est ? 90 * t / est : 90 + 8 * (1 - Math.exp(-(t - est) / est));
+    el.firstElementChild.style.width = pct.toFixed(1) + '%';
+    const lbl = el.nextElementSibling?.matches('[data-progt]') ? el.nextElementSibling : null;
+    if (lbl) lbl.textContent = t < est ? `About ${Math.max(1, Math.round(est - t))} seconds left` : 'Almost there… taking a little longer than usual';
+  });
+}
+setInterval(tickProg, 300);
+
 /* ---------- cast ---------- */
 function renderChars(){
   $('#chars').innerHTML = chars.length ? chars.map(c => {
@@ -523,7 +590,7 @@ $('#chars').onclick = async e => {
 };
 
 /* ---------- character editor ---------- */
-let editing = null, draftPhotos = [], sheetBusy = false;
+let editing = null, draftPhotos = [], sheetBusy = false, sheetStart = 0;
 function openChar(c){
   editing = c || null; draftPhotos = c ? c.photos.map(p => ({...p})) : [];
   $('#charDlgTitle').textContent = c ? c.name : 'New character';
@@ -537,7 +604,7 @@ function renderViews(){
 }
 function renderSheet(){
   const c = editing, show = c?.sheet?.data || c?.sheetDraft;
-  if (sheetBusy) $('#sheetBox').innerHTML = '<div class="burst spin">DRAWING…<small>Usually 10–60 seconds</small></div>';
+  if (sheetBusy){ $('#sheetBox').innerHTML = `<div class="burst">DRAWING…${progHTML('sheet', sheetStart)}</div>`; tickProg(); }
   else if (show) $('#sheetBox').innerHTML = `<img src="${show}" alt="Model sheet">${c.sheet ? '<span class="stamp">APPROVED</span>' : ''}`;
   else $('#sheetBox').innerHTML = '<div class="burst">NO LOOK YET<small>Add photos, then draw a model sheet</small></div>';
   const approved = !!c?.sheet;
@@ -632,7 +699,7 @@ $('#genSheet').onclick = async () => {
   if (!draftPhotos.length){ $('#sheetErr').innerHTML = '<div class="err">Add at least one photo first.</div>'; return; }
   if (!await saveChar()) return;
   const c = editing, notes = $('#sheetNotes').value.trim();
-  sheetBusy = true; $('#sheetErr').innerHTML = ''; renderSheet();
+  sheetBusy = true; sheetStart = Date.now(); $('#sheetErr').innerHTML = ''; renderSheet();
   let text = `Create a comic book CHARACTER MODEL SHEET (turnaround) for a character called "${c.name}", drawn in this style: ${styleText()}.
 Show the same character four times, side by side on a plain white background: full body front view, full body side view, full body back view, and a large face close-up. Neutral standing pose, arms slightly away from the body.
 The character must be clearly recognisable as the real person in the reference photos: same face shape, eyes, nose, mouth, hairstyle, hair colour, skin tone, body build and distinguishing features, translated into the comic style.
@@ -641,7 +708,7 @@ Keep the outfit identical in every view. Small label under each view (FRONT, SID
   const refs = c.photos.map(p => ({label: `Reference photo of ${c.name} (${p.view} view)`, data: p.data}));
   if (notes && c.sheetDraft){ text += `\nThe last attempt is attached as the final image. Keep everything about it the same EXCEPT these changes: ${notes}`; refs.push({label:'Previous model sheet attempt', data: c.sheetDraft}); }
   else if (notes) text += `\nAlso: ${notes}`;
-  try { c.sheetDraft = await generateImage(text, refs, '16:9'); await put('chars', c); renderChars(); }
+  try { c.sheetDraft = await generateImage(text, refs, '16:9'); recordSecs('sheet', (Date.now() - sheetStart)/1000); await put('chars', c); renderChars(); }
   catch (e) { $('#sheetErr').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
   finally { sheetBusy = false; if (editing === c) renderSheet(); }
 };
@@ -665,7 +732,7 @@ const found = text => chars.filter(c => new RegExp('(^|[^\\p{L}\\p{N}_])@?' + re
 function newPage(){ return {id: uid(), order: pages.length, layout:'four', panels:[]}; }
 function ensurePanels(p){ const n = slots(p.layout).length; while (p.panels.length < n) p.panels.push({id: uid(), prompt:'', takes:[], pick:0}); }
 const panelImg = pn => pn.takes[pn.pick] || pn.takes[0] || '';
-const busyPanels = new Set();
+const busyPanels = new Map(); // panel id -> start time
 function showTopErr(m){ $('#pageErr').innerHTML = m ? `<div class="err">${esc(m)}</div>` : ''; }
 
 function renderPages(){
@@ -681,7 +748,7 @@ function renderPaper(){
   $('#paper').innerHTML = LAYOUTS[p.layout].rows.map(([n,a]) => `<div class="prow">${Array.from({length:n}, () => {
       const idx = i++, pn = p.panels[idx], img = panelImg(pn);
       return `<button type="button" class="cell${busyPanels.has(pn.id)?' busy':''}" data-cell="${idx}" style="aspect-ratio:${a.replace(':','/')}">
-        <span class="num">${idx+1}</span>
+        <span class="num">${idx+1}</span>${busyPanels.has(pn.id) ? `<span class="cellbusy">DRAWING…${progHTML('panel', busyPanels.get(pn.id), false)}</span>` : ''}
         ${img ? `<img src="${img}" alt="${esc(pn.prompt)}">` : `<span class="lbl">Panel ${idx+1}<small>${pn.prompt ? esc(pn.prompt.slice(0,60)) + '…' : 'Click to write'}</small></span>`}</button>`; }).join('')}</div>`).join('');
 }
 $('#pages').onclick = e => { const b = e.target.closest('[data-pg]'); if (b){ cur = +b.dataset.pg; ls.set('cs.cur', cur); renderPages(); } };
@@ -835,7 +902,7 @@ function panelChips(){
 function renderPanelStage(){
   const pn = curPanel(), a = slots(page().layout)[pIdx], img = panelImg(pn);
   $('#pStage').style.aspectRatio = a.replace(':','/');
-  $('#pStage').innerHTML = busyPanels.has(pn.id) ? '<div class="burst spin">DRAWING…<small>Usually 10–60 seconds</small></div>'
+  $('#pStage').innerHTML = busyPanels.has(pn.id) ? `<div class="burst">DRAWING…${progHTML('panel', busyPanels.get(pn.id))}</div>`
     : img ? `<img src="${img}" alt="">` : '<div class="burst">POW!<small>Your panel appears here</small></div>';
   $('#takes').innerHTML = pn.takes.length > 1 ? pn.takes.map((t,i) => `<button type="button" class="${i===pn.pick?'on':''}" data-take="${i}" aria-label="Take ${i+1}"><img src="${t}" alt=""></button>`).join('') : '';
   $('#drawPanel').textContent = pn.takes.length ? 'Draw another take' : 'Draw it!';
@@ -871,10 +938,10 @@ Scene: ${prompt}`;
   cast.forEach(c => { refs.push({label:`APPROVED model sheet for ${c.name}: this is exactly how ${c.name} looks`, data: c.sheet.data});
     const face = c.photos.find(p => /face|front/.test(p.view)) || c.photos[0]; if (face && cast.length <= 4) refs.push({label:`Photo of the real ${c.name}, for face likeness only`, data: face.data}); });
   if (prevImg && refs.length < 12){ refs.push({label:'Previous panel on this page, for matching colours, lighting and art style only', data: prevImg}); }
-  busyPanels.add(pn.id); $('#panelErr').innerHTML = ''; renderPanelStage(); renderPaper();
-  try { const img = await generateImage(text, refs, aspect); pn.takes.push(img); if (pn.takes.length > 6) pn.takes.shift(); pn.pick = pn.takes.length-1; await savePage(pg); }
+  busyPanels.set(pn.id, Date.now()); $('#panelErr').innerHTML = ''; renderPanelStage(); renderPaper(); tickProg();
+  try { const img = await generateImage(text, refs, aspect); recordSecs('panel', (Date.now() - busyPanels.get(pn.id))/1000); pn.takes.push(img); if (pn.takes.length > 6) pn.takes.shift(); pn.pick = pn.takes.length-1; await savePage(pg); }
   catch (e) { if (curPanel() === pn) $('#panelErr').innerHTML = `<div class="err">${esc(e.message)}</div>`; else showTopErr(`Page ${pages.indexOf(pg)+1}, panel ${idx+1}: ${e.message}`); }
-  finally { busyPanels.delete(pn.id); if (curPanel() === pn && $('#panelDlg').open) renderPanelStage(); renderPaper(); }
+  finally { busyPanels.delete(pn.id); if (curPanel() === pn) renderPanelStage(); renderPaper(); }
 };
 
 /* ---------- book settings ---------- */
