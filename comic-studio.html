@@ -214,7 +214,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
         </select>
         <p class="hint">Choose this before approving characters. Their model sheets are drawn in this style.</p></div>
       <div><label for="styleNotes">Extra style notes (optional)</label><input id="styleNotes" placeholder="e.g. moody purple skies, lots of rain"></div>
-      <label style="display:flex;gap:10px;align-items:flex-start;font-weight:700;font-size:15px;cursor:pointer"><input type="checkbox" id="blurBg" checked style="width:22px;height:22px;flex:none;margin-top:2px;accent-color:#e8352e"><span>Soft blurred background<span class="hint" style="display:block;font-weight:400;margin-top:2px">Characters and action stay sharp in the middle; the background is softly out of focus, so pictures crop easily into any panel shape.</span></span></label>
+      <label style="display:flex;gap:10px;align-items:flex-start;font-weight:700;font-size:15px;cursor:pointer"><input type="checkbox" id="blurBg" checked style="width:22px;height:22px;flex:none;margin-top:2px;accent-color:#e8352e"><span>Soft blurred background<span class="hint" style="display:block;font-weight:400;margin-top:2px">Characters and action stay crisp; the background is softly out of focus. (Every picture is always drawn with spare background around the edges for trimming.)</span></span></label>
     </div>
     <div class="card stack">
       <h3>Back up</h3>
@@ -1363,11 +1363,13 @@ function renderPanelStage(){
   $('#pStage').style.maxWidth = `min(100%, calc(60vh * ${(bb.w / bb.h).toFixed(3)}))`;
   const mask = `<svg class="mask" viewBox="${bb.x0.toFixed(1)} ${bb.y0.toFixed(1)} ${bb.w.toFixed(1)} ${bb.h.toFixed(1)}" preserveAspectRatio="none" aria-hidden="true">
     <path fill-rule="evenodd" fill="rgba(20,20,20,.55)" d="M${bb.x0-2},${bb.y0-2}H${bb.x1+2}V${bb.y1+2}H${bb.x0-2}Z ${G.path(ins)}"/>
-    <path d="${G.path(ins)}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"/></svg>`;
+    <path d="${G.path(ins)}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"/>
+    <rect x="${(bb.x0 + bb.w*0.2).toFixed(1)}" y="${(bb.y0 + bb.h*0.2).toFixed(1)}" width="${(bb.w*0.6).toFixed(1)}" height="${(bb.h*0.6).toFixed(1)}" fill="none" stroke="#ffd43b" stroke-width="2" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/></svg>
+    <span style="position:absolute;left:20%;top:20%;transform:translateY(-120%);background:#ffd43b;color:#141414;font:800 11px 'Nunito Sans',sans-serif;padding:1px 6px;border-radius:3px;pointer-events:none">Safe area: the important stuff stays in here</span>`;
   $('#pStage').innerHTML = busyPanels.has(pn.id) ? `<div class="burst">DRAWING…${progHTML('panel', busyPanels.get(pn.id))}</div>`
     : img ? `<img src="${img}" alt="" style="width:100%;height:100%">${mask}` : `<div class="burst">POW!<small>Your panel appears here, in this exact shape</small></div>${mask}`;
   const slanted = ins.length !== 4 || ins.some((q, i) => { const r = ins[(i+1)%4]; return Math.abs(q[0]-r[0]) > 0.5 && Math.abs(q[1]-r[1]) > 0.5; });
-  $('#pShape').textContent = `Drawn as a ${asp} picture to fit this panel${slanted ? '. The shaded corners get trimmed' : ''}.`;
+  $('#pShape').textContent = `Drawn as a ${asp} picture with spare background around the edges${slanted ? '. The shaded corners get trimmed' : ''}. The yellow box is the safe area.`;
   $('#takes').innerHTML = pn.takes.length > 1 ? pn.takes.map((t,i) => `<button type="button" class="${i===pn.pick?'on':''}" data-take="${i}" aria-label="Take ${i+1}"><img src="${t}" alt=""></button>`).join('') : '';
   $('#drawPanel').textContent = pn.takes.length ? 'Draw another take' : 'Draw it!';
   $('#drawPanel').disabled = busyPanels.has(pn.id);
@@ -1393,7 +1395,9 @@ $('#clearPanel').onclick = async e => {
   const b = e.target; if (!b.dataset.sure){ b.dataset.sure = 1; b.textContent = 'Clear all takes?'; setTimeout(() => { delete b.dataset.sure; b.textContent = 'Clear panel'; }, 3000); return; }
   delete b.dataset.sure; b.textContent = 'Clear panel'; const pn = curPanel(); pn.takes = []; pn.pick = 0; if (pn.img && !pn.img.upload) pn.img = null; await savePage(page()); renderPanelStage(); renderEditor();
 };
-const BLUR_TEXT = `\nComposition for easy cropping: keep the characters and the main action sharp and inside the central 70% of the frame. Draw the background softly blurred and out of focus (shallow depth of field, gentle bokeh-like softness in the comic style), and keep faces, hands, dialogue and important objects away from the edges so the picture can be trimmed into any panel shape without losing anything important.`;
+// Every panel picture is framed with spare background around it, so it can be trimmed to any panel shape.
+const ROOM_TEXT = `\nIMPORTANT FRAMING (this picture will be cropped): pull the camera back and leave generous empty space around the subject. Keep every character, face, hand, speech-worthy action and important object inside the CENTRAL 60% of the image (a safe zone in the middle). The outer 20% on every side must contain ONLY unimportant background that simply continues the scene (sky, walls, floor, ground, scenery, crowd blur), with nothing important touching or near the edges. Do not crop heads, hands or feet at the frame edge; do not fill the frame edge to edge with the subject.`;
+const BLUR_TEXT = `\nBackground style: draw the background softly blurred and out of focus (shallow depth of field, gentle softness in the comic style) while the characters and main action stay crisp and sharp.`;
 $('#drawPanel').onclick = async () => {
   const pg = page(), pn = curPanel(), prompt = $('#pPrompt').value.trim();
   if (busyPanels.has(pn.id)) return;
@@ -1408,6 +1412,7 @@ Scene: ${prompt}`;
   if (cast.length) text += `\n\nCharacters in this panel: ${cast.map(c => c.name).join(', ')}. Each one has an APPROVED model sheet attached. Draw each character exactly as on their model sheet: same face, hair, body build, skin tone and outfit. Pose and expression should fit the scene; do not copy the model-sheet poses. Do not draw anyone else who looks like them.` +
     cast.filter(c => c.desc).map(c => `\n${c.name}: ${c.desc}`).join('');
   text += breakdownText(pn, prompt);
+  text += ROOM_TEXT;
   if (book.blurBg !== false) text += BLUR_TEXT;
   text += '\nDo NOT draw speech bubbles, captions or any lettering: those are added separately on the page. Leave a little calm space where a speech bubble could sit.';
   const refs = [];
