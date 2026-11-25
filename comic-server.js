@@ -173,7 +173,12 @@ module.exports = function mountComicStudio(app, { express, dataDir }) {
     try {
       const { text, aspect } = req.body || {};
       if (!text) return res.status(400).json({ error: 'Nothing to draw.' });
-      const refs = (Array.isArray(req.body.refs) ? req.body.refs : []).slice(0, 14).map((r) => Object.assign({ label: String(r.label || '') }, readPicture(r.data)));
+      const refs = (Array.isArray(req.body.refs) ? req.body.refs : []).slice(0, 13).map((r) => Object.assign({ label: String(r.label || '') }, readPicture(r.data)));
+      // "Keep the room exactly": a fixed background picture, plus a mask of where the AI may paint
+      const base = req.body.base ? readPicture(req.body.base) : null;
+      const mask = base && req.body.mask ? readPicture(req.body.mask) : null;
+      const hint = base && req.body.hint ? readPicture(req.body.hint) : null;
+      if (base) refs.unshift(Object.assign({ label: 'THE FIXED BACKGROUND to paint into (only the masked area may change)' }, base));
       const [aw, ah] = String(aspect || '1:1').split(':').map(Number), ratio = aw / ah || 1;
       let buf, ext = 'png';
       if (p === 'openai') {
@@ -182,6 +187,7 @@ module.exports = function mountComicStudio(app, { express, dataDir }) {
         if (refs.length) {
           const fd = new FormData();
           refs.forEach((x, i) => fd.append('image[]', new Blob([x.buf], { type: x.mime }), `ref${i + 1}.${x.mime.split('/')[1]}`));
+          if (mask) fd.append('mask', new Blob([mask.buf], { type: 'image/png' }), 'mask.png');
           fd.append('model', imageModel());
           fd.append('prompt', text + '\n\nThe attached images, in order: ' + refs.map((x, i) => `image ${i + 1} = ${x.label}`).join('; '));
           fd.append('size', size); fd.append('n', '1');
@@ -197,7 +203,8 @@ module.exports = function mountComicStudio(app, { express, dataDir }) {
         buf = Buffer.from(d.b64_json, 'base64');
       } else {
         const parts = [{ text }];
-        refs.forEach((x) => { parts.push({ text: x.label }); parts.push({ inline_data: { mime_type: x.mime, data: x.buf.toString('base64') } }); });
+        refs.forEach((x, i) => { parts.push({ text: x.label }); parts.push({ inline_data: { mime_type: x.mime, data: x.buf.toString('base64') } });
+          if (i === 0 && hint) { parts.push({ text: 'The same background with the area to paint into marked in red. Paint only there; keep everything else identical.' }); parts.push({ inline_data: { mime_type: hint.mime, data: hint.buf.toString('base64') } }); } });
         const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(imageModel())}:generateContent`, {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey() },
           body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'], imageConfig: { aspectRatio: aspect || '1:1' } } }) });
