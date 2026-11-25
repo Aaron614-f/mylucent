@@ -26,8 +26,14 @@ h1,h2,h3{font-family:Bangers,Impact,sans-serif;letter-spacing:.03em;font-weight:
 h1{font-size:clamp(32px,5vw,46px)}h2{font-size:28px}h3{font-size:22px}
 header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px max(4vw,16px);background:var(--yel);color:#141414;border-bottom:4px solid #141414}
 header h1 span{color:var(--red);-webkit-text-stroke:1px #141414}
-main{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:24px;padding:24px max(4vw,16px);max-width:1440px;margin:0 auto}
-@media(max-width:900px){main{grid-template-columns:minmax(0,1fr)}}
+main{display:block;padding:18px max(3vw,12px);max-width:1400px;margin:0 auto}
+.topnav{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+header .topnav button{min-height:38px;padding:0 12px;font-size:14px}
+header .topnav button b{background:#141414;color:#fff;border-radius:999px;font-size:11px;padding:2px 7px;margin-left:2px}
+dialog.hub{width:min(720px,95vw)}
+.hubin{padding:20px;display:grid;gap:14px}
+.hubhead{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.xbtn{min-height:36px;width:36px;padding:0;font-size:20px;box-shadow:2px 2px 0 var(--line)}
 .card{background:var(--panel);border:3px solid var(--line);border-radius:6px;box-shadow:6px 6px 0 var(--line);padding:18px}
 .stack{display:grid;gap:14px;align-content:start}
 button,.btn{font:800 15px/1 "Nunito Sans",sans-serif;min-height:44px;padding:0 16px;border:3px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);cursor:pointer;box-shadow:3px 3px 0 var(--line);display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
@@ -44,6 +50,17 @@ textarea{resize:vertical;min-height:90px}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}.row>*{flex:1 1 150px}.row>.fit{flex:0 0 auto}
 .hint{color:var(--muted);font-size:14px;margin:4px 0 0}
 .chars{display:grid;gap:10px}
+.bgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.bgt{position:relative;border:2px solid var(--line);border-radius:6px;overflow:hidden;background:var(--bg)}
+.bgt img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.bgt input{width:100%;border:0;border-top:2px solid var(--line);border-radius:0;padding:6px 8px;font-size:14px;min-height:0}
+.bgt .x{position:absolute;top:4px;right:4px;width:28px;height:28px;min-height:0;padding:0;border-radius:50%;font-weight:800;line-height:1}
+.bgpick{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.bgpick button{flex:0 0 auto;width:96px;padding:0;border:3px solid var(--line);border-radius:6px;overflow:hidden;background:var(--bg);min-height:0;display:block;text-align:center;font:700 12px 'Nunito Sans',sans-serif}
+.bgpick button img{display:block;width:100%;height:64px;object-fit:cover}
+.bgpick button span{display:block;padding:3px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bgpick button.on{border-color:#e8352e;box-shadow:0 0 0 2px #e8352e}
+.bgpick .none{height:88px;display:grid;place-items:center;padding:6px}
 .side{border:2px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);display:grid;gap:8px}
 .side .row{align-items:center}
 .side .pics{display:flex;flex-wrap:wrap;gap:6px}
@@ -139,7 +156,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 .ptabs{display:flex;gap:0}
 .ptabs button{flex:1;border-radius:6px 6px 0 0;box-shadow:none;border-bottom-width:0;min-height:42px;font-size:14px;background:var(--panel)}
 .ptabs button[aria-selected=true]{background:var(--yel);color:#141414}
-.pside .ov{border-radius:0 0 6px 6px}
+.pside .ov{border-radius:6px}
 .pform{max-height:70vh;overflow-y:auto}
 .pform label{font-size:13px}
 .pform textarea{min-height:64px}
@@ -165,14 +182,23 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 .seg{display:flex;gap:6px;flex-wrap:wrap}.seg button.on{background:var(--ink);color:var(--bg)}
 .view .acts2{display:flex;gap:4px;margin-top:4px}.view .acts2>*{flex:1}
 /* page editor */
-.edtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.edtools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.maintools{display:flex;border:3px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:4px 4px 0 var(--line)}
+.maintools .tool{border:0;border-radius:0;box-shadow:none;min-height:52px;padding:0 18px;font-size:17px;border-right:3px solid var(--line)}
+.maintools .tool:last-child{border-right:0}
+.maintools .tool svg{width:24px!important;height:24px!important}
+.edtools .icon{min-height:44px;width:44px;padding:0}
+.edtools .grow{flex:1}
+.menu{position:relative}
+.menu .pop{position:absolute;right:0;top:calc(100% + 6px);z-index:30;background:var(--panel);border:3px solid var(--line);border-radius:8px;box-shadow:5px 5px 0 var(--line);padding:8px;display:grid;gap:6px;min-width:230px}
+.menu .pop button{justify-content:flex-start;box-shadow:none;width:100%}
 .edtools .tool{min-height:44px;padding:0 12px;gap:6px}
 .edtools .tool svg{width:20px;height:20px}
 .edtools .tool.on{background:var(--yel);color:#141414}
 .edtools .sep{width:3px;align-self:stretch;background:var(--line);border-radius:2px;margin:0 2px}
-.edmain{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;align-items:start}
+.edmain{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
 @media(max-width:1100px){.edmain{grid-template-columns:minmax(0,1fr)}}
-.edstage{position:relative;width:100%;max-width:560px;margin:0 auto;border:4px solid #141414;box-shadow:8px 8px 0 var(--line);background:#fff;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.edstage{position:relative;width:100%;max-width:640px;margin:0 auto;border:4px solid #141414;box-shadow:8px 8px 0 var(--line);background:#fff;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
 .edpage{position:absolute;left:0;top:0;width:540px;height:720px;transform-origin:0 0}
 .edpage svg{position:absolute;left:0;top:0;display:block}
 .edpage .lbl2{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;text-align:center;color:#141414}
@@ -199,6 +225,10 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 .pstage{position:relative}
 .pstage .mask{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .pstage>img{object-fit:cover!important}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-height:66vh;overflow-y:auto;padding:2px 6px 6px 2px}
+.gal button{padding:0;aspect-ratio:1/1;overflow:hidden;min-height:0;box-shadow:3px 3px 0 var(--line);display:block}
+.gal img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.gal button:hover{outline:3px solid var(--red)}
 .idrow{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:10px 12px;border:2px solid var(--line);border-radius:6px;background:var(--bg)}
 .idrow input{width:22px;height:22px;margin:2px 0 0;accent-color:#e8352e}
 .idrow .old{color:var(--muted);text-decoration:line-through;font-size:14px}
@@ -217,70 +247,40 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 <body>
 <header>
   <h1>Comic <span>Studio</span></h1>
-  <div class="row" style="flex:0 1 auto">
-    <span id="saveState" class="hint" style="margin:0;color:#141414;font-weight:800" aria-live="polite"></span>
-    <button id="openSettings" type="button" class="fit">⚙ AI &amp; saving</button>
-  </div>
+  <nav class="topnav" aria-label="Book settings">
+    <button type="button" data-hub="castDlg">★ Cast <b id="nCast">0</b></button>
+    <button type="button" data-hub="bgDlg">▣ Backgrounds <b id="nBg">0</b></button>
+    <button type="button" data-hub="styleDlg">✎ Book style</button>
+    <button type="button" data-hub="backupDlg">⇩ Backup</button>
+    <button id="openSettings" type="button">⚙ AI</button>
+    <span id="saveState" class="hint" style="margin:0 0 0 4px;color:#141414;font-weight:800" aria-live="polite"></span>
+  </nav>
 </header>
 
 <main>
   <section class="stack">
     <div class="card stack">
-      <div class="row" style="align-items:center"><h2>Your cast</h2><button class="primary fit" id="newChar" type="button">+ New character</button></div>
-      <p class="hint" style="margin:0">Add each person's photos and approve their comic look once. After that, their code word always brings in the approved look.</p>
-      <div class="chars" id="chars"></div>
-    </div>
-    <div class="card stack">
-      <div class="row" style="align-items:center"><h2>Places</h2><button class="primary fit" id="newPlace" type="button">+ New place</button></div>
-      <p class="hint" style="margin:0">Add a real place with a few photos (your kitchen, a park, a shop). Approve its comic look once, then its code word puts the story in that same place.</p>
-      <div class="chars" id="places"></div>
-    </div>
-    <div class="card stack">
-      <h3>Book style</h3>
-      <div><label for="bookTitle">Comic title</label><input id="bookTitle" placeholder="My Comic"></div>
-      <div><label for="style">Art style for the whole book</label>
-        <select id="style">
-          <option value="classic">Classic American comic</option>
-          <option value="manga">Manga (black &amp; white)</option>
-          <option value="golden">Golden-age retro, halftone dots</option>
-          <option value="noir">Gritty noir graphic novel</option>
-          <option value="cartoon">Bright Saturday-morning cartoon</option>
-          <option value="euro">European bande dessinée (clean line)</option>
-        </select>
-        <p class="hint">Choose this before approving characters. Their model sheets are drawn in this style.</p></div>
-      <div><label for="styleNotes">Extra style notes (optional)</label><input id="styleNotes" placeholder="e.g. moody purple skies, lots of rain"></div>
-      <div><label for="neverDraw">Never draw</label><textarea id="neverDraw" style="min-height:76px"></textarea><p class="hint">Mistakes the AI must avoid in every picture. One per line. Add anything that keeps going wrong.</p></div>
-      <label style="display:flex;gap:10px;align-items:flex-start;font-weight:700;font-size:15px;cursor:pointer"><input type="checkbox" id="blurBg" checked style="width:22px;height:22px;flex:none;margin-top:2px;accent-color:#e8352e"><span>Soft blurred background<span class="hint" style="display:block;font-weight:400;margin-top:2px">Characters and action stay crisp; the background is softly out of focus. (Every picture is always drawn with spare background around the edges for trimming.)</span></span></label>
-    </div>
-    <div class="card stack">
-      <h3>Back up</h3>
-      <p class="hint" style="margin:0">Everything saves to the myLucent server automatically. A backup file is an extra copy you keep yourself.</p>
-      <div class="row">
-        <button type="button" id="exportBtn">Export backup</button>
-        <button type="button" id="importBtn">Import backup</button>
-        <input type="file" id="importFile" accept=".json,application/json" hidden>
-      </div>
-    </div>
-  </section>
-
-  <section class="stack">
-    <div class="card stack">
       <div class="row" style="align-items:center">
-        <h2 id="pageTitle">Page 1</h2>
+        <h2 id="pageTitle" style="flex:0 0 auto">Page 1</h2>
+        <div class="pages" id="pages" aria-label="Pages" style="flex:1 1 auto"></div>
         <button type="button" class="fit small" id="addPage">+ Add page</button>
       </div>
-      <div class="pages" id="pages" aria-label="Pages"></div>
       <div id="pageErr"></div>
       <div class="edtools" id="edTools">
+        <div class="maintools" role="toolbar" aria-label="Main tools">
         <button type="button" class="tool" data-tool="panels"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg>Panels</button>
         <button type="button" class="tool" data-tool="slice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.1 8.1L20 20M8.1 15.9L20 4"/></svg>Slice</button>
         <button type="button" class="tool" data-tool="bubbles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v10H10l-5 4v-4H4z"/></svg>Bubbles</button>
-        <span class="sep"></span>
-        <button type="button" class="tool" id="edUndo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>Undo</button>
-        <button type="button" class="tool" id="edRedo" aria-label="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg>Redo</button>
-        <span class="sep"></span>
-        <button type="button" class="tool" id="edPolishPage" title="Fix spelling and punctuation in every bubble and panel description"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>Polish page</button>
-        <button type="button" class="tool" id="edIdeas" title="Suggest different ways of writing this page's dialogue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Rewrite ideas</button>
+        </div>
+        <button type="button" class="tool" id="openGallery"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>All pictures</button>
+        <span class="grow"></span>
+        <button type="button" class="tool icon" id="edUndo" aria-label="Undo (Ctrl+Z)" title="Undo (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+        <button type="button" class="tool icon" id="edRedo" aria-label="Redo (Ctrl+Y)" title="Redo (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
+        <div class="menu"><button type="button" class="tool small" id="writeMenu" aria-haspopup="true" aria-expanded="false">Writing help ▾</button>
+          <div class="pop" id="writePop" hidden>
+            <button type="button" class="small" id="edPolishPage" title="Fix spelling and punctuation in every bubble and panel description">✦ Polish page</button>
+            <button type="button" class="small" id="edIdeas" title="Suggest different ways of writing this page's dialogue">💡 Rewrite ideas</button>
+          </div></div>
       </div>
       <div class="edmain">
         <div class="edstage" id="edStage">
@@ -304,6 +304,51 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 </main>
 
 <div id="printArea"></div>
+<dialog id="galDlg" class="hub" style="width:min(980px,96vw)"><div class="hubin">
+  <div class="hubhead"><h2>All pictures</h2><button type="button" class="xbtn" data-close aria-label="Close">×</button></div>
+  <p class="hint" style="margin:0" id="galHint"></p>
+  <div class="row"><label class="btn small" style="cursor:pointer;position:relative">+ Add your own pictures<input type="file" id="galUpload" accept="image/*" multiple style="position:absolute;opacity:0;width:1px;height:1px"></label></div>
+  <div class="gal" id="galGrid"></div>
+</div></dialog>
+<dialog id="castDlg" class="hub"><div class="hubin">
+  <div class="hubhead"><h2>Your cast</h2><button type="button" class="xbtn" data-close aria-label="Close">×</button></div>
+      <div class="row"><button class="primary fit" id="newChar" type="button">+ New character</button></div>
+      <p class="hint" style="margin:0">Add each person's photos and approve their comic look once. After that, their code word always brings in the approved look.</p>
+      <div class="chars" id="chars"></div>
+</div></dialog>
+<dialog id="bgDlg" class="hub"><div class="hubin">
+  <div class="hubhead"><h2>Backgrounds</h2><button type="button" class="xbtn" data-close aria-label="Close">×</button></div>
+      <div class="row"><button class="primary fit" id="addBg" type="button">+ Add photos</button><input type="file" id="bgFiles" accept="image/*" multiple hidden></div>
+      <p class="hint" style="margin:0">Upload plain photos of places. When you draw a panel, pick one as the background: it goes in blurred, behind your characters. A name is optional.</p>
+      <div class="bgs" id="places"></div>
+</div></dialog>
+<dialog id="styleDlg" class="hub"><div class="hubin">
+  <div class="hubhead"><h2>Book style</h2><button type="button" class="xbtn" data-close aria-label="Close">×</button></div>
+      <div><label for="bookTitle">Comic title</label><input id="bookTitle" placeholder="My Comic"></div>
+      <div><label for="style">Art style for the whole book</label>
+        <select id="style">
+          <option value="classic">Classic American comic</option>
+          <option value="manga">Manga (black &amp; white)</option>
+          <option value="golden">Golden-age retro, halftone dots</option>
+          <option value="noir">Gritty noir graphic novel</option>
+          <option value="cartoon">Bright Saturday-morning cartoon</option>
+          <option value="euro">European bande dessinée (clean line)</option>
+        </select>
+        <p class="hint">Choose this before approving characters. Their model sheets are drawn in this style.</p></div>
+      <div><label for="styleNotes">Extra style notes (optional)</label><input id="styleNotes" placeholder="e.g. moody purple skies, lots of rain"></div>
+      <div><label for="neverDraw">Never draw</label><textarea id="neverDraw" style="min-height:76px"></textarea><p class="hint">Mistakes the AI must avoid in every picture. One per line. Add anything that keeps going wrong.</p></div>
+      <label style="display:flex;gap:10px;align-items:flex-start;font-weight:700;font-size:15px;cursor:pointer"><input type="checkbox" id="blurBg" checked style="width:22px;height:22px;flex:none;margin-top:2px;accent-color:#e8352e"><span>Soft blurred background<span class="hint" style="display:block;font-weight:400;margin-top:2px">Characters and action stay crisp; the background is softly out of focus. (Every picture is always drawn with spare background around the edges for trimming.)</span></span></label>
+</div></dialog>
+<dialog id="backupDlg" class="hub"><div class="hubin">
+  <div class="hubhead"><h2>Back up</h2><button type="button" class="xbtn" data-close aria-label="Close">×</button></div>
+      <p class="hint" style="margin:0">Everything saves to the myLucent server automatically. A backup file is an extra copy you keep yourself.</p>
+      <div class="row">
+        <button type="button" id="exportBtn">Export backup</button>
+        <button type="button" id="importBtn">Import backup</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+</div></dialog>
+
 
 <!-- crop -->
 <dialog id="cropDlg">
@@ -332,6 +377,10 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
     <div><label for="cDesc">Description</label>
       <div class="micwrap"><textarea id="cDesc" placeholder="Man in his 30s, short curly brown hair, beard, round glasses, tall and broad. Always wears a green hoodie, jeans and red sneakers."></textarea><button type="button" class="polish" data-polish="cDesc" aria-label="Polish the description" title="Polish: rewrite so the AI understands it clearly"></button><button type="button" class="mic" data-mic="cDesc" aria-label="Speak the description"></button></div>
       <p class="hint" id="cDescHint">Describe their usual outfit too. It keeps clothes the same on every page.</p></div>
+    <div class="row" id="cRulesRow">
+      <div><label for="cAlways">Always</label><input id="cAlways" placeholder="e.g. round glasses, short black beard, navy hoodie"></div>
+      <div><label for="cNever">Never</label><input id="cNever" placeholder="e.g. side locks, hat, earrings"></div>
+    </div>
     <div id="photosBox">
       <label id="cPhotosLbl">Reference photos (front, side, back… up to 6)</label>
       <div class="drop" id="drop" tabindex="0">Tap to choose photos, or drop them here</div>
@@ -374,45 +423,45 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 <!-- panel -->
 <dialog id="panelDlg">
   <form method="dialog" id="panelForm">
-    <h2 id="panelTitle">Panel</h2>
+    <div class="hubhead"><h2 id="panelTitle">Panel</h2><button type="button" class="xbtn" data-close aria-label="Close">×</button></div>
     <div class="pgrid">
       <div class="stack">
         <div><label for="pPrompt">What happens in this panel? Type it or tap the mic.</label>
           <div class="micwrap"><textarea id="pPrompt" placeholder="Dave and Mia sprint down a rainy alley, Dave looking back over his shoulder. Speech bubble from Mia: &quot;Faster!&quot;"></textarea><button type="button" class="polish" data-polish="pPrompt" aria-label="Polish the panel description" title="Polish: rewrite so the AI understands it clearly"></button><button type="button" class="mic" data-mic="pPrompt" aria-label="Speak the panel description"></button></div></div>
         <div class="chips" id="pChips"></div>
-        <div class="seg" id="pMode"><button type="button" class="small on" data-mode="new">Draw a new picture</button><button type="button" class="small" data-mode="room">Keep the room exactly</button></div>
-        <div id="roomTools" class="stack" hidden style="gap:10px">
-          <p class="hint" style="margin:0">The approved room picture stays exactly the same. Frame it, brush where the people go, and the AI paints them in only there.</p>
-          <div><label for="roomSrc">Room picture</label><select id="roomSrc"></select></div>
-          <div class="seg" id="roomTool"><button type="button" class="small" data-rt="move">Move &amp; zoom the room</button><button type="button" class="small on" data-rt="mark">Mark where people go</button></div>
-          <div class="row" style="align-items:end">
-            <div><label for="roomZoom">Zoom</label><input type="range" id="roomZoom" min="100" max="300" value="100" style="accent-color:#e8352e;padding:0"></div>
-            <div><label for="roomBrush">Brush size</label><input type="range" id="roomBrush" min="15" max="200" value="70" style="accent-color:#e8352e;padding:0"></div>
-            <button type="button" class="small fit" id="roomClear">Clear marks</button>
-            <button type="button" class="small fit" id="roomToggle" hidden>See the result</button>
-          </div>
+        <div class="stack" id="pBgBox" style="gap:8px">
+          <label style="margin:0">Background photo</label>
+          <div class="bgpick" id="pBgPick"></div>
+          <div class="row" id="pFrameRow" hidden style="align-items:center;gap:12px"><canvas id="pFrameCv" width="300" height="200" style="height:140px;border:2px solid var(--ink);border-radius:6px;cursor:move;touch-action:none;flex:0 0 auto"></canvas>
+            <div class="stack" style="gap:6px;flex:1 1 120px"><label for="pFrameZoom" style="margin:0">Zoom</label><input type="range" id="pFrameZoom" min="100" max="300" value="100" style="accent-color:#e8352e;padding:0"><p class="hint" style="margin:0">Drag the photo to move it. This is exactly the blurred background the AI gets.</p></div></div>
         </div>
-        <div class="row" id="pBgRow" hidden style="align-items:center"><label for="pBg" class="fit" style="margin:0">Background behind the characters</label><select id="pBg" style="flex:1 1 200px"></select></div>
         <div class="chips" id="pInsert"></div>
         <div id="panelErr"></div>
         <div class="pstage" id="pStage"></div>
+        <div id="fixBar" class="stack" hidden style="gap:8px;border:2px solid var(--line);border-radius:6px;padding:10px">
+          <p class="hint" style="margin:0">Brush over the part to fix. Only that part is redrawn; the rest of the picture stays exactly the same.</p>
+          <div><label for="fixText">What should change there?</label><input id="fixText" placeholder="e.g. remove the extra side lock, keep the hair like his model sheet"></div>
+          <div class="row" style="align-items:end">
+            <div><label for="fixBrush">Brush size</label><input type="range" id="fixBrush" min="10" max="160" value="50" style="accent-color:#e8352e;padding:0"></div>
+            <button type="button" class="small fit" id="fixClear">Clear marks</button>
+            <button type="button" class="small fit" id="fixCancel">Cancel</button>
+            <button type="button" class="primary fit" id="fixGo">Fix it</button>
+          </div>
+        </div>
+        <div class="row" style="justify-content:center"><button type="button" class="small fit" id="fixOpen" hidden>Fix part of the picture</button></div>
         <p class="hint" id="pShape" style="margin:0;text-align:center"></p>
-        <div class="takes" id="takes"></div>
+        <div class="takes" id="takes" hidden></div>
       </div>
 <div class="pside">
-        <div class="ptabs" role="tablist">
-          <button type="button" role="tab" data-ptab="ov" aria-selected="true">AI understood</button>
-          <button type="button" role="tab" data-ptab="form" aria-selected="false">Fill in a form</button>
-        </div>
+
         <aside class="ov" id="ov" aria-live="polite"></aside>
-        <div class="ov pform" id="pform" hidden>
+        <div class="ov pform" id="pform" hidden data-removed>
           <p class="hint" style="margin:0">Optional. Answer what you can and skip the rest. Then let the app write the best description from it.</p>
           <div><label>Who is in this panel?</label><div class="chips" id="fWho"></div></div>
           <div id="fDoing" class="stack" style="gap:8px"></div>
           <div><label for="fAction">What is happening?</label><div class="micwrap"><textarea id="fAction" data-f="action" placeholder="e.g. Dave slams a folder on the table and leans in"></textarea><button type="button" class="mic" data-mic="fAction" aria-label="Speak what is happening"></button></div></div>
           <div class="row">
-            <div><label for="fPlace">Where?</label><select id="fPlace" data-f="place"></select></div>
-            <div id="fSideBox" hidden><label for="fSide">Which side is behind them?</label><select id="fSide" data-f="side"></select></div>
+            <div><label for="fWhere">Where?</label><input id="fWhere" data-f="where" placeholder="e.g. the kitchen, by the counter"></div>
           </div>
           <div class="row">
             <div><label for="fTime">Time and light</label><select id="fTime" data-f="time"><option value="">Not sure / let the AI decide</option><option>Early morning, soft light</option><option>Bright midday</option><option>Golden sunset</option><option>Blue evening</option><option>Night, dark with lamps</option><option>Indoors, warm lamp light</option><option>Indoors, cold office light</option><option>Stormy, gloomy</option></select></div>
@@ -436,10 +485,10 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
       </div>
     </div>
     <div class="end">
+      <button type="button" id="panelGallery">All pictures</button>
       <button type="button" id="clearPanel">Clear panel</button>
       <button type="button" class="go" id="drawPanel">Draw it!</button>
       <button type="button" class="okb" id="putPanel" disabled>✓ Put in panel</button>
-      <button type="submit">Close</button>
     </div>
   </form>
 </dialog>
@@ -562,6 +611,18 @@ function fillSettings(){
     `<p class="hint" style="margin:0">Your key stays on the server and is never sent to this page. Characters, pages and pictures are saved on the server's volume, so they survive every redeploy and show up on any device you log in from.</p>`;
 }
 $('#openSettings').onclick = () => { fillSettings(); $('#setDlg').showModal(); };
+document.querySelectorAll('[data-hub]').forEach(b => b.onclick = () => $('#' + b.dataset.hub).showModal());
+document.addEventListener('click', e => { const x = e.target.closest('[data-close]'); if (x) x.closest('dialog').close(); });
+// click outside a box closes it (the press and the release both have to be outside)
+let downOut = null;
+document.addEventListener('pointerdown', e => { const d = e.target; downOut = d.tagName === 'DIALOG' && outside(d, e) ? d : null; });
+document.addEventListener('click', e => { const d = e.target; if (d.tagName !== 'DIALOG' || d !== downOut || !outside(d, e)) return; downOut = null; closeOutside(d); });
+function outside(d, e){ const r = d.getBoundingClientRect(); return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom; }
+async function closeOutside(d){
+  if (d.id === 'cropDlg') return;                           // a photo is waiting on this one
+  if (d.id === 'charDlg' && $('#cName').value.trim()){ if (!await saveChar()) return; }
+  d.close();
+}
 $('#logoutBtn').onclick = async () => { try { await api('POST', '/api/comic/logout'); } catch {} location.reload(); };
 const AI_MISSING = "The AI isn't set up on the server yet. Add OPENAI_API_KEY in Railway → Variables.";
 
@@ -586,12 +647,14 @@ const toBlob = async d => (await fetch(d)).blob();
 async function generateImage(text, refs, aspect, extra = {}){
   if (!srv.ready) throw new Error(AI_MISSING);
   const sent = await Promise.all(refs.map(async r => ({label: r.label, data: await asUrl(r.data)})));
-  const more = {}; for (const k of ['base', 'mask', 'hint']) if (extra[k]) more[k] = extra[k];
+  const more = {}; for (const k of ['base', 'mask', 'hint', 'baseLabel']) if (extra[k]) more[k] = extra[k];
   const j = await api('POST', '/api/comic/ai/image', {text, refs: sent, aspect, ...more});
   return j.url;
 }
 const NEVER_DEFAULT = 'Extra side locks or extra curls of hair\nExtra fingers, hands, arms or legs\nText, letters, logos or watermarks';
 const neverList = () => String(book.never ?? NEVER_DEFAULT).split('\n').map(x => x.trim()).filter(Boolean);
+// a character's own Always / Never notes, put right next to their name
+const charRules = c => (c.always ? `\n${c.name} ALWAYS has: ${c.always}.` : '') + (c.never ? `\n${c.name} must NEVER have: ${c.never}.` : '');
 const neverText = () => { const l = neverList(); return l.length ? `\nNEVER DRAW any of these (check the finished picture for them): ${l.join('; ')}.` : ''; };
 const HAIR_RULE = `\nHAIR AND BODY CHECK: copy each character's hair exactly from their approved model sheet: same hairstyle, length and curl, and exactly the same number of side locks in exactly the same places (for example, if the sheet shows one side lock in front of each ear, draw exactly two, one in front of each ear). Never add an extra side lock, curl or strand anywhere: not behind the ear, not on the neck, not on the shoulder, not on the back. Every person has one head, two arms, two hands with five fingers each, and two legs.`;
 // keeps a place's walls the same from panel to panel
@@ -682,7 +745,7 @@ const POLISH = {
   pPrompt: () => ({
     system: `You polish descriptions of single comic book panels so an image-generating AI understands them exactly.
 Rewrite the user's text into one clear, specific description (at most about 90 words) that states: who is in the panel and what each is doing (pose, action), their expressions, the setting and time/lighting, the camera framing, and any speech bubbles, thought bubbles, captions or sound effects with the exact words and who says them.
-Rules: keep every character code word exactly as written (these are the known characters and places: ${chars.concat(places).map(c => c.name).join(', ') || 'none'}). Keep all dialogue word for word. Keep the user's meaning; fill only small gaps sensibly and never add major new events or characters. Fix spelling and speech-to-text mistakes. Reply with only the rewritten description, no quotes, no preamble.`,
+Rules: keep every character code word exactly as written (these are the known characters: ${chars.map(c => c.name).join(', ') || 'none'}). Keep all dialogue word for word. Keep the user's meaning; fill only small gaps sensibly and never add major new events or characters. Fix spelling and speech-to-text mistakes. Reply with only the rewritten description, no quotes, no preamble.`,
     user: ovContext(page(), curPanel()) + 'Panel description to polish:\n' }),
   cDesc: () => ({
     system: `You polish character descriptions for a comic book, so an image AI draws the character the same way every time.
@@ -762,8 +825,8 @@ function renderList(kind){
         <button class="small" type="button" data-del="${esc(c.id)}">Delete</button></div></div></div>`; }).join('')
     : `<div class="empty">${K.empty}</div>`;
 }
-function renderChars(){ renderList('char'); renderList('place'); }
-['char','place'].forEach(kind => $(KIND[kind].el).onclick = async e => {
+function renderChars(){ renderList('char'); renderBgs(); $('#nCast').textContent = chars.length; $('#nBg').textContent = places.length; }
+['char'].forEach(kind => $(KIND[kind].el).onclick = async e => {
   const K = KIND[kind], b = e.target.closest('button'); if (!b) return;
   const c = K.list().find(x => x.id === (b.dataset.edit || b.dataset.del)); if (!c) return;
   if (b.dataset.edit) openChar(c, kind);
@@ -772,6 +835,36 @@ function renderChars(){ renderList('char'); renderList('place'); }
     else { b.dataset.sure = 1; b.textContent = 'Sure?'; setTimeout(() => { if (b.isConnected){ delete b.dataset.sure; b.textContent = 'Delete'; } }, 3000); }
   }
 });
+
+/* ---------- backgrounds: plain photos, used blurred behind the characters ---------- */
+const bgLabel = (b, i) => b.name || `Background ${i + 1}`;
+function renderBgs(){
+  $('#places').innerHTML = places.length ? places.map((b, i) => `<div class="bgt"><img src="${b.data}" alt="">
+    <input data-bgname="${esc(b.id)}" value="${esc(b.name || '')}" placeholder="Name (optional)" aria-label="Name for this background">
+    <button type="button" class="small x" data-bgdel="${esc(b.id)}" aria-label="Delete this background" title="Delete">×</button></div>`).join('')
+    : '<div class="empty" style="grid-column:1/-1">No backgrounds yet. Add photos of your places.</div>';
+}
+$('#bgFiles').onchange = async e => {
+  const files = [...e.target.files].filter(f => f.type.startsWith('image/')); e.target.value = '';
+  for (const f of files){ try { const b = {id: uid(), kind: 'bg', name: '', data: await shrink(f, 2048)}; places.push(b); renderBgs(); await put('places', b); } catch { toast('Could not read one of those photos.'); } }
+  renderBgs();
+};
+let bgNameT;
+$('#places').addEventListener('input', e => { const id = e.target.dataset.bgname; if (!id) return; const b = places.find(x => x.id === id); if (!b) return;
+  b.name = e.target.value; clearTimeout(bgNameT); bgNameT = setTimeout(() => put('places', b), 600); });
+$('#places').addEventListener('click', async e => { const btn = e.target.closest('[data-bgdel]'); if (!btn) return; const b = places.find(x => x.id === btn.dataset.bgdel); if (!b) return;
+  if (!btn.dataset.sure){ btn.dataset.sure = 1; btn.textContent = 'Sure?'; btn.style.width = 'auto'; btn.style.borderRadius = '999px'; btn.style.padding = '0 8px'; setTimeout(() => { if (btn.isConnected){ delete btn.dataset.sure; btn.textContent = '×'; btn.style.cssText = ''; } }, 3000); return; }
+  await del('places', b.id); places = places.filter(x => x !== b); renderBgs(); });
+// older places (comic-styled, with sides) become plain backgrounds: one per photo
+async function migratePlaces(){
+  const old = places.filter(c => c.kind !== 'bg'); if (!old.length) return;
+  for (const c of old){
+    const photos = (c.sides || []).flatMap(sd => (sd.photos || []).map(ph => ({name: [c.name, sd.name].filter(Boolean).join(' · '), data: ph.data})))
+      .concat((c.photos || []).map(ph => ({name: c.name, data: ph.data})));
+    for (const ph of photos){ const b = {id: uid(), kind: 'bg', name: ph.name, data: ph.data}; places.push(b); await put('places', b); }
+    places = places.filter(x => x !== c); await del('places', c.id);
+  }
+}
 
 /* ---------- character editor ---------- */
 let editing = null, draftPhotos = [], draftSides = [], sideFor = -1, sheetBusy = false, sheetStart = 0, placeBusy = new Set();
@@ -783,7 +876,7 @@ function openChar(c, kind = 'char'){
   $('#charDlgTitle').textContent = c ? c.name : K.newTitle;
   $('#cNameHint').textContent = K.nameHint; $('#cName').placeholder = K.namePh; $('#cDesc').placeholder = K.descPh; $('#cDescHint').textContent = K.descHint;
   $('#cPhotosLbl').textContent = K.photos; $('#sheetHint').textContent = K.sheetHint; $('#saveCharBtn').textContent = K.save; $('#sheetNotes').placeholder = K.notesPh;
-  $('#cName').value = c?.name || ''; $('#cDesc').value = c?.desc || ''; $('#sheetNotes').value = '';
+  $('#cName').value = c?.name || ''; $('#cDesc').value = c?.desc || ''; $('#cAlways').value = c?.always || ''; $('#cNever').value = c?.never || ''; $('#cRulesRow').hidden = kind === 'place'; $('#sheetNotes').value = '';
   $('#pArt').value = c?.art || 'keep'; $('#pKeep').value = c?.keep || '';
   $('#sheetErr').innerHTML = ''; $('#sidesBox').hidden = kind !== 'place'; $('#photosBox').hidden = kind === 'place'; renderViews(); renderSides(); renderSheet(); $('#charDlg').showModal();
 }
@@ -906,10 +999,10 @@ $('#cName').oninput = () => $('#cName').setCustomValidity('');
 
 async function saveChar(){
   const name = $('#cName').value.trim().replace(/\s+/g,'_');
-  const clash = chars.concat(places).find(c => c.name.toLowerCase() === name.toLowerCase() && c !== editing);
+  const clash = chars.find(c => c.name.toLowerCase() === name.toLowerCase() && c !== editing);
   if (!name || clash){ $('#cName').setCustomValidity(clash ? `${clash.kind === 'place' ? 'A place' : 'A character'} already uses that code word` : 'Give it a code word'); $('#cName').reportValidity(); return false; }
   const K = KIND[edKind], c = editing || {id: uid()};
-  Object.assign(c, {name, desc: $('#cDesc').value.trim(), photos: draftPhotos.map(p => ({...p}))},
+  Object.assign(c, {name, desc: $('#cDesc').value.trim(), always: $('#cAlways').value.trim(), never: $('#cNever').value.trim(), photos: draftPhotos.map(p => ({...p}))},
     edKind === 'place' ? {kind: 'place', art: $('#pArt').value, keep: $('#pKeep').value.trim(), sides: draftSides.map((x, i) => ({x, i})).filter(({x}) => x.name.trim() || x.photos.length).map(({x, i}) => ({id: x.id, name: x.name.trim() || `Side ${i+1}`, photos: x.photos.map(q => ({...q})), sheet: (c.sides || []).find(o => o.id === x.id)?.sheet}))} : {});
   if (!editing){ K.list().push(c); editing = c; }
   $('#charDlgTitle').textContent = c.name;
@@ -918,7 +1011,7 @@ async function saveChar(){
 $('#charForm').onsubmit = async e => { e.preventDefault(); if (await saveChar()) $('#charDlg').close(); };
 $('#cancelChar').onclick = () => $('#charDlg').close();
 $('#newChar').onclick = () => openChar(null, 'char');
-$('#newPlace').onclick = () => openChar(null, 'place');
+$('#addBg').onclick = () => $('#bgFiles').click();
 
 $('#genSheet').onclick = async () => {
   if (edKind === 'place') return genPlace();
@@ -941,6 +1034,7 @@ Redraw the real place in the reference photos as comic art, clearly recognisable
 Draw a grid of ${sides.length} views, one for each side of the room, each seen from the middle of the room looking straight at that side, with a clear label under each: ${sides.map((x, i) => `${i+1}. ${x.name.toUpperCase()}`).join(', ')}.
 The sides are listed going round the room clockwise${sides.length === 4 ? ', so side 1 is opposite side 3 and side 2 is opposite side 4' : sides.length === 2 ? ', and the two sides face each other' : ''}. Keep it one consistent room in every view: same floor, ceiling, lighting, colours and style, and anything near a corner appears at the edge of both neighbouring views. No other text.`;
   if (c.desc) text += `\n${isPlace ? 'Place' : 'Character'} description: ${c.desc}`;
+  if (!isPlace) text += charRules(c);
   const refs = c.photos.map(p => ({label: `Reference photo of ${isPlace ? 'the place' : ''} ${c.name} (${p.view})`, data: p.data}));
   sides.forEach(x => x.photos.slice(0, 2).forEach(q => refs.push({label: `Photo of the ${x.name} side of ${c.name}`, data: q.data})));
   if (notes && c.sheetDraft){ text += `\nThe last attempt is attached as the final image. Keep everything about it the same EXCEPT these changes: ${notes}`; refs.push({label: isPlace ? 'Previous location sheet attempt' : 'Previous model sheet attempt', data: c.sheetDraft}); }
@@ -1035,8 +1129,8 @@ async function approvePlace(){
 const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const hasWord = (text, name) => new RegExp('(^|[^\\p{L}\\p{N}_])@?' + reEsc(name) + '(?![\\p{L}\\p{N}_])', 'iu').test(text);
 const found = text => chars.filter(c => hasWord(text, c.name));
-const foundPlaces = text => places.filter(c => hasWord(text, c.name));
-const placeList = () => places.length ? places.map(c => `- ${c.name}${c.desc ? ': ' + c.desc : ''}${c.sides?.length ? ` (sides of the room: ${c.sides.map(x => x.name).join(', ')})` : ''}`).join('\n') : '(none)';
+const foundPlaces = () => [];
+const placeList = () => '(none)';
 // which side of a place is behind the characters: chosen in the panel window, or spotted in the description
 function bgFor(pn, text){
   const opts = foundPlaces(text).flatMap(pl => (pl.sides || []).map(sd => ({pl, sd, v: pl.id + ':' + sd.id})));
@@ -1210,7 +1304,7 @@ function bGeo(b){
   const T = bt(b), fs = b.fs * (T.big || 1);
   const it = T.italic ? 'italic ' : '';
   const font = T.font === 'bangers' ? `${it}400 ${fs}px Bangers, Impact, sans-serif` : T.font === 'mono' ? `${it}700 ${fs}px "Courier New", Courier, monospace` : `${it}700 ${fs}px "Comic Neue", "Comic Sans MS", cursive`;
-  const K = T.K || [1.36,34,1.38,30], lh = Math.round(fs * 1.12);
+  const K0 = T.K || [1.36,34,1.38,30], f = T.K ? [.85, .7] : [.6, .35], K = [1 + (K0[0] - 1) * f[0], K0[1] * f[1], 1 + (K0[2] - 1) * f[0], K0[3] * f[1]], lh = Math.round(fs * 1.12);
   // a bubble you've resized keeps your width and height; the words re-flow inside it at the same size
   const boxW = b.bw ? Math.max(30, (b.bw - K[1]) / K[0] - 8) : 0;
   const m = wrapText(b.text, font, boxW || b.tw || (T.big > 2 ? 320 : 190));
@@ -1364,7 +1458,7 @@ function renderTools(){
   $('#edHint').textContent = {
     panels: 'Click an empty panel to draw it. Click a panel with a picture to select it, drag to move the picture, scroll to zoom, double-click to redraw.',
     slice: 'Press and drag across the page to cut. Hold Shift for a straight line. Only panels your line touches get cut.',
-    bubbles: 'Drag a bubble from the right onto the page. Drag to move · click the words to type · blue corners stretch · red dot aims the tail.'
+    bubbles: 'Drag a bubble from the right onto the page. Drag to move · double-click to type · blue corners stretch · red dot aims the tail · Delete removes it.'
   }[ed.tool];
 }
 function renderPanels(){
@@ -1400,7 +1494,7 @@ function renderBubbles(){
     let el = $('#edText').querySelector(`[data-b="${CSS.escape(String(b.id))}"]`);
     if (!el){ el = document.createElement('div'); el.className = 'bub'; el.dataset.b = b.id; el.innerHTML = `<textarea class="bta" aria-label="Bubble text" spellcheck="false" id="bta-${esc(b.id)}"></textarea>`; $('#edText').append(el); }
     const ta = el.firstElementChild, sel = ed.sel === b.id;
-    Object.assign(el.style, {left: (b.x - g.w/2) + 'px', top: (b.y - g.h/2) + 'px', width: g.w + 'px', height: g.h + 'px', pointerEvents: bt ? 'auto' : 'none', cursor: ed.editing === b.id ? 'text' : 'move', outline: sel && bt ? '2px dashed #2e6fe8' : 'none'});
+    Object.assign(el.style, {left: (b.x - g.w/2) + 'px', top: (b.y - g.h/2) + 'px', width: g.w + 'px', height: g.h + 'px', pointerEvents: 'auto', cursor: ed.editing === b.id ? 'text' : 'move', outline: sel && bt ? '2px dashed #2e6fe8' : 'none'});
     if (document.activeElement !== ta || ta.value !== b.text) { if (ta.value !== b.text) ta.value = b.text; }
     Object.assign(ta.style, {width: g.taW + 'px', height: g.taH + 'px', font: g.font, lineHeight: g.lh + 'px', color: g.color, webkitTextStroke: g.stroke, pointerEvents: ed.editing === b.id ? 'auto' : 'none'});
     if (sel && bt){
@@ -1447,15 +1541,15 @@ function renderSide(){
         h += `<label for="edZoom" style="margin:0">Zoom: ${z}%</label><input type="range" id="edZoom" min="50" max="400" value="${z}" style="accent-color:#e8352e;padding:0">
           <div class="row"><button type="button" class="small" id="edFit">Fit to panel</button><button type="button" class="small" id="edRemoveImg">Remove picture</button></div>`; }
     } else h += `<h3>Panels</h3><p class="hint" style="margin:0">Click a panel on the page to draw it or adjust its picture.</p>`;
-    const pics = allPictures();
-    h += `<h3 style="margin-top:6px">Your pictures</h3><p class="hint" style="margin:0">Drag onto a panel, or select a panel and click a picture.</p>
-      <label class="btn small" style="cursor:pointer;position:relative">+ Add pictures<input type="file" id="edUpload" accept="image/*" multiple style="position:absolute;opacity:0;width:1px;height:1px"></label>
-      ${pics.length ? `<div class="tray">${pics.map((t,i) => `<button type="button" draggable="true" data-pic="${i}" aria-label="Use picture ${i+1}"><img src="${t.src}" alt=""></button>`).join('')}</div>` : '<p class="hint" style="margin:0">No pictures yet. Draw a panel, or add your own.</p>'}`;
+    h += `<button type="button" class="small" id="edGal" style="margin-top:4px">Choose from all pictures</button><p class="hint" style="margin:0">Or drag a photo from your computer straight onto a panel.</p>`;
   }
   $('#edSide').innerHTML = h;
 }
 
 /* tools & history */
+$('#writeMenu').onclick = e => { e.stopPropagation(); const p = $('#writePop'); p.hidden = !p.hidden; $('#writeMenu').setAttribute('aria-expanded', !p.hidden); };
+document.addEventListener('click', e => { if (!e.target.closest('.menu')) $('#writePop').hidden = true; });
+$('#writePop').addEventListener('click', () => { $('#writePop').hidden = true; });
 $('#edTools').onclick = e => {
   const t = e.target.closest('[data-tool]'); if (t){ ed.tool = t.dataset.tool; ed.sel = ed.editing = null; if (ed.tool !== 'panels') ed.panelSel = null; renderEditor(); }
 };
@@ -1476,6 +1570,7 @@ $('#edSide').addEventListener('click', async e => {
   const lay = e.target.closest('[data-lay]'); if (lay){ pushHist(); pg.panels = layoutPolys(lay.dataset.lay).map(newPanel); ed.panelSel = null; saveSoon(); renderEditor(); return; }
   const bt = e.target.closest('[data-btype]'); if (bt){ addBubble(bt.dataset.btype, PW/2, PH*0.28); return; }
   if (e.target.id === 'edDraw' && pn){ openPanel(pn.id); return; }
+  if (e.target.id === 'edGal'){ openGallery('page'); return; }
   if (e.target.id === 'edFit' && pn?.img){ pushHist(); Object.assign(pn.img, coverPlace(pg, pn, pn.img.w, pn.img.h)); saveSoon(); renderEditor(); return; }
   if (e.target.id === 'edRemoveImg' && pn){ pushHist(); pn.img = null; saveSoon(); renderEditor(); return; }
   const pic = e.target.closest('[data-pic]');
@@ -1513,8 +1608,9 @@ stage.addEventListener('pointerdown', e => {
       ed.drag = {kind: 'resize', id: b.id, dir: corner.dataset.dir || 'se', box: {x0: b.x - g.w/2, y0: b.y - g.h/2, x1: b.x + g.w/2, y1: b.y + g.h/2}}; }
     else ed.drag = {kind: 'tip', id: tip.dataset.tip};
     return; }
-  if (ed.tool === 'bubbles' && bub){
+  if (bub){
     const b = pg.bubbles.find(x => String(x.id) === bub.dataset.b); if (!b) return;
+    if (ed.tool !== 'bubbles'){ ed.tool = 'bubbles'; ed.panelSel = null; renderSide(); renderTools(); renderPanels(); }
     if (ed.editing === b.id && e.target.tagName === 'TEXTAREA') return;
     e.preventDefault(); pushHist(); stage.setPointerCapture(e.pointerId);
     ed.drag = {kind: 'move', id: b.id, start: p, b: {...b}, moved: false};
@@ -1563,14 +1659,19 @@ function endDrag(){
     if (c && Math.hypot(c.x2-c.x1, c.y2-c.y1) > 24){ pushHist(); pg.panels = cutPanels(pg.panels, [c.x1, c.y1], [c.x2, c.y2], false).map(p => { delete p.fresh; return p; }); saveSoon(); }
     renderEditor(); return;
   }
-  if (d.kind === 'move' && !d.moved){ ed.past.pop(); ed.editing = d.id; renderBubbles(); const ta = document.getElementById('bta-' + d.id); if (ta){ ta.focus(); ta.select(); } return; }
+  if (d.kind === 'move' && !d.moved){ ed.past.pop(); renderBubbles(); return; }
   if (d.kind === 'pan' && !d.moved){ ed.past.pop(); return; }
   saveSoon(); renderSide();
 }
 stage.addEventListener('pointerup', endDrag); stage.addEventListener('pointercancel', endDrag);
-stage.addEventListener('dblclick', e => { if (ed.tool !== 'panels') return; const pn = panelAt(edPt(e)); if (pn) openPanel(pn.id); });
+stage.addEventListener('dblclick', e => {
+  const pt = edPt(e), hit = page().bubbles.slice().reverse().find(b => { const g = bGeo(b); return Math.abs(pt[0] - b.x) <= g.w/2 && Math.abs(pt[1] - b.y) <= g.h/2; });
+  if (hit){ const id = hit.id; ed.sel = ed.editing = id; renderBubbles();
+    const ta = document.getElementById('bta-' + id); if (ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } return; }
+  if (ed.tool !== 'panels') return; const pn = panelAt(edPt(e)); if (pn) openPanel(pn.id); });
 stage.addEventListener('wheel', e => {
   if (ed.tool !== 'panels') return; const pn = page().panels.find(p => p.id === ed.panelSel); if (!pn?.img) return;
+  if (panelAt(edPt(e)) !== pn) return;               // not over the box: let the page scroll
   e.preventDefault(); const k = e.deltaY < 0 ? 1.06 : 1/1.06; pn.img.s = Math.max(pn.img.fit*0.5, Math.min(pn.img.fit*4, pn.img.s*k)); updateImg(pn); saveSoon();
   const z = $('#edZoom'); if (z){ z.value = Math.round(pn.img.s/pn.img.fit*100); z.previousElementSibling.textContent = `Zoom: ${z.value}%`; }
 }, {passive: false});
@@ -1579,6 +1680,7 @@ stage.addEventListener('drop', async e => {
   e.preventDefault(); const p = edPt(e), pg = page(); let v = ''; try { v = e.dataTransfer.getData('text/plain'); } catch {}
   if (v.startsWith('cs-bubble:')){ addBubble(v.slice(10), p[0], p[1]); return; }
   const pn = panelAt(p);
+  if (v.startsWith('cs-src:')){ if (!pn) return; pushHist(); await putPicture(pg, pn, {upload: v.slice(7)}); ed.tool = 'panels'; ed.panelSel = pn.id; saveSoon(); renderEditor(); return; }
   if (v.startsWith('cs-pic:')){ const t = allPictures()[+v.slice(7)]; if (!t || !pn) return; pushHist(); await putPicture(pg, pn, {upload: t.src}); ed.tool = 'panels'; ed.panelSel = pn.id; saveSoon(); renderEditor(); return; }
   const files = [...(e.dataTransfer.files || [])].filter(f => /^image\//.test(f.type));
   if (files.length && pn){ try { const src = await shrink(files[0], 1600); tray.unshift({id: uid(), src}); put('meta', {id: 'tray', items: tray.slice(0, 60)}); pushHist(); await putPicture(pg, pn, {upload: src}); ed.tool = 'panels'; ed.panelSel = pn.id; saveSoon(); renderEditor(); } catch {} }
@@ -1605,6 +1707,46 @@ $('#edHandles').addEventListener('change', e => {
   const bar = e.target.closest('[data-qbar]'); if (!bar || e.target.dataset.q !== 'type') return;
   const b = page().bubbles.find(x => String(x.id) === bar.dataset.qbar); if (!b) return; pushHist(); b.type = e.target.value; saveSoon(); renderBubbles();
 });
+
+/* keyboard: undo / redo / delete */
+document.addEventListener('keydown', e => {
+  const t = e.target, typing = /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable;
+  if (typing || document.querySelector('dialog[open]')) return;
+  const k = e.key.toLowerCase(), mod = e.ctrlKey || e.metaKey;
+  if (mod && k === 'z' && !e.shiftKey){ e.preventDefault(); $('#edUndo').click(); }
+  else if (mod && (k === 'y' || (k === 'z' && e.shiftKey))){ e.preventDefault(); $('#edRedo').click(); }
+  else if ((k === 'delete' || k === 'backspace') && ed.sel != null && ed.editing == null){ const pg = page(); if (!pg.bubbles.some(b => b.id === ed.sel)) return; e.preventDefault(); pushHist(); pg.bubbles = pg.bubbles.filter(b => b.id !== ed.sel); ed.sel = null; saveSoon(); renderBubbles(); }
+  else if (k === 'escape' && ed.sel != null){ ed.sel = ed.editing = null; renderBubbles(); }
+});
+
+/* ---------- all pictures ever made ---------- */
+let picHistory = [];                                   // [{src, at}] newest first, kept on the server
+function remember(src){ if (!src || picHistory.some(h => h.src === src)) return; picHistory.unshift({src, at: Date.now()}); put('meta', {id: 'history', items: picHistory}); }
+function everyPicture(){
+  const seen = new Set(), out = [];
+  const add = src => { if (src && !seen.has(src)){ seen.add(src); out.push(src); } };
+  picHistory.forEach(h => add(h.src)); pages.forEach(pg => pg.panels.forEach(pn => pn.takes.forEach(add))); tray.forEach(t => add(t.src));
+  return out;
+}
+let galFor = 'page';
+function openGallery(forWhat){
+  galFor = forWhat; const pics = everyPicture();
+  $('#galHint').textContent = forWhat === 'panel' ? 'Click a picture to use it in this panel.' : 'Click a picture to put it in the selected panel (or the next empty one). You can also drag one onto a panel.';
+  $('#galGrid').innerHTML = pics.length ? pics.map((src, i) => `<button type="button" data-gal="${i}" draggable="true" aria-label="Picture ${i+1}"><img src="${src}" alt="" loading="lazy"></button>`).join('') : '<p class="hint" style="margin:0">No pictures yet. Draw a panel, or add your own.</p>';
+  $('#galDlg').showModal();
+}
+$('#openGallery').onclick = () => openGallery('page');
+$('#panelGallery').onclick = () => openGallery('panel');
+$('#galUpload').onchange = async e => { for (const f of [...e.target.files].filter(f => /^image\//.test(f.type))){ try { const src = await shrink(f, 1600); tray.unshift({id: uid(), src}); remember(src); } catch {} }
+  e.target.value = ''; put('meta', {id: 'tray', items: tray.slice(0, 200)}); openGallery(galFor); };
+$('#galGrid').onclick = async e => {
+  const b = e.target.closest('[data-gal]'); if (!b) return; const src = everyPicture()[+b.dataset.gal]; if (!src) return;
+  if (galFor === 'panel'){ const pn = curPanel(); let i = pn.takes.indexOf(src); if (i < 0){ pn.takes.push(src); if (pn.takes.length > 6){ pn.takes.shift(); if (pn.img && !pn.img.upload){ pn.img.take--; if (pn.img.take < 0) pn.img = null; } } i = pn.takes.indexOf(src); }
+    pn.pick = i; fix.on = false; await savePage(page()); $('#galDlg').close(); renderPanelStage(); return; }
+  const pg = page(), target = pg.panels.find(p => p.id === ed.panelSel) || ordered(pg).find(p => !srcOf(p)); if (!target){ toast('Select a panel on the page first.'); return; }
+  pushHist(); await putPicture(pg, target, {upload: src}); ed.tool = 'panels'; ed.panelSel = target.id; saveSoon(); $('#galDlg').close(); renderEditor();
+};
+$('#galGrid').addEventListener('dragstart', e => { const b = e.target.closest('[data-gal]'); if (!b) return; try { e.dataTransfer.setData('text/plain', 'cs-src:' + everyPicture()[+b.dataset.gal]); } catch {} setTimeout(() => $('#galDlg').close(), 0); });
 
 /* page list */
 $('#pages').onclick = e => { const b = e.target.closest('[data-pg]'); if (b){ cur = +b.dataset.pg; ls.set('cs.cur', cur); renderPages(); } };
@@ -1665,12 +1807,12 @@ const ASPECTS = {openai: ['1:1','2:3','3:2'], gemini: ['1:1','2:3','3:2','3:4','
 function panelBox(pg, pn){ return G.bbox(G.inset(pn.pts, (pg.gutter || 12)/2)); }
 function bestAspect(r){ const list = ASPECTS[settings().provider] || ASPECTS.openai; let best = list[0], bd = 1e9; list.forEach(a => { const d = Math.abs(Math.log(ratio(a)) - Math.log(r)); if (d < bd){ bd = d; best = a; } }); return best; }
 function openPanel(id){
-  pId = id; const pg = page(), pn = curPanel();
+  pId = id; fix.on = false; const pg = page(), pn = curPanel();
   $('#panelTitle').textContent = `Page ${cur+1} · Panel ${panelNo(pg, pn)}`;
   $('#pPrompt').value = pn.prompt || ''; $('#panelErr').innerHTML = '';
-  $('#pInsert').innerHTML = chars.concat(places).map(c => `<button type="button" class="small" data-ins="${esc(c.id)}" title="${c.kind === 'place' ? 'Place' : 'Character'}">+ ${c.kind === 'place' ? '⌂ ' : ''}${esc(c.name)}</button>`).join('');
-  room.show = pn.takes.length && pn.mode === 'room' ? 'result' : 'edit'; panelChips(); renderPanelStage(); if (!$('#panelDlg').open) $('#panelDlg').showModal(); checkOverview(true);
-  if (pn.mode === 'room') loadRoom(pn, true).then(() => loadMask(pn)).then(() => { syncRoomTools(); renderPanelStage(); }); else syncRoomTools(); setPtab(ls.get('cs.ptab', 'ov') === 'form' ? 'form' : 'ov');
+  $('#pInsert').innerHTML = chars.map(c => `<button type="button" class="small" data-ins="${esc(c.id)}" title="${c.kind === 'place' ? 'Place' : 'Character'}">+ ${c.kind === 'place' ? '⌂ ' : ''}${esc(c.name)}</button>`).join('');
+  panelChips(); renderPanelStage(); if (!$('#panelDlg').open) $('#panelDlg').showModal(); checkOverview(true);
+  setPtab(ls.get('cs.ptab', 'ov') === 'form' ? 'form' : 'ov');
 }
 
 /* ---------- AI understood ---------- */
@@ -1714,24 +1856,16 @@ async function runOverview(){
 }
 const list = a => Array.isArray(a) ? a.filter(Boolean) : [];
 function renderOverview(d, state, err){
-  const st = {ok:['ok','✓ Up to date'], busy:['busy','Thinking…'], stale:['','Updating soon'], error:['','Not updated'], empty:['',''], nokey:['','']}[state];
-  let h = `<h3>AI understood${st[1] ? ` <span class="st ${st[0]}">${st[1]}</span>` : ''}</h3>`;
-  if (state === 'empty' && !d) h += '<p class="hint" style="margin:0">Start describing the panel. A short summary of what the AI thinks you mean shows up here, so you can catch mix-ups before drawing.</p>';
-  if (state === 'nokey') h += '<p class="hint" style="margin:0">The AI is not set up on the server yet (OPENAI_API_KEY in Railway → Variables).</p>';
-  if (state === 'error') h += `<div class="err">${esc(err)}</div><button type="button" class="small" id="ovRetry">Try again</button>`;
+  const st = {ok:['ok','✓'], busy:['busy','Thinking…'], stale:['',''], error:['',''], empty:['',''], nokey:['','']}[state];
+  let h = `<h3 style="font-size:18px">AI understood${st[1] ? ` <span class="st ${st[0]}">${st[1]}</span>` : ''}</h3>`;
+  if (state === 'empty' && !d) h += '<p class="hint" style="margin:0">Type what happens and a one-line summary shows here.</p>';
+  if (state === 'nokey') h += '<p class="hint" style="margin:0">The AI is not set up on the server yet.</p>';
+  if (state === 'error') h += `<p class="hint" style="margin:0">Couldn't check that. <button type="button" class="small" id="ovRetry">Try again</button></p>`;
   if (d){
-    const cs = list(d.characters), dl = list(d.dialogue), uq = list(d.unclear);
-    h += `<p class="sum">${esc(d.summary)}</p><dl>`;
-    if (cs.length) h += `<dt>Who</dt><dd><ul>${cs.map(c => { const known = chars.find(x => x.name.toLowerCase() === String(c.name||'').toLowerCase());
-      return `<li><b>${esc(c.name)}</b>${known ? (known.sheet ? ' ✓' : ' (look not approved)') : ''}: ${esc(c.doing)}${c.expression ? `, <i>${esc(c.expression)}</i>` : ''}</li>`; }).join('')}</ul></dd>`;
-    if (d.setting) h += `<dt>Where</dt><dd>${esc(d.setting)}</dd>`;
-    if (d.shot) h += `<dt>Camera</dt><dd>${esc(d.shot)}</dd>`;
-    if (dl.length) h += `<dt>Words on the page</dt><dd><ul>${dl.map(x => `<li><b>${esc(x.speaker)}</b> (${esc(x.type || 'speech')}): "${esc(x.text)}"</li>`).join('')}</ul></dd>`;
-    h += '</dl>';
-    if (uq.length) h += `<div class="q"><b>Check this:</b><ul>${uq.map(q => `<li>${esc(q)}</li>`).join('')}</ul></div>`;
-    if (d.clearer_prompt && d.clearer_prompt.trim() !== $('#pPrompt').value.trim())
-      h += `<div class="better"><b>Clearer wording:</b> ${esc(d.clearer_prompt)}<div style="margin-top:8px"><button type="button" class="small" id="ovUse">Use this wording</button></div></div>`;
-    if (state === 'ok') h += '<p class="hint" style="margin:0">If this is wrong, change your description and the summary updates.</p>';
+    const uq = list(d.unclear);
+    h += `<p class="sum" style="font-size:16px">${esc(d.summary)}</p>`;
+    if (uq.length) h += `<p class="hint" style="margin:0"><b>Check:</b> ${uq.map(esc).join(' · ')}</p>`;
+    if (d.clearer_prompt && d.clearer_prompt.trim() !== $('#pPrompt').value.trim()) h += `<button type="button" class="small" id="ovUse" title="${esc(d.clearer_prompt)}">Use clearer wording</button>`;
   }
   $('#ov').innerHTML = h;
 }
@@ -1753,29 +1887,62 @@ function breakdownText(pn, prompt){
 }
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', stopMic));
 function renderBg(){
-  const pn = curPanel(), t = $('#pPrompt').value, r = bgFor(pn, t);
-  $('#pBgRow').hidden = !r.opts.length || pn.mode === 'room'; if ($('#pBgRow').hidden) return;
-  $('#pBg').innerHTML = `<option value="">${r.auto && !r.chosen ? `Auto: ${esc(r.auto.pl.name)} · ${esc(r.auto.sd.name)} (from your words)` : 'Let the AI choose'}</option>` +
-    r.opts.map(o => `<option value="${esc(o.v)}"${r.chosen && r.chosen.v === o.v ? ' selected' : ''}>${esc(o.pl.name)} · ${esc(o.sd.name)}</option>`).join('');
+  const pn = curPanel(), pick = photoPick(pn);
+  $('#pBgBox').hidden = !places.length;
+  $('#pBgPick').innerHTML = `<button type="button" class="none${pick ? '' : ' on'}" data-bgp="" title="No photo: the AI draws a background">No photo</button>` +
+    places.map((b, i) => `<button type="button" data-bgp="${esc(b.id)}"${pick === b ? ' class="on"' : ''} title="${esc(bgLabel(b, i))}"><img src="${b.data}" alt=""><span>${esc(bgLabel(b, i))}</span></button>`).join('');
+  $('#pFrameRow').hidden = !pick; if (pick) drawFramePrev(pn, pick);
 }
-$('#pBg').onchange = () => { curPanel().bg = $('#pBg').value; savePage(page()); renderBg(); };
+const photoPick = pn => places.find(b => b.id === pn.bgPhoto) || null;
+$('#pBgPick').onclick = e => { const b = e.target.closest('[data-bgp]'); if (!b) return; curPanel().bgPhoto = b.dataset.bgp; savePage(page()); renderBg(); };
+// framing of the background photo: centre point (as a fraction of the photo) and zoom
+const frameOf = (pn, pick) => (pn.bgFrame && pn.bgFrame.v === pick.id) ? pn.bgFrame : {v: pick.id, x: .5, y: .5, z: 1};
+function drawFramed(x, im, W, H, f, blur){
+  const s = Math.max(W / im.naturalWidth, H / im.naturalHeight) * f.z, w = im.naturalWidth * s, h = im.naturalHeight * s;
+  const fx = Math.min(1 - W/(2*w), Math.max(W/(2*w), f.x)), fy = Math.min(1 - H/(2*h), Math.max(H/(2*h), f.y));
+  f.x = fx; f.y = fy;
+  x.save(); x.fillStyle = '#888'; x.fillRect(0, 0, W, H); if (blur) x.filter = `blur(${blur}px)`;
+  const pad = blur * 2;   // draw a touch larger so the blur has no soft edge
+  x.drawImage(im, W/2 - fx*w - pad, H/2 - fy*h - pad, w + pad*2, h + pad*2); x.restore();
+}
+const imCache = new Map();
+const getIm = async src => { if (!imCache.has(src)) imCache.set(src, await loadImg(src)); return imCache.get(src); };
+async function drawFramePrev(pn, pick){
+  const bb = panelBox(page(), pn), k = ratio(bestAspect(bb.w / bb.h)), cv = $('#pFrameCv');
+  const W = k >= 1 ? 300 : Math.round(300 * k), H = k >= 1 ? Math.round(300 / k) : 300;
+  if (cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+  const f = frameOf(pn, pick); $('#pFrameZoom').value = Math.round(f.z * 100);
+  drawFramed(cv.getContext('2d'), await getIm(pick.data), W, H, f, Math.round(W / 90));
+}
+let fdrag = null;
+const framePick = () => { const pn = curPanel(); return [pn, photoPick(pn)]; };
+$('#pFrameCv').addEventListener('pointerdown', e => { const [pn, pick] = framePick(); if (!pick) return; e.preventDefault(); e.target.setPointerCapture(e.pointerId);
+  pn.bgFrame = frameOf(pn, pick); fdrag = {sx: e.clientX, sy: e.clientY, x: pn.bgFrame.x, y: pn.bgFrame.y, pick}; });
+$('#pFrameCv').addEventListener('pointermove', async e => { if (!fdrag) return; const [pn] = framePick(), cv = $('#pFrameCv'), r = cv.getBoundingClientRect(), im = await getIm(fdrag.pick.data);
+  const s = Math.max(cv.width / im.naturalWidth, cv.height / im.naturalHeight) * pn.bgFrame.z, k = cv.width / r.width;
+  pn.bgFrame.x = fdrag.x - (e.clientX - fdrag.sx) * k / (im.naturalWidth * s); pn.bgFrame.y = fdrag.y - (e.clientY - fdrag.sy) * k / (im.naturalHeight * s);
+  drawFramePrev(pn, fdrag.pick); });
+$('#pFrameCv').addEventListener('pointerup', () => { if (fdrag){ fdrag = null; savePage(page()); } });
+$('#pFrameCv').addEventListener('wheel', e => { const [pn, pick] = framePick(); if (!pick) return; e.preventDefault();
+  pn.bgFrame = frameOf(pn, pick); pn.bgFrame.z = Math.max(1, Math.min(3, pn.bgFrame.z * (e.deltaY < 0 ? 1.06 : 1/1.06))); drawFramePrev(pn, pick); clearTimeout(fdrag?.t); savePage(page()); }, {passive: false});
+$('#pFrameZoom').oninput = () => { const [pn, pick] = framePick(); if (!pick) return; pn.bgFrame = frameOf(pn, pick); pn.bgFrame.z = $('#pFrameZoom').value / 100; drawFramePrev(pn, pick); };
+$('#pFrameZoom').onchange = () => savePage(page());
+async function blurredPhoto(pn, pick, aspect){
+  const im = await getIm(pick.data), k = ratio(aspect), W = k >= 1 ? 1536 : Math.round(1536 * k), H = k >= 1 ? Math.round(1536 / k) : 1536;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  drawFramed(c.getContext('2d'), im, W, H, Object.assign({}, frameOf(pn, pick)), Math.round(W / 90));
+  return c.toDataURL('image/jpeg', .9);
+}
 function panelChips(){
   renderBg();
-  const t = $('#pPrompt').value, f = found(t), pl = foundPlaces(t);
+  const t = $('#pPrompt').value, f = found(t), pl = [];
   const chip = (c, mark) => c.sheet ? `<span class="chip">${mark} ${esc(c.name)} ✓</span>` : `<span class="chip warn">⚠ ${esc(c.name)}: look not approved</span>`;
-  $('#pChips').innerHTML = (f.length || pl.length) ? f.map(c => chip(c, '★')).concat(pl.map(c => chip(c, '⌂'))).join('')
-    : ((chars.length || places.length) ? '<span class="chip off">No characters or places in this panel yet. Type a code word or tap + below.</span>' : '');
+  $('#pChips').innerHTML = (f.length || pl.length) ? f.map(c => chip(c, '★')).concat(pl.map(c => curPanel().bgMode === 'photo' && !c.sheet ? `<span class="chip">⌂ ${esc(c.name)} (photo)</span>` : chip(c, '⌂'))).join('')
+    : (chars.length ? '<span class="chip off">No characters in this panel yet. Type a code word or tap + below.</span>' : '');
 }
 function renderPanelStage(){
-  const pnR = curPanel();
-  if (pnR.mode === 'room' && room.show === 'edit'){
-    renderRoomStage();
-    $('#pShape').textContent = room.img ? 'Red = where the AI may paint. Everything else in the room stays exactly as it is. The shaded part is trimmed by the panel shape.' : '';
-    $('#takes').innerHTML = pnR.takes.length > 1 ? pnR.takes.map((t,i) => `<button type="button" class="${i===pnR.pick?'on':''}" data-take="${i}" aria-label="Take ${i+1}"><img src="${t}" alt=""></button>`).join('') : '';
-    $('#drawPanel').textContent = 'Paint the people in'; $('#drawPanel').disabled = busyPanels.has(pnR.id);
-    $('#putPanel').disabled = !panelImg(pnR) || busyPanels.has(pnR.id);
-    return;
-  }
+  if (fix.on && curPanel().id === fix.pid && !busyPanels.has(fix.pid)) return renderFixStage();
+  $('#fixBar').hidden = true;
   const pg = page(), pn = curPanel(), bb = panelBox(pg, pn), img = panelImg(pn), asp = bestAspect(bb.w / bb.h);
   const ins = G.inset(pn.pts, (pg.gutter || 12)/2);
   $('#pStage').style.aspectRatio = `${bb.w.toFixed(1)} / ${bb.h.toFixed(1)}`;
@@ -1783,26 +1950,28 @@ function renderPanelStage(){
   const mask = `<svg class="mask" viewBox="${bb.x0.toFixed(1)} ${bb.y0.toFixed(1)} ${bb.w.toFixed(1)} ${bb.h.toFixed(1)}" preserveAspectRatio="none" aria-hidden="true">
     <path fill-rule="evenodd" fill="rgba(20,20,20,.55)" d="M${bb.x0-2},${bb.y0-2}H${bb.x1+2}V${bb.y1+2}H${bb.x0-2}Z ${G.path(ins)}"/>
     <path d="${G.path(ins)}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"/>
-    ${pn.mode === 'room' ? '' : `<rect x="${(bb.x0 + bb.w*0.2).toFixed(1)}" y="${(bb.y0 + bb.h*0.2).toFixed(1)}" width="${(bb.w*0.6).toFixed(1)}" height="${(bb.h*0.6).toFixed(1)}" fill="none" stroke="#ffd43b" stroke-width="2" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>`}</svg>
-    ${pn.mode === 'room' ? '' : `<span style="position:absolute;left:20%;top:20%;transform:translateY(-120%);background:#ffd43b;color:#141414;font:800 11px 'Nunito Sans',sans-serif;padding:1px 6px;border-radius:3px;pointer-events:none">Safe area: the important stuff stays in here</span>`}`;
+    <rect x="${(bb.x0 + bb.w*0.2).toFixed(1)}" y="${(bb.y0 + bb.h*0.2).toFixed(1)}" width="${(bb.w*0.6).toFixed(1)}" height="${(bb.h*0.6).toFixed(1)}" fill="none" stroke="#ffd43b" stroke-width="2" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/></svg>
+    <span style="position:absolute;left:20%;top:20%;transform:translateY(-120%);background:#ffd43b;color:#141414;font:800 11px 'Nunito Sans',sans-serif;padding:1px 6px;border-radius:3px;pointer-events:none">Safe area: the important stuff stays in here</span>`;
   $('#pStage').innerHTML = busyPanels.has(pn.id) ? `<div class="burst">DRAWING…${progHTML('panel', busyPanels.get(pn.id))}</div>`
     : img ? `<img src="${img}" alt="" style="width:100%;height:100%">${mask}` : `<div class="burst">POW!<small>Your panel appears here, in this exact shape</small></div>${mask}`;
   const slanted = ins.length !== 4 || ins.some((q, i) => { const r = ins[(i+1)%4]; return Math.abs(q[0]-r[0]) > 0.5 && Math.abs(q[1]-r[1]) > 0.5; });
-  $('#pShape').textContent = pn.mode === 'room' ? 'Painted into the fixed room picture: only the marked area was changed.' : `Drawn as a ${asp} picture with spare background around the edges${slanted ? '. The shaded corners get trimmed' : ''}. The yellow box is the safe area.`;
+  $('#pShape').textContent = `Drawn as a ${asp} picture with spare background around the edges${slanted ? '. The shaded corners get trimmed' : ''}. The yellow box is the safe area.`;
   $('#takes').innerHTML = pn.takes.length > 1 ? pn.takes.map((t,i) => `<button type="button" class="${i===pn.pick?'on':''}" data-take="${i}" aria-label="Take ${i+1}"><img src="${t}" alt=""></button>`).join('') : '';
-  $('#drawPanel').textContent = pn.mode === 'room' ? 'Paint the people in' : pn.takes.length ? 'Draw another take' : 'Draw it!';
+  $('#drawPanel').textContent = pn.takes.length ? 'Draw another take' : 'Draw it!';
   $('#drawPanel').disabled = busyPanels.has(pn.id);
   const inPlace = pn.img && !pn.img.upload && pn.img.take === pn.pick;
   $('#putPanel').disabled = !img || busyPanels.has(pn.id);
   $('#putPanel').textContent = inPlace ? '✓ In the panel' : '✓ Put in panel';
+  $('#fixOpen').hidden = !img || busyPanels.has(pn.id) || !!(pn.img && pn.img.upload && pn.pick < 0);
 }
 $('#pPrompt').oninput = async () => { curPanel().prompt = $('#pPrompt').value; panelChips(); checkOverview(false); };
 $('#pPrompt').onchange = () => savePage(page());
-$('#pInsert').onclick = e => { const b = e.target.closest('[data-ins]'); if (!b) return; const c = chars.concat(places).find(x => x.id === b.dataset.ins);
+$('#pInsert').onclick = e => { const b = e.target.closest('[data-ins]'); if (!b) return; const c = chars.find(x => x.id === b.dataset.ins);
   const t = $('#pPrompt'), p = t.selectionStart ?? t.value.length; t.value = t.value.slice(0,p) + c.name + ' ' + t.value.slice(p);
   curPanel().prompt = t.value; savePage(page()); panelChips(); checkOverview(false); t.focus(); };
-$('#takes').onclick = async e => { const b = e.target.closest('[data-take]'); if (!b) return; curPanel().pick = +b.dataset.take; if (curPanel().mode === 'room') room.show = 'result'; syncRoomTools(); await savePage(page()); renderPanelStage(); };
+$('#takes').onclick = async e => { const b = e.target.closest('[data-take]'); if (!b) return; curPanel().pick = +b.dataset.take; await savePage(page()); renderPanelStage(); };
 $('#panelForm').onsubmit = async () => { curPanel().prompt = $('#pPrompt').value; await savePage(page()); renderEditor(); };
+$('#panelDlg').addEventListener('close', () => { fix.on = false; renderEditor(); });
 $('#putPanel').onclick = async () => {
   const pg = page(), pn = curPanel(); if (!panelImg(pn)) return;
   if (pg === page()) pushHist();
@@ -1815,207 +1984,129 @@ $('#clearPanel').onclick = async e => {
   delete b.dataset.sure; b.textContent = 'Clear panel'; const pn = curPanel(); pn.takes = []; pn.pick = 0; if (pn.img && !pn.img.upload) pn.img = null; await savePage(page()); renderPanelStage(); renderEditor();
 };
 
-/* ---------- "Keep the room exactly": a fixed room picture, AI paints only where you brush ---------- */
-const room = {img: null, src: '', label: '', W: 1536, H: 1024, aspect: '3:2', cx: 0, cy: 0, s: 1, fit: 1, tool: 'mark', show: 'edit', dirty: false};
-const maskCv = document.createElement('canvas');
-const roomDims = r => {
+// Behind the scenes: give every named person a spot in the picture (in the order they're mentioned), so the AI never swaps their faces.
+// Skipped if the description already says where people are.
+function whereTheyStand(cast, prompt){
+  if (cast.length < 2) return '';
+  if (/\b(left|right|centre|center|middle)\b/i.test(prompt)) return `\nKeep each character exactly where the scene description puts them, and give each one only their own face, hair and outfit from their own model sheet; never swap or blend features between characters.`;
+  const low = prompt.toLowerCase(), ord = cast.slice().sort((x, y) => (low.indexOf(x.name.toLowerCase()) + 1 || 1e9) - (low.indexOf(y.name.toLowerCase()) + 1 || 1e9));
+  const spots = {2: ['on the left', 'on the right'], 3: ['on the left', 'in the middle', 'on the right'], 4: ['on the far left', 'left of centre', 'right of centre', 'on the far right']}[Math.min(ord.length, 4)];
+  const list = ord.map((c, i) => `${c.name} ${spots[i] || 'further back, between the others'}`);
+  return `\nWho is where (as seen in the picture): ${list.join(', ')}. Keep them in these spots (they may face each other, turn or overlap a little), and give each one only their own face, hair and outfit from their own model sheet; never swap or blend features between characters.`;
+}
+/* ---------- Fix part of the picture: brush a spot, only that spot is redrawn ---------- */
+const fix = {on: false, pid: null, img: null, W: 1024, H: 1024, aspect: '1:1'};
+const fixMask = document.createElement('canvas');
+const fixDims = r => {
   if (settings().provider === 'gemini'){ const a = bestAspect(r), k = ratio(a); return k >= 1 ? {W: 1536, H: Math.round(1536 / k), aspect: a} : {W: Math.round(1536 * k), H: 1536, aspect: a}; }
   return r > 1.05 ? {W: 1536, H: 1024, aspect: '3:2'} : r < 0.95 ? {W: 1024, H: 1536, aspect: '2:3'} : {W: 1024, H: 1024, aspect: '1:1'};
 };
-// every approved room picture the panel could use: each place's sides, then the whole place
-function roomSources(pn){
-  const t = $('#pPrompt').value, named = foundPlaces(t), list = (named.length ? named : places).filter(pl => pl.sheet);
-  const out = [];
-  list.forEach(pl => { (pl.sides || []).filter(x => x.sheet).forEach(x => out.push({v: `${pl.id}:${x.id}`, label: `${pl.name} · ${x.name}`, src: x.sheet, pl, sd: x}));
-    out.push({v: `${pl.id}:all`, label: `${pl.name} · whole place`, src: pl.sheet.data, pl}); });
-  return out;
+async function startFix(){
+  const pn = curPanel(), src = panelImg(pn); if (!src) return;
+  fix.img = await loadImg(src); Object.assign(fix, fixDims(fix.img.naturalWidth / fix.img.naturalHeight), {on: true, pid: pn.id});
+  fixMask.width = fix.W; fixMask.height = fix.H; $('#fixText').value = ''; renderPanelStage(); $('#fixText').focus();
 }
-function roomCover(){ room.fit = Math.max(room.W / room.img.naturalWidth, room.H / room.img.naturalHeight); room.s = room.fit; room.cx = room.W / 2; room.cy = room.H / 2; }
-async function loadRoom(pn, keepFraming){
-  const opts = roomSources(pn); let pick = opts.find(o => o.v === pn.room?.v);
-  if (!pick){ const bg = bgFor(pn, $('#pPrompt').value).pick; pick = (bg && opts.find(o => o.v === `${bg.pl.id}:${bg.sd.id}`)) || opts[0]; }
-  $('#roomSrc').innerHTML = opts.map(o => `<option value="${esc(o.v)}"${pick && o.v === pick.v ? ' selected' : ''}>${esc(o.label)}</option>`).join('');
-  if (!pick){ room.img = null; return; }
-  const bb = panelBox(page(), pn), d = roomDims(bb.w / bb.h);
-  const sizeChanged = d.W !== room.W || d.H !== room.H;
-  Object.assign(room, d, {src: pick.src, label: pick.label});
-  room.img = await loadImg(pick.src);
-  if (sizeChanged || maskCv.width !== room.W || maskCv.height !== room.H){ maskCv.width = room.W; maskCv.height = room.H; }
-  const r = pn.room;
-  if (keepFraming && r && r.v === pick.v && r.W === room.W){ Object.assign(room, {cx: r.cx, cy: r.cy, s: r.s, fit: r.fit}); }
-  else roomCover();
-  pn.room = Object.assign(pn.room || {}, {v: pick.v, W: room.W, H: room.H, cx: room.cx, cy: room.cy, s: room.s, fit: room.fit});
+function stopFix(){ fix.on = false; fix.img = null; renderPanelStage(); }
+function renderFixStage(){
+  $('#pStage').style.aspectRatio = `${fix.W} / ${fix.H}`;
+  $('#pStage').style.maxWidth = `min(100%, calc(60vh * ${(fix.W / fix.H).toFixed(3)}))`;
+  $('#pStage').innerHTML = `<canvas id="fixCv" width="${fix.W}" height="${fix.H}" style="width:100%;height:100%;display:block;touch-action:none;cursor:crosshair"></canvas>`;
+  $('#fixBar').hidden = false; $('#fixOpen').hidden = true; $('#pShape').textContent = 'Red = the part that gets redrawn.';
+  drawFix();
 }
-async function loadMask(pn){
-  const m = maskCv.getContext('2d'); m.clearRect(0, 0, maskCv.width, maskCv.height);
-  if (pn.room?.mask){ try { const im = await loadImg(pn.room.mask); m.drawImage(im, 0, 0, maskCv.width, maskCv.height); } catch {} }
+function drawFix(){
+  const cv = $('#fixCv'); if (!cv || !fix.img) return; const x = cv.getContext('2d');
+  x.clearRect(0, 0, fix.W, fix.H); x.drawImage(fix.img, 0, 0, fix.W, fix.H); x.globalAlpha = .5; x.drawImage(fixMask, 0, 0); x.globalAlpha = 1;
 }
-const maskEmpty = () => { const d = maskCv.getContext('2d').getImageData(0, 0, maskCv.width, maskCv.height).data; for (let i = 3; i < d.length; i += 16) if (d[i] > 10) return false; return true; };
-function drawPlate(ctx){
-  ctx.fillStyle = '#f4f1ea'; ctx.fillRect(0, 0, room.W, room.H);
-  if (!room.img) return;
-  const w = room.img.naturalWidth * room.s, h = room.img.naturalHeight * room.s;
-  ctx.drawImage(room.img, room.cx - w/2, room.cy - h/2, w, h);
+function fixBrush(a, b){
+  const m = fixMask.getContext('2d'), rad = +$('#fixBrush').value * fix.W / 1024;
+  m.fillStyle = m.strokeStyle = '#e8352e'; m.lineCap = 'round'; m.lineWidth = rad * 2;
+  m.beginPath(); m.moveTo(a[0], a[1]); m.lineTo(b[0], b[1]); m.stroke(); m.beginPath(); m.arc(b[0], b[1], rad, 0, Math.PI * 2); m.fill();
 }
-function drawRoomStage(){
-  const cv = $('#roomCv'); if (!cv) return; const ctx = cv.getContext('2d');
-  drawPlate(ctx);
-  ctx.save(); ctx.globalAlpha = .45; ctx.drawImage(maskCv, 0, 0); ctx.restore();
-  // what the panel will show: the panel shape, cover-fitted inside the picture
-  const pg = page(), pn = curPanel(), bb = panelBox(pg, pn), r = bb.w / bb.h;
-  let cw = room.W, ch = room.H; if (room.W / room.H > r) cw = room.H * r; else ch = room.W / r;
-  const ox = (room.W - cw)/2, oy = (room.H - ch)/2, k = cw / bb.w;
-  const ins = G.inset(pn.pts, (pg.gutter || 12)/2).map(q => [ox + (q[0] - bb.x0)*k, oy + (q[1] - bb.y0)*k]);
-  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, room.W, room.H); ins.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath();
-  ctx.fillStyle = 'rgba(20,20,20,.5)'; ctx.fill('evenodd');
-  ctx.beginPath(); ins.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath();
-  ctx.setLineDash([12, 10]); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.restore();
-}
-function renderRoomStage(){
-  const pn = curPanel();
-  $('#pStage').style.aspectRatio = `${room.W} / ${room.H}`;
-  $('#pStage').style.maxWidth = `min(100%, calc(60vh * ${(room.W / room.H).toFixed(3)}))`;
-  if (busyPanels.has(pn.id)){ $('#pStage').innerHTML = `<div class="burst">PAINTING…${progHTML('panel', busyPanels.get(pn.id))}</div>`; tickProg(); return; }
-  if (!room.img){ $('#pStage').innerHTML = '<div class="burst" style="font-size:28px">NO ROOM YET<small>Add a place, draw it and approve it first. Then its pictures can be used here.</small></div>'; return; }
-  $('#pStage').innerHTML = `<canvas id="roomCv" width="${room.W}" height="${room.H}" style="width:100%;height:100%;display:block;touch-action:none;cursor:${room.tool === 'mark' ? 'crosshair' : 'move'}"></canvas>`;
-  drawRoomStage();
-}
-function syncRoomTools(){
-  const pn = curPanel(), on = pn.mode === 'room';
-  document.querySelectorAll('#pMode [data-mode]').forEach(b => b.classList.toggle('on', (b.dataset.mode === 'room') === on));
-  $('#roomTools').hidden = !on; renderBg();
-  document.querySelectorAll('#roomTool [data-rt]').forEach(b => b.classList.toggle('on', b.dataset.rt === room.tool));
-  $('#roomZoom').value = room.img ? Math.round(room.s / room.fit * 100) : 100;
-  $('#roomToggle').hidden = !on || !pn.takes.length;
-  $('#roomToggle').textContent = room.show === 'edit' ? 'See the result' : 'Edit the room & marks';
-}
-async function setPanelMode(mode){
-  const pn = curPanel(); pn.mode = mode; room.show = 'edit';
-  if (mode === 'room'){ await loadRoom(pn, true); await loadMask(pn); }
-  syncRoomTools(); renderPanelStage(); savePage(page());
-}
-$('#pMode').onclick = e => { const b = e.target.closest('[data-mode]'); if (b) setPanelMode(b.dataset.mode); };
-$('#roomTool').onclick = e => { const b = e.target.closest('[data-rt]'); if (!b) return; room.tool = b.dataset.rt; syncRoomTools(); renderPanelStage(); };
-$('#roomSrc').onchange = async () => { const pn = curPanel(); pn.room = Object.assign(pn.room || {}, {v: $('#roomSrc').value}); await loadRoom(pn, false); room.show = 'edit'; syncRoomTools(); renderPanelStage(); savePage(page()); };
-$('#roomZoom').oninput = () => { if (!room.img) return; room.s = room.fit * $('#roomZoom').value / 100; keepCovered(); drawRoomStage(); };
-$('#roomZoom').onchange = () => saveFraming();
-$('#roomClear').onclick = () => { maskCv.getContext('2d').clearRect(0, 0, maskCv.width, maskCv.height); const pn = curPanel(); if (pn.room) delete pn.room.mask; drawRoomStage(); savePage(page()); };
-$('#roomToggle').onclick = () => { room.show = room.show === 'edit' ? 'result' : 'edit'; syncRoomTools(); renderPanelStage(); };
-// the room always fills the frame (no empty edges)
-function keepCovered(){
-  const w = room.img.naturalWidth * room.s, h = room.img.naturalHeight * room.s;
-  room.cx = Math.min(w/2, Math.max(room.W - w/2, room.cx)); room.cy = Math.min(h/2, Math.max(room.H - h/2, room.cy));
-}
-let saveRoomT;
-function saveFraming(){ const pn = curPanel(); pn.room = Object.assign(pn.room || {}, {cx: room.cx, cy: room.cy, s: room.s, fit: room.fit, W: room.W, H: room.H});
-  clearTimeout(saveRoomT); saveRoomT = setTimeout(() => { if (!maskEmpty()) pn.room.mask = maskCv.toDataURL('image/png'); savePage(page()); }, 500); }
-let rdrag = null;
-const roomPt = e => { const r = $('#roomCv').getBoundingClientRect(); return [(e.clientX - r.left) * room.W / r.width, (e.clientY - r.top) * room.H / r.height]; };
-function brush(a, b){
-  const m = maskCv.getContext('2d'), rad = +$('#roomBrush').value * room.W / 1024;
-  m.fillStyle = '#e8352e'; m.strokeStyle = '#e8352e'; m.lineCap = 'round'; m.lineWidth = rad*2;
-  m.beginPath(); m.moveTo(a[0], a[1]); m.lineTo(b[0], b[1]); m.stroke();
-  m.beginPath(); m.arc(b[0], b[1], rad, 0, Math.PI*2); m.fill();
-}
-$('#pStage').addEventListener('pointerdown', e => {
-  if (e.target.id !== 'roomCv' || !room.img) return; e.preventDefault(); e.target.setPointerCapture(e.pointerId);
-  const p = roomPt(e); rdrag = {p, start: p, cx: room.cx, cy: room.cy};
-  if (room.tool === 'mark'){ brush(p, p); drawRoomStage(); }
-});
-$('#pStage').addEventListener('pointermove', e => {
-  if (!rdrag || e.target.id !== 'roomCv') return; const p = roomPt(e);
-  if (room.tool === 'mark'){ brush(rdrag.p, p); rdrag.p = p; }
-  else { room.cx = rdrag.cx + p[0] - rdrag.start[0]; room.cy = rdrag.cy + p[1] - rdrag.start[1]; keepCovered(); }
-  drawRoomStage();
-});
-$('#pStage').addEventListener('pointerup', () => { if (rdrag){ rdrag = null; saveFraming(); } });
-$('#pStage').addEventListener('wheel', e => {
-  if (e.target.id !== 'roomCv' || !room.img) return; e.preventDefault();
-  room.s = Math.max(room.fit, Math.min(room.fit * 3, room.s * (e.deltaY < 0 ? 1.06 : 1/1.06))); keepCovered(); $('#roomZoom').value = Math.round(room.s / room.fit * 100); drawRoomStage(); saveFraming();
-}, {passive: false});
-
-async function paintRoom(){
-  const pg = page(), pn = curPanel(), prompt = $('#pPrompt').value.trim();
-  if (busyPanels.has(pn.id)) return;
-  pn.prompt = prompt; await savePage(pg);
+const fixPt = e => { const r = $('#fixCv').getBoundingClientRect(); return [(e.clientX - r.left) * fix.W / r.width, (e.clientY - r.top) * fix.H / r.height]; };
+let fdrawing = null;
+$('#pStage').addEventListener('pointerdown', e => { if (e.target.id !== 'fixCv') return; e.preventDefault(); e.target.setPointerCapture(e.pointerId); fdrawing = fixPt(e); fixBrush(fdrawing, fdrawing); drawFix(); $('#panelErr').innerHTML = ''; });
+$('#pStage').addEventListener('pointermove', e => { if (!fdrawing || e.target.id !== 'fixCv') return; const p = fixPt(e); fixBrush(fdrawing, p); fdrawing = p; drawFix(); });
+$('#pStage').addEventListener('pointerup', () => { fdrawing = null; });
+const fixEmpty = () => { const d = fixMask.getContext('2d').getImageData(0, 0, fix.W, fix.H).data; for (let i = 3; i < d.length; i += 16) if (d[i]) return false; return true; };
+$('#fixOpen').onclick = startFix;
+$('#fixCancel').onclick = stopFix;
+$('#fixClear').onclick = () => { fixMask.getContext('2d').clearRect(0, 0, fix.W, fix.H); drawFix(); };
+$('#fixGo').onclick = async () => {
+  const pg = page(), pn = curPanel(), what = $('#fixText').value.trim();
   const err = m => { $('#panelErr').innerHTML = `<div class="err">${esc(m)}</div>`; };
-  if (!room.img) return err('Pick a room picture first. Approve a place, then it can be used here.');
-  if (!prompt) return err('Describe what happens in this panel first.');
-  if (maskEmpty()) return err('Brush over where the people should go first (Mark where people go).');
-  const cast = found(prompt), notOk = cast.filter(c => !c.sheet);
-  if (notOk.length) return err(`Approve the look of ${notOk.map(c => c.name).join(' and ')} first (Open → Approve look).`);
-  // 1. the room exactly as framed, 2. a mask (see-through where the AI may paint), 3. a red-marked copy as a hint
-  const mk = () => { const c = document.createElement('canvas'); c.width = room.W; c.height = room.H; return c; };
-  const baseCv = mk(); drawPlate(baseCv.getContext('2d'));
-  const apiMask = mk(), am = apiMask.getContext('2d'); am.fillStyle = '#000'; am.fillRect(0, 0, room.W, room.H); am.globalCompositeOperation = 'destination-out'; am.drawImage(maskCv, 0, 0);
-  const hintCv = mk(), hm = hintCv.getContext('2d'); hm.drawImage(baseCv, 0, 0); hm.globalAlpha = .55; hm.drawImage(maskCv, 0, 0);
-  pn.room = Object.assign(pn.room || {}, {mask: maskCv.toDataURL('image/png'), cx: room.cx, cy: room.cy, s: room.s, fit: room.fit, W: room.W, H: room.H});
-  let text = `This is a FIXED comic book background: the approved drawing of ${room.label}. Paint the scene INTO the marked (transparent) area only. Everything outside the marked area must stay exactly as it is.
-Scene: ${prompt}`;
-  if (cast.length) text += `\n\nCharacters to paint in: ${cast.map(c => c.name).join(', ')}. Each one has an APPROVED model sheet attached. Draw each character exactly as on their model sheet: same face, hair, body build, skin tone and outfit, posed to fit the scene.` + cast.filter(c => c.desc).map(c => `\n${c.name}: ${c.desc}`).join('') + HAIR_RULE;
-  text += `\nMatch the background exactly: same comic art style, line weight, colours, perspective and lighting. Characters must be the right size for the room, stand on its floor or touch its furniture naturally, and cast soft shadows onto the surfaces they touch. Do NOT draw speech bubbles, captions or any text.`;
-  text += neverText() + breakdownText(pn, prompt);
-  const refs = [];
-  cast.forEach(c => { refs.push({label: `APPROVED model sheet for ${c.name}: this is exactly how ${c.name} looks`, data: c.sheet.data});
-    const face = c.photos.find(p => /face|front/.test(p.view)) || c.photos[0]; if (face && cast.length <= 3) refs.push({label: `Photo of the real ${c.name}, for face likeness only`, data: face.data}); });
+  if (busyPanels.has(pn.id)) return;
+  if (fixEmpty()) return err('Brush over the part you want fixed first.');
+  if (!what) return err('Say what should change there, e.g. "remove the extra side lock".');
+  const mk = () => { const c = document.createElement('canvas'); c.width = fix.W; c.height = fix.H; return c; };
+  const baseCv = mk(); baseCv.getContext('2d').drawImage(fix.img, 0, 0, fix.W, fix.H);
+  const apiMask = mk(), am = apiMask.getContext('2d'); am.fillStyle = '#000'; am.fillRect(0, 0, fix.W, fix.H); am.globalCompositeOperation = 'destination-out'; am.drawImage(fixMask, 0, 0);
+  const hintCv = mk(), hm = hintCv.getContext('2d'); hm.drawImage(baseCv, 0, 0); hm.globalAlpha = .55; hm.drawImage(fixMask, 0, 0);
+  const cast = found(what + ' ' + (pn.prompt || '')).filter(c => c.sheet);
+  let text = `Edit this comic book panel. Change ONLY the marked area (transparent in the mask, shown in red on the hint copy): ${what}.
+Everything outside the marked area must stay exactly as it is. Inside it, match the picture exactly: same comic art style, line weight, colours, lighting and perspective, so the fix blends in invisibly.`;
+  if (cast.length) text += `\nCharacters in this panel: ${cast.map(c => c.name).join(', ')}. Their APPROVED model sheets are attached: anything you redraw on them must match their sheet exactly.` + cast.map(charRules).join('') + HAIR_RULE;
+  text += neverText() + '\nDo NOT add speech bubbles, captions or any text.';
+  const refs = cast.slice(0, 4).map(c => ({label: `APPROVED model sheet for ${c.name}`, data: c.sheet.data}));
+  const keepImg = fix.img; fix.on = false;
   busyPanels.set(pn.id, Date.now()); $('#panelErr').innerHTML = ''; renderPanelStage(); renderPanels(); tickProg();
   try {
-    const url = await generateImage(text, refs, room.aspect, {base: baseCv.toDataURL('image/png'), mask: apiMask.toDataURL('image/png'), hint: hintCv.toDataURL('image/jpeg', .85)});
-    recordSecs('panel', (Date.now() - busyPanels.get(pn.id))/1000);
-    // paste the untouched room back over everything outside the marks (with soft edges), so the room never changes
-    const gen = await loadImg(url), out = mk(), o = out.getContext('2d');
-    o.drawImage(gen, 0, 0, room.W, room.H);
-    const soft = mk(), sm = soft.getContext('2d'); sm.filter = `blur(${Math.round(room.W / 160)}px)`; sm.drawImage(maskCv, 0, 0); sm.drawImage(maskCv, 0, 0);
-    const keep = mk(), km = keep.getContext('2d'); km.drawImage(baseCv, 0, 0); km.globalCompositeOperation = 'destination-out'; km.drawImage(soft, 0, 0);
+    const url = await generateImage(text, refs, fix.aspect, {base: baseCv.toDataURL('image/png'), mask: apiMask.toDataURL('image/png'), hint: hintCv.toDataURL('image/jpeg', .85), baseLabel: 'THE PANEL TO FIX (only the masked area may change)'});
+    recordSecs('panel', (Date.now() - busyPanels.get(pn.id)) / 1000);
+    // put the untouched picture back everywhere outside the marks (soft edges), so nothing else can change
+    const gen = await loadImg(url), out = mk(), o = out.getContext('2d'); o.drawImage(gen, 0, 0, fix.W, fix.H);
+    const soft = mk(), sm = soft.getContext('2d'); sm.filter = `blur(${Math.round(fix.W / 160)}px)`; sm.drawImage(fixMask, 0, 0); sm.drawImage(fixMask, 0, 0);
+    const keep = mk(), km = keep.getContext('2d'); km.drawImage(keepImg, 0, 0, fix.W, fix.H); km.globalCompositeOperation = 'destination-out'; km.drawImage(soft, 0, 0);
     o.drawImage(keep, 0, 0);
     pn.takes.push(out.toDataURL('image/jpeg', .92));
     if (pn.takes.length > 6){ pn.takes.shift(); if (pn.img && !pn.img.upload){ pn.img.take--; if (pn.img.take < 0) pn.img = null; } }
-    pn.pick = pn.takes.length - 1; room.show = 'result'; await savePage(pg);
+    pn.pick = pn.takes.length - 1; await savePage(pg); remember(pn.takes[pn.pick]);
+    toast('Fixed. It is saved as a new take, so the old one is still there.');
   } catch (e) { if (curPanel() === pn && $('#panelDlg').open) err(e.message); else showTopErr(`Page ${pages.indexOf(pg)+1}, panel ${panelNo(pg, pn)}: ${e.message}`); }
-  finally { busyPanels.delete(pn.id); if (curPanel() === pn){ syncRoomTools(); renderPanelStage(); } if (pg === page()){ renderPanels(); renderSide(); } }
-}
+  finally { busyPanels.delete(pn.id); if (curPanel() === pn) renderPanelStage(); if (pg === page()){ renderPanels(); renderSide(); } }
+};
 
 // Every panel picture is framed with spare background around it, so it can be trimmed to any panel shape.
 const ROOM_TEXT = `\nIMPORTANT FRAMING (this picture will be cropped): pull the camera back and leave generous empty space around the subject. Keep every character, face, hand, speech-worthy action and important object inside the CENTRAL 60% of the image (a safe zone in the middle). The outer 20% on every side must contain ONLY unimportant background that simply continues the scene (sky, walls, floor, ground, scenery, crowd blur), with nothing important touching or near the edges. Do not crop heads, hands or feet at the frame edge; do not fill the frame edge to edge with the subject.`;
 const BLUR_TEXT = `\nBackground style: draw the background softly blurred and out of focus (shallow depth of field, gentle softness in the comic style) while the characters and main action stay crisp and sharp.`;
 $('#drawPanel').onclick = async () => {
-  if (curPanel().mode === 'room'){ room.show = 'edit'; return paintRoom(); }
   const pg = page(), pn = curPanel(), prompt = $('#pPrompt').value.trim();
   if (busyPanels.has(pn.id)) return;
   pn.prompt = prompt; await savePage(pg);
   if (!prompt){ $('#panelErr').innerHTML = '<div class="err">Describe what happens in this panel first.</div>'; return; }
-  const cast = found(prompt), where = foundPlaces(prompt).slice(0, 2), notOk = cast.concat(where).filter(c => !c.sheet);
+  const cast = found(prompt), where = foundPlaces(prompt).slice(0, 2), notOk = cast.filter(c => !c.sheet);
   if (notOk.length){ $('#panelErr').innerHTML = `<div class="err">Approve the look of ${esc(notOk.map(c => c.name).join(' and '))} first (Open → Approve look). That's what keeps them consistent.</div>`; return; }
   const bb = panelBox(pg, pn), aspect = bestAspect(bb.w / bb.h);
-  const ord = ordered(pg), prev = ord[ord.indexOf(pn) - 1], prevImg = prev && (srcOf(prev) || panelImg(prev));
   let text = `Draw ONE comic book panel in this style: ${styleText()}. Panel shape ${aspect} (${bb.w > bb.h * 1.15 ? 'wide' : bb.h > bb.w * 1.15 ? 'tall' : 'square-ish'}). Fill the whole frame with artwork; no panel borders, no page layout, no extra panels.
 Scene: ${prompt}`;
   if (cast.length) text += `\n\nCharacters in this panel: ${cast.map(c => c.name).join(', ')}. Each one has an APPROVED model sheet attached. Draw each character exactly as on their model sheet: same face, hair, body build, skin tone and outfit. Pose and expression should fit the scene; do not copy the model-sheet poses. Do not draw anyone else who looks like them.` +
-    cast.filter(c => c.desc).map(c => `\n${c.name}: ${c.desc}`).join('');
-  const bg = bgFor(pn, prompt).pick;
+    cast.filter(c => c.desc).map(c => `\n${c.name}: ${c.desc}`).join('') + cast.map(charRules).join('');
+  const photo = photoPick(pn), bg = null;
+  if (photo) text += `\n\nBACKGROUND: the FIRST attached picture is the finished background, a blurred photo. Use it exactly as it is, filling the whole frame: keep it a soft, blurred photo with the same framing, colours and blur. Do NOT redraw it, sharpen it, restyle it as a comic, or add or remove anything in it. Draw only the characters in front of it, in the comic style, crisp and sharp, sized and lit to sit naturally in that place.`;
   if (bg){ const sides = bg.pl.sides, i = sides.indexOf(bg.sd), opp = sides.length === 4 ? sides[(i + 2) % 4] : sides.length === 2 ? sides[1 - i] : null;
     text += `\n\nCamera direction: the camera faces the "${bg.sd.name}" side of ${bg.pl.name}. That side is directly behind the characters and fills the background, exactly as in the attached approved drawing of that side.${opp ? ` The "${opp.name}" side is behind the camera and is not visible.` : ''}`; }
-  if (where.length) text += `\n\nPlace: this panel is set in ${where.map(w => w.name).join(' and ')}. ${where.length > 1 ? 'Each place has' : 'It has'} an APPROVED location sheet attached. Redraw that exact place as the setting: same layout, furniture, fixtures, colours and key objects, in the same comic style. Choose the camera angle and how much of the room shows to suit the action; the place is the backdrop, the characters are the focus.` +
+  if (where.length && !photo && !bg) text += `\n\nPlace: this panel is set in ${where.map(w => w.name).join(' and ')}. ${where.length > 1 ? 'Each place has' : 'It has'} an APPROVED location sheet attached. Redraw that exact place as the setting: same layout, furniture, fixtures, colours and key objects, in the same comic style. Choose the camera angle and how much of the room shows to suit the action; the place is the backdrop, the characters are the focus.` +
     where.map(w => placeRules(w, true)).join('') +
     where.filter(w => w.desc).map(w => `\n${w.name}: ${w.desc}`).join('');
+  text += whereTheyStand(cast, prompt);
   if (cast.length) text += HAIR_RULE;
   text += neverText();
   text += breakdownText(pn, prompt);
   text += ROOM_TEXT;
-  if (book.blurBg !== false) text += BLUR_TEXT;
+  if (book.blurBg !== false && !photo) text += BLUR_TEXT;
   text += '\nDo NOT draw speech bubbles, captions or any lettering: those are added separately on the page. Leave a little calm space where a speech bubble could sit.';
   const refs = [];
-  cast.forEach(c => { refs.push({label:`APPROVED model sheet for ${c.name}: this is exactly how ${c.name} looks`, data: c.sheet.data});
-    const face = c.photos.find(p => /face|front/.test(p.view)) || c.photos[0]; if (face && cast.length <= 4) refs.push({label:`Photo of the real ${c.name}, for face likeness only`, data: face.data}); });
-  where.forEach(w => refs.push({label:`APPROVED location sheet for the place ${w.name}: the scene takes place here`, data: w.sheet.data}));
-  if (bg && (bg.sd.sheet || bg.sd.photos[0])) refs.push({label: bg.sd.sheet ? `APPROVED drawing of the ${bg.sd.name} side of ${bg.pl.name}: this is the background behind the characters` : `Photo of the ${bg.sd.name} side of ${bg.pl.name}: this is the background behind the characters`, data: bg.sd.sheet || bg.sd.photos[0].data});
-  // every other approved side drawing too, so wall pictures and details can be copied exactly
-  where.forEach(w => (w.sides || []).filter(x => x.sheet && !(bg && bg.sd === x)).forEach(x => { if (refs.length < 13) refs.push({label: `APPROVED drawing of the ${x.name} side of ${w.name}, for copying its wall pictures and details exactly`, data: x.sheet}); }));
-  if (prevImg && refs.length < 12){ refs.push({label:'Previous panel on this page, for matching colours, lighting and art style only', data: prevImg}); }
+  if (photo) refs.push({label: 'THE BACKGROUND: a blurred photo. Keep it exactly as it is, blurred; draw the characters in front of it', data: await blurredPhoto(pn, photo, aspect)});
+  // only the approved model sheets (no real photos: they fight the approved comic look) and ONE background picture
+  cast.forEach(c => refs.push({label:`APPROVED model sheet for ${c.name}: this is exactly how ${c.name} looks`, data: c.sheet.data}));
+  if (!photo){
+    if (bg && (bg.sd.sheet || bg.sd.photos[0])) refs.push({label: bg.sd.sheet ? `APPROVED drawing of the ${bg.sd.name} side of ${bg.pl.name}: this is the background behind the characters` : `Photo of the ${bg.sd.name} side of ${bg.pl.name}: this is the background behind the characters`, data: bg.sd.sheet || bg.sd.photos[0].data});
+    else where.slice(0, 1).forEach(w => refs.push({label:`APPROVED location sheet for the place ${w.name}: the scene takes place here`, data: w.sheet.data}));
+  }
   busyPanels.set(pn.id, Date.now()); $('#panelErr').innerHTML = ''; renderPanelStage(); renderPanels(); tickProg();
   try {
     const img = await generateImage(text, refs, aspect); recordSecs('panel', (Date.now() - busyPanels.get(pn.id))/1000);
-    pn.takes.push(img);
+    pn.takes.push(img); remember(img);
     if (pn.takes.length > 6){ pn.takes.shift(); if (pn.img && !pn.img.upload){ pn.img.take--; if (pn.img.take < 0){ pn.img.upload = null; pn.img = null; } } }
     pn.pick = pn.takes.length-1; await savePage(pg);
   }
@@ -2129,7 +2220,7 @@ $('#edIdeas').onclick = pageIdeas;
 
 /* ---------- panel form: optional questions that build the best description ---------- */
 function setPtab(t){
-  ls.set('cs.ptab', t);
+  t = 'ov';
   document.querySelectorAll('[data-ptab]').forEach(b => b.setAttribute('aria-selected', b.dataset.ptab === t));
   $('#ov').hidden = t !== 'ov'; $('#pform').hidden = t !== 'form';
   if (t === 'form') renderForm();
@@ -2146,19 +2237,14 @@ function renderForm(){
     return `<div class="who"><b>${esc(c.name)}</b>
       <div><label for="fdA${esc(c.id)}">Doing / pose</label><input id="fdA${esc(c.id)}" data-doing="${esc(c.id)}" data-k="pose" value="${esc(d.pose)}" placeholder="e.g. arms crossed, leaning on the bar"></div>
       <div><label for="fdE${esc(c.id)}">Face / feeling</label><input id="fdE${esc(c.id)}" data-doing="${esc(c.id)}" data-k="face" value="${esc(d.face)}" placeholder="e.g. smirking, worried"></div></div>`; }).join('');
-  if (!f.place && !f.touched){ const pl0 = foundPlaces($('#pPrompt').value)[0]; if (pl0) f.place = pl0.id; }
-  $('#fPlace').innerHTML = '<option value="">Not set</option>' + places.map(pl => `<option value="${esc(pl.id)}"${f.place === pl.id ? ' selected' : ''}>${esc(pl.name)}</option>`).join('') + `<option value="other"${f.place === 'other' ? ' selected' : ''}>Somewhere else (say where under "Anything else")</option>`;
-  const pl = places.find(x => x.id === f.place);
-  $('#fSideBox').hidden = !(pl && pl.sides && pl.sides.length);
-  $('#fSide').innerHTML = '<option value="">Let the AI choose</option>' + (pl?.sides || []).map(sd => `<option value="${esc(sd.id)}"${f.side === sd.id ? ' selected' : ''}>${esc(sd.name)}</option>`).join('');
-  ['action','props','atmos','said','extra'].forEach(k => { const el = document.querySelector(`[data-f="${k}"]`); if (document.activeElement !== el) el.value = f[k] || ''; });
+  ['action','props','atmos','said','extra','where'].forEach(k => { const el = document.querySelector(`[data-f="${k}"]`); if (document.activeElement !== el) el.value = f[k] || ''; });
   ['time','mood','shot','angle'].forEach(k => { document.querySelector(`[data-f="${k}"]`).value = f[k] || ''; });
   $('#fErr').innerHTML = '';
 }
 let formSaveT;
 $('#pform').addEventListener('input', e => {
   const pn = curPanel(), f = formOf(pn), el = e.target; f.touched = true;
-  if (el.dataset.f){ f[el.dataset.f] = el.value; if (el.dataset.f === 'place'){ f.side = ''; renderForm(); } }
+  if (el.dataset.f){ f[el.dataset.f] = el.value; }
   if (el.dataset.doing){ (f.doing[el.dataset.doing] = f.doing[el.dataset.doing] || {})[el.dataset.k] = el.value; }
   clearTimeout(formSaveT); formSaveT = setTimeout(() => savePage(page()), 600);
 });
@@ -2167,19 +2253,18 @@ $('#fWho').onclick = e => { const b = e.target.closest('[data-who]'); if (!b) re
 $('#fClear').onclick = () => { curPanel().form = {who: [], doing: {}, touched: true}; renderForm(); savePage(page()); };
 function formFacts(pn){
   const f = formOf(pn), who = f.who.map(id => chars.find(c => c.id === id)).filter(Boolean);
-  const pl = places.find(x => x.id === f.place), sd = pl?.sides?.find(x => x.id === f.side);
   const doing = who.some(c => f.doing[c.id]?.pose || f.doing[c.id]?.face);
-  return {f, who, pl, sd, filled: !!(doing || f.action || f.time || f.mood || f.shot || f.angle || f.props || f.atmos || f.said || f.extra || who.length || pl)};
+  return {f, who, filled: !!(doing || f.action || f.time || f.mood || f.shot || f.angle || f.props || f.atmos || f.said || f.extra || f.where || who.length)};
 }
 const sentence = t => { t = String(t || '').trim(); return t ? t.charAt(0).toUpperCase() + t.slice(1).replace(/([^.!?…])$/, '$1.') : ''; };
 function formToText(pn){
-  const {f, who, pl, sd} = formFacts(pn), parts = [];
+  const {f, who} = formFacts(pn), parts = [];
   const cam = [f.shot && f.shot.replace(/ \(.*\)$/, ''), f.angle && f.angle.replace(/ \(.*\)$/, '').toLowerCase()].filter(Boolean).join(', ');
   if (cam) parts.push(sentence(cam));
   const people = who.map(c => { const d = f.doing[c.id] || {}; return [c.name, d.pose, d.face && `looking ${d.face}`].filter(Boolean).join(', '); });
   if (people.length) parts.push(sentence(people.join('; ')));
   if (f.action) parts.push(sentence(f.action));
-  if (pl) parts.push(`In the ${pl.name}${sd ? `, with the ${sd.name} behind them` : ''}.`);
+  if (f.where) parts.push(sentence('In ' + f.where.trim().replace(/^in /i, '')));
   if (f.time) parts.push(sentence(f.time));
   if (f.mood) parts.push(`Mood: ${f.mood.toLowerCase()}.`);
   if (f.props) parts.push(`Important objects: ${f.props.trim().replace(/[.]$/, '')}.`);
@@ -2189,7 +2274,6 @@ function formToText(pn){
   return parts.join(' ');
 }
 function useDescription(pn, text){
-  if (pn.form && pn.form.side){ const pl = places.find(x => x.id === pn.form.place); if (pl) pn.bg = pl.id + ':' + pn.form.side; }
   $('#pPrompt').value = text; $('#pPrompt').dispatchEvent(new Event('input', {bubbles: true})); savePage(page());
   setPtab('ov');
 }
@@ -2199,8 +2283,8 @@ $('#fWrite').onclick = () => {
   toast('Description written from your form. Check "AI understood", then Draw it!', before.trim() ? 'Undo' : null, () => { $('#pPrompt').value = before; $('#pPrompt').dispatchEvent(new Event('input', {bubbles: true})); savePage(page()); });
 };
 const FORM_SYS = `You write descriptions for an image AI that draws ONE comic book panel. You get a filled-in form about the panel.
-Write one clear, vivid, specific description of 60 to 110 words that the image AI can follow exactly. Order: camera shot and angle first; then each character with their pose, action and facial expression; then the setting (and which side of the room is behind them, if given); then time of day and lighting; then mood, weather and important objects.
-Rules: keep every character and place code word exactly as written. Use only what the form says plus small, sensible details that make it drawable; never add new characters or events. If lines of dialogue are given, say who speaks and how (for example: Dave says, angrily, ...) so the faces fit, but never ask for speech bubbles or text in the picture. Fix spelling and voice-typing mistakes. Reply with only the description.`;
+Write one clear, vivid, specific description of 60 to 110 words that the image AI can follow exactly. Order: camera shot and angle first; then each character with their pose, action and facial expression; then the setting; then time of day and lighting; then mood, weather and important objects.
+Rules: keep every character code word exactly as written. Use only what the form says plus small, sensible details that make it drawable; never add new characters or events. If lines of dialogue are given, say who speaks and how (for example: Dave says, angrily, ...) so the faces fit, but never ask for speech bubbles or text in the picture. Fix spelling and voice-typing mistakes. Reply with only the description.`;
 $('#fPolish').onclick = async () => {
   const pn = curPanel(), {f, who, pl, sd, filled} = formFacts(pn);
   if (!filled){ $('#fErr').innerHTML = '<div class="err">Fill in at least one answer first.</div>'; return; }
@@ -2248,7 +2332,8 @@ $('#importFile').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try { const j = JSON.parse(await f.text()); if (j.app !== 'comic-studio') throw 0;
     for (const c of j.chars || []){ if (!c.id || !Array.isArray(c.photos)) continue; await put('chars', c); chars = chars.filter(x => x.id !== c.id).concat(c); }
-    for (const c of j.places || []){ if (!c.id || !Array.isArray(c.photos)) continue; c.kind = 'place'; await put('places', c); places = places.filter(x => x.id !== c.id).concat(c); }
+    for (const c of j.places || []){ if (!c.id || !(c.data || Array.isArray(c.photos) || Array.isArray(c.sides))) continue; await put('places', c); places = places.filter(x => x.id !== c.id).concat(c); }
+    await migratePlaces();
     if (Array.isArray(j.pages) && j.pages.length){ for (const p of pages) await del('pages', p.id);
       pages = j.pages.filter(p => p.id && Array.isArray(p.panels)).map(migratePage).sort((a,b) => a.order - b.order);
       for (const p of pages) await put('pages', p); cur = 0; }
@@ -2260,7 +2345,7 @@ $('#importFile').onchange = async e => {
 };
 function fillBook(){ $('#neverDraw').value = book.never ?? NEVER_DEFAULT; $('#blurBg').checked = book.blurBg !== false; $('#bookTitle').value = book.title || ''; $('#style').value = STYLES[book.style] ? book.style : 'classic'; $('#styleNotes').value = book.styleNotes || ''; }
 
-window.__cs = {get pages(){ return pages; }, get cur(){ return cur; }, renderPagePNG}; // handy for testing
+window.__cs = {get pages(){ return pages; }, get cur(){ return cur; }, get chars(){ return chars; }, renderPagePNG}; // handy for testing
 /* ---------- login ---------- */
 let started = false;
 function showLogin(msg){
@@ -2295,9 +2380,10 @@ async function start(){
   started = true;
   let data;
   try { data = await api('GET', '/api/comic/all'); } catch (e) { showTopErr('Could not load your comic from the server: ' + e.message); data = {chars: [], pages: [], meta: []}; }
-  chars = data.chars || []; places = data.places || []; pages = (data.pages || []).map(migratePage).sort((a,b) => a.order - b.order);
+  chars = data.chars || []; places = data.places || []; await migratePlaces(); pages = (data.pages || []).map(migratePage).sort((a,b) => a.order - b.order);
   const m = (data.meta || []).find(x => x.id === 'book'); if (m) book = {...book, ...m};
   const t = (data.meta || []).find(x => x.id === 'tray'); if (t && Array.isArray(t.items)) tray = t.items;
+  const hi = (data.meta || []).find(x => x.id === 'history'); if (hi && Array.isArray(hi.items)) picHistory = hi.items;
   // first time on the server: bring across anything made earlier in this browser
   if (!chars.length && !places.length && !pages.some(p => p.panels.some(x => x.takes.length || x.prompt) || p.bubbles.length) && ls.get('cs.moved', '') !== '1'){
     const old = await readOldBrowserData();

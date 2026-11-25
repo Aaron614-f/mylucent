@@ -178,7 +178,7 @@ module.exports = function mountComicStudio(app, { express, dataDir }) {
       const base = req.body.base ? readPicture(req.body.base) : null;
       const mask = base && req.body.mask ? readPicture(req.body.mask) : null;
       const hint = base && req.body.hint ? readPicture(req.body.hint) : null;
-      if (base) refs.unshift(Object.assign({ label: 'THE FIXED BACKGROUND to paint into (only the masked area may change)' }, base));
+      if (base) refs.unshift(Object.assign({ label: String(req.body.baseLabel || 'THE PICTURE to edit (only the masked area may change)').slice(0, 200) }, base));
       const [aw, ah] = String(aspect || '1:1').split(':').map(Number), ratio = aw / ah || 1;
       let buf, ext = 'png';
       if (p === 'openai') {
