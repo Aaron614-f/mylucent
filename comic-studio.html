@@ -55,12 +55,11 @@ textarea{resize:vertical;min-height:90px}
 .bgt img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
 .bgt input{width:100%;border:0;border-top:2px solid var(--line);border-radius:0;padding:6px 8px;font-size:14px;min-height:0}
 .bgt .x{position:absolute;top:4px;right:4px;width:28px;height:28px;min-height:0;padding:0;border-radius:50%;font-weight:800;line-height:1}
-.bgpick{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
-.bgpick button{flex:0 0 auto;width:96px;padding:0;border:3px solid var(--line);border-radius:6px;overflow:hidden;background:var(--bg);min-height:0;display:block;text-align:center;font:700 12px 'Nunito Sans',sans-serif}
-.bgpick button img{display:block;width:100%;height:64px;object-fit:cover}
-.bgpick button span{display:block;padding:3px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bgpick{display:flex;gap:6px;flex-wrap:wrap}
+.bgpick button{flex:0 0 auto;width:46px;height:46px;padding:0;border:3px solid var(--line);border-radius:6px;overflow:hidden;background:var(--bg);min-height:0;display:block;text-align:center;font:700 12px 'Nunito Sans',sans-serif}
+.bgpick button img{display:block;width:100%;height:100%;object-fit:cover}
 .bgpick button.on{border-color:#e8352e;box-shadow:0 0 0 2px #e8352e}
-.bgpick .none{height:88px;display:grid;place-items:center;padding:6px}
+.bgpick .none{display:grid;place-items:center;font-size:20px;line-height:1}
 .side{border:2px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);display:grid;gap:8px}
 .side .row{align-items:center}
 .side .pics{display:flex;flex-wrap:wrap;gap:6px}
@@ -126,7 +125,7 @@ dialog form{padding:20px;display:grid;gap:14px}
 @keyframes pop{to{transform:rotate(4deg) scale(1.08)}}
 @media(prefers-reduced-motion:reduce){.spin{animation:none}}
 .section{border-top:3px solid var(--line);padding-top:14px;display:grid;gap:10px}
-.pstage{border:4px solid var(--line);background:#f4f1ea;display:grid;place-items:center;overflow:hidden;max-height:60vh;margin:0 auto;width:100%;color:#141414}
+.pstage{border:4px solid var(--line);background:#f4f1ea;display:grid;place-items:center;overflow:hidden;max-height:68vh;margin:0 auto;width:100%;color:#141414}
 .pstage img{width:100%;height:100%;object-fit:contain;background:#fff}
 .takes{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
 .takes button{flex:none;width:72px;height:72px;padding:0;overflow:hidden}
@@ -149,8 +148,11 @@ dialog form{padding:20px;display:grid;gap:14px}
 @media(prefers-reduced-motion:reduce){.mic.on{animation:none}}
 .toast{position:sticky;bottom:0;margin:0 -20px -20px;padding:10px 20px;background:#141414;color:#fff;font-weight:700;font-size:14px}
 body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radius:6px;z-index:9}
-#panelDlg{width:min(1140px,96vw)}
-.pgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+#panelDlg{width:min(1320px,97vw)}
+.pgrid{display:grid;grid-template-columns:minmax(260px,.75fr) minmax(0,1.4fr);gap:22px;align-items:start}
+.pleft{position:sticky;top:0}
+.castline{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+.castline b{color:var(--ink)}.castline .no{color:#a3241e}
 @media(max-width:820px){.pgrid{grid-template-columns:minmax(0,1fr)}}
 .pside{position:sticky;top:0;display:grid;gap:0}
 .ptabs{display:flex;gap:0}
@@ -225,9 +227,9 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 .pstage{position:relative}
 .pstage .mask{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .pstage>img{object-fit:cover!important}
-.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-height:66vh;overflow-y:auto;padding:2px 6px 6px 2px}
-.gal button{padding:0;aspect-ratio:1/1;overflow:hidden;min-height:0;box-shadow:3px 3px 0 var(--line);display:block}
-.gal img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));grid-auto-rows:140px;gap:12px;max-height:66vh;overflow-y:auto;padding:2px 8px 8px 2px;align-content:start}
+.gal button{position:relative;width:100%;height:100%;padding:0;margin:0;overflow:hidden;min-height:0;box-shadow:3px 3px 0 var(--line);display:block}
+.gal img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .gal button:hover{outline:3px solid var(--red)}
 .idrow{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:10px 12px;border:2px solid var(--line);border-radius:6px;background:var(--bg)}
 .idrow input{width:22px;height:22px;margin:2px 0 0;accent-color:#e8352e}
@@ -425,17 +427,20 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
   <form method="dialog" id="panelForm">
     <div class="hubhead"><h2 id="panelTitle">Panel</h2><button type="button" class="xbtn" data-close aria-label="Close">×</button></div>
     <div class="pgrid">
-      <div class="stack">
+      <div class="stack pleft">
         <div><label for="pPrompt">What happens in this panel? Type it or tap the mic.</label>
           <div class="micwrap"><textarea id="pPrompt" placeholder="Dave and Mia sprint down a rainy alley, Dave looking back over his shoulder. Speech bubble from Mia: &quot;Faster!&quot;"></textarea><button type="button" class="polish" data-polish="pPrompt" aria-label="Polish the panel description" title="Polish: rewrite so the AI understands it clearly"></button><button type="button" class="mic" data-mic="pPrompt" aria-label="Speak the panel description"></button></div></div>
-        <div class="chips" id="pChips"></div>
+        <p class="castline" id="pChips"></p>
+        <div class="chips" id="pInsert" hidden></div>
+        <aside class="ov" id="ov" aria-live="polite"></aside>
         <div class="stack" id="pBgBox" style="gap:8px">
           <label style="margin:0">Background photo</label>
           <div class="bgpick" id="pBgPick"></div>
-          <div class="row" id="pFrameRow" hidden style="align-items:center;gap:12px"><canvas id="pFrameCv" width="300" height="200" style="height:140px;border:2px solid var(--ink);border-radius:6px;cursor:move;touch-action:none;flex:0 0 auto"></canvas>
-            <div class="stack" style="gap:6px;flex:1 1 120px"><label for="pFrameZoom" style="margin:0">Zoom</label><input type="range" id="pFrameZoom" min="100" max="300" value="100" style="accent-color:#e8352e;padding:0"><p class="hint" style="margin:0">Drag the photo to move it. This is exactly the blurred background the AI gets.</p></div></div>
+          <div class="row" id="pFrameRow" hidden style="align-items:center;gap:12px"><canvas id="pFrameCv" width="300" height="200" style="height:110px;border:2px solid var(--ink);border-radius:6px;cursor:move;touch-action:none;flex:0 0 auto"></canvas>
+            <div class="stack" style="gap:6px;flex:1 1 120px"><label for="pFrameZoom" style="margin:0">Zoom</label><input type="range" id="pFrameZoom" min="100" max="300" value="100" style="accent-color:#e8352e;padding:0"><p class="hint" style="margin:0">Drag the photo to move it. The AI redraws this loosely as a soft, faded comic background, so it feels like the same place without copying every detail.</p></div></div>
         </div>
-        <div class="chips" id="pInsert"></div>
+      </div>
+      <div class="stack pright">
         <div id="panelErr"></div>
         <div class="pstage" id="pStage"></div>
         <div id="fixBar" class="stack" hidden style="gap:8px;border:2px solid var(--line);border-radius:6px;padding:10px">
@@ -452,9 +457,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
         <p class="hint" id="pShape" style="margin:0;text-align:center"></p>
         <div class="takes" id="takes" hidden></div>
       </div>
-<div class="pside">
-
-        <aside class="ov" id="ov" aria-live="polite"></aside>
+<div class="pside" hidden>
         <div class="ov pform" id="pform" hidden data-removed>
           <p class="hint" style="margin:0">Optional. Answer what you can and skip the rest. Then let the app write the best description from it.</p>
           <div><label>Who is in this panel?</label><div class="chips" id="fWho"></div></div>
@@ -1304,7 +1307,7 @@ function bGeo(b){
   const T = bt(b), fs = b.fs * (T.big || 1);
   const it = T.italic ? 'italic ' : '';
   const font = T.font === 'bangers' ? `${it}400 ${fs}px Bangers, Impact, sans-serif` : T.font === 'mono' ? `${it}700 ${fs}px "Courier New", Courier, monospace` : `${it}700 ${fs}px "Comic Neue", "Comic Sans MS", cursive`;
-  const K0 = T.K || [1.36,34,1.38,30], f = T.K ? [.85, .7] : [.6, .35], K = [1 + (K0[0] - 1) * f[0], K0[1] * f[1], 1 + (K0[2] - 1) * f[0], K0[3] * f[1]], lh = Math.round(fs * 1.12);
+  const K0 = T.K || [1.36,34,1.38,30], f = T.K ? [.55, .35] : [.4, .2], K = [1 + (K0[0] - 1) * f[0], K0[1] * f[1], 1 + (K0[2] - 1) * f[0], K0[3] * f[1]], lh = Math.round(fs * 1.12);
   // a bubble you've resized keeps your width and height; the words re-flow inside it at the same size
   const boxW = b.bw ? Math.max(30, (b.bw - K[1]) / K[0] - 8) : 0;
   const m = wrapText(b.text, font, boxW || b.tw || (T.big > 2 ? 320 : 190));
@@ -1889,8 +1892,8 @@ document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', sto
 function renderBg(){
   const pn = curPanel(), pick = photoPick(pn);
   $('#pBgBox').hidden = !places.length;
-  $('#pBgPick').innerHTML = `<button type="button" class="none${pick ? '' : ' on'}" data-bgp="" title="No photo: the AI draws a background">No photo</button>` +
-    places.map((b, i) => `<button type="button" data-bgp="${esc(b.id)}"${pick === b ? ' class="on"' : ''} title="${esc(bgLabel(b, i))}"><img src="${b.data}" alt=""><span>${esc(bgLabel(b, i))}</span></button>`).join('');
+  $('#pBgPick').innerHTML = `<button type="button" class="none${pick ? '' : ' on'}" data-bgp="" title="No photo: the AI draws a background" aria-label="No photo">∅</button>` +
+    places.map((b, i) => `<button type="button" data-bgp="${esc(b.id)}"${pick === b ? ' class="on"' : ''} title="${esc(bgLabel(b, i))}"><img src="${b.data}" alt="${esc(bgLabel(b, i))}"></button>`).join('');
   $('#pFrameRow').hidden = !pick; if (pick) drawFramePrev(pn, pick);
 }
 const photoPick = pn => places.find(b => b.id === pn.bgPhoto) || null;
@@ -1935,10 +1938,9 @@ async function blurredPhoto(pn, pick, aspect){
 }
 function panelChips(){
   renderBg();
-  const t = $('#pPrompt').value, f = found(t), pl = [];
-  const chip = (c, mark) => c.sheet ? `<span class="chip">${mark} ${esc(c.name)} ✓</span>` : `<span class="chip warn">⚠ ${esc(c.name)}: look not approved</span>`;
-  $('#pChips').innerHTML = (f.length || pl.length) ? f.map(c => chip(c, '★')).concat(pl.map(c => curPanel().bgMode === 'photo' && !c.sheet ? `<span class="chip">⌂ ${esc(c.name)} (photo)</span>` : chip(c, '⌂'))).join('')
-    : (chars.length ? '<span class="chip off">No characters in this panel yet. Type a code word or tap + below.</span>' : '');
+  const t = $('#pPrompt').value, f = found(t);
+  $('#pChips').innerHTML = chars.length ? 'Cast: ' + chars.map(c => { const on = f.includes(c); return on ? `<b${c.sheet ? '' : ' class="no"'}>${esc(c.name)}${c.sheet ? ' ✓' : ' (look not approved)'}</b>` : esc(c.name); }).join(', ')
+    : 'No characters yet. Add them under Cast at the top.';
 }
 function renderPanelStage(){
   if (fix.on && curPanel().id === fix.pid && !busyPanels.has(fix.pid)) return renderFixStage();
@@ -1946,7 +1948,7 @@ function renderPanelStage(){
   const pg = page(), pn = curPanel(), bb = panelBox(pg, pn), img = panelImg(pn), asp = bestAspect(bb.w / bb.h);
   const ins = G.inset(pn.pts, (pg.gutter || 12)/2);
   $('#pStage').style.aspectRatio = `${bb.w.toFixed(1)} / ${bb.h.toFixed(1)}`;
-  $('#pStage').style.maxWidth = `min(100%, calc(60vh * ${(bb.w / bb.h).toFixed(3)}))`;
+  $('#pStage').style.maxWidth = `min(100%, calc(68vh * ${(bb.w / bb.h).toFixed(3)}))`;
   const mask = `<svg class="mask" viewBox="${bb.x0.toFixed(1)} ${bb.y0.toFixed(1)} ${bb.w.toFixed(1)} ${bb.h.toFixed(1)}" preserveAspectRatio="none" aria-hidden="true">
     <path fill-rule="evenodd" fill="rgba(20,20,20,.55)" d="M${bb.x0-2},${bb.y0-2}H${bb.x1+2}V${bb.y1+2}H${bb.x0-2}Z ${G.path(ins)}"/>
     <path d="${G.path(ins)}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"/>
@@ -2009,7 +2011,7 @@ async function startFix(){
 function stopFix(){ fix.on = false; fix.img = null; renderPanelStage(); }
 function renderFixStage(){
   $('#pStage').style.aspectRatio = `${fix.W} / ${fix.H}`;
-  $('#pStage').style.maxWidth = `min(100%, calc(60vh * ${(fix.W / fix.H).toFixed(3)}))`;
+  $('#pStage').style.maxWidth = `min(100%, calc(68vh * ${(fix.W / fix.H).toFixed(3)}))`;
   $('#pStage').innerHTML = `<canvas id="fixCv" width="${fix.W}" height="${fix.H}" style="width:100%;height:100%;display:block;touch-action:none;cursor:crosshair"></canvas>`;
   $('#fixBar').hidden = false; $('#fixOpen').hidden = true; $('#pShape').textContent = 'Red = the part that gets redrawn.';
   drawFix();
@@ -2082,7 +2084,7 @@ Scene: ${prompt}`;
   if (cast.length) text += `\n\nCharacters in this panel: ${cast.map(c => c.name).join(', ')}. Each one has an APPROVED model sheet attached. Draw each character exactly as on their model sheet: same face, hair, body build, skin tone and outfit. Pose and expression should fit the scene; do not copy the model-sheet poses. Do not draw anyone else who looks like them.` +
     cast.filter(c => c.desc).map(c => `\n${c.name}: ${c.desc}`).join('') + cast.map(charRules).join('');
   const photo = photoPick(pn), bg = null;
-  if (photo) text += `\n\nBACKGROUND: the FIRST attached picture is the finished background, a blurred photo. Use it exactly as it is, filling the whole frame: keep it a soft, blurred photo with the same framing, colours and blur. Do NOT redraw it, sharpen it, restyle it as a comic, or add or remove anything in it. Draw only the characters in front of it, in the comic style, crisp and sharp, sized and lit to sit naturally in that place.`;
+  if (photo) text += `\n\nBACKGROUND: the FIRST attached picture is a blurred photo of the place. Use it only as a loose guide to the feel of the place: its colours, light, rough layout and kind of room. Redraw it as a simple, soft comic background in the same art style: faded and low in contrast (as if seen through a light haze, at low opacity), softly blurred, with only broad shapes. Do NOT copy it exactly and do NOT draw small or exact details: no readable pictures on the walls, no text, no clutter. It should simply feel like the same place every time. The characters in front stay crisp, sharp and full colour.`;
   if (bg){ const sides = bg.pl.sides, i = sides.indexOf(bg.sd), opp = sides.length === 4 ? sides[(i + 2) % 4] : sides.length === 2 ? sides[1 - i] : null;
     text += `\n\nCamera direction: the camera faces the "${bg.sd.name}" side of ${bg.pl.name}. That side is directly behind the characters and fills the background, exactly as in the attached approved drawing of that side.${opp ? ` The "${opp.name}" side is behind the camera and is not visible.` : ''}`; }
   if (where.length && !photo && !bg) text += `\n\nPlace: this panel is set in ${where.map(w => w.name).join(' and ')}. ${where.length > 1 ? 'Each place has' : 'It has'} an APPROVED location sheet attached. Redraw that exact place as the setting: same layout, furniture, fixtures, colours and key objects, in the same comic style. Choose the camera angle and how much of the room shows to suit the action; the place is the backdrop, the characters are the focus.` +
@@ -2096,7 +2098,7 @@ Scene: ${prompt}`;
   if (book.blurBg !== false && !photo) text += BLUR_TEXT;
   text += '\nDo NOT draw speech bubbles, captions or any lettering: those are added separately on the page. Leave a little calm space where a speech bubble could sit.';
   const refs = [];
-  if (photo) refs.push({label: 'THE BACKGROUND: a blurred photo. Keep it exactly as it is, blurred; draw the characters in front of it', data: await blurredPhoto(pn, photo, aspect)});
+  if (photo) refs.push({label: 'The place (blurred photo): a loose guide for the colours, light and feel of the background only. Redraw it simple, soft and faded; do not copy details', data: await blurredPhoto(pn, photo, aspect)});
   // only the approved model sheets (no real photos: they fight the approved comic look) and ONE background picture
   cast.forEach(c => refs.push({label:`APPROVED model sheet for ${c.name}: this is exactly how ${c.name} looks`, data: c.sheet.data}));
   if (!photo){
