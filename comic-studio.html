@@ -44,6 +44,13 @@ textarea{resize:vertical;min-height:90px}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}.row>*{flex:1 1 150px}.row>.fit{flex:0 0 auto}
 .hint{color:var(--muted);font-size:14px;margin:4px 0 0}
 .chars{display:grid;gap:10px}
+.side{border:2px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);display:grid;gap:8px}
+.side .row{align-items:center}
+.side .pics{display:flex;flex-wrap:wrap;gap:6px}
+.side .pics span{position:relative}
+.side .pics img{width:84px;height:60px;object-fit:cover;border-radius:4px;border:2px solid var(--line);display:block}
+.side .pics .x{position:absolute;top:-8px;right:-8px;min-height:26px;width:26px;padding:0;font-size:12px;box-shadow:none;border-radius:50%}
+.char .ph{width:72px;height:72px;object-fit:cover;border-radius:4px;border:2px solid var(--line)}
 .char{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:center;padding:10px;border:2px solid var(--line);border-radius:6px;background:var(--bg)}
 .char img,.thumb{width:72px;height:72px;object-fit:cover;border-radius:4px;border:2px solid var(--line);background:#ddd}
 .char .code{font-family:Bangers,sans-serif;font-size:22px;letter-spacing:.04em}
@@ -160,9 +167,11 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 .qbar{position:absolute;display:flex;gap:6px;padding:5px;background:#141414;border-radius:8px;z-index:4;white-space:nowrap}
 .qbar button,.qbar select{min-height:40px;height:40px;border:2px solid #141414;border-radius:6px;background:#fff;color:#141414;font:800 14px "Nunito Sans",sans-serif;padding:0 8px;box-shadow:none;width:auto}
 .edside{display:grid;gap:12px;align-content:start}
-.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.tiles button{flex-direction:column;gap:2px;min-height:64px;padding:6px;cursor:grab;font-size:12px;box-shadow:2px 2px 0 var(--line)}
-.tiles button span{font:400 21px Bangers,Impact,sans-serif;letter-spacing:.04em}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:62vh;overflow-y:auto;padding:2px 6px 6px 2px}
+.tiles button{flex-direction:column;gap:2px;height:auto;min-height:72px;padding:6px 4px;cursor:grab;box-shadow:2px 2px 0 var(--line);background:#fffaf0;color:#141414}
+.tiles button svg{width:100%;height:60px;display:block;pointer-events:none}
+.tiles button:hover{background:var(--yel)}
+.tiles button small{font:700 10.5px/1.15 "Nunito Sans",sans-serif;color:#4d4752;text-align:center;pointer-events:none}
 .tray{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .tray button{padding:0;aspect-ratio:1/1;overflow:hidden;min-height:0;box-shadow:2px 2px 0 var(--line);cursor:grab}
 .tray img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
@@ -200,6 +209,11 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
       <div class="row" style="align-items:center"><h2>Your cast</h2><button class="primary fit" id="newChar" type="button">+ New character</button></div>
       <p class="hint" style="margin:0">Add each person's photos and approve their comic look once. After that, their code word always brings in the approved look.</p>
       <div class="chars" id="chars"></div>
+    </div>
+    <div class="card stack">
+      <div class="row" style="align-items:center"><h2>Places</h2><button class="primary fit" id="newPlace" type="button">+ New place</button></div>
+      <p class="hint" style="margin:0">Add a real place with a few photos (your kitchen, a park, a shop). Approve its comic look once, then its code word puts the story in that same place.</p>
+      <div class="chars" id="places"></div>
     </div>
     <div class="card stack">
       <h3>Book style</h3>
@@ -293,19 +307,30 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 <dialog id="charDlg">
   <form method="dialog" id="charForm">
     <h2 id="charDlgTitle">New character</h2>
-    <div><label for="cName">Code word</label><input id="cName" required maxlength="30" placeholder="e.g. Dave" autocomplete="off"><p class="hint">One word. This is what you type in panel prompts.</p></div>
+    <div><label for="cName">Code word</label><input id="cName" required maxlength="30" placeholder="e.g. Dave" autocomplete="off"><p class="hint" id="cNameHint">One word. This is what you type in panel prompts.</p></div>
     <div><label for="cDesc">Description</label>
       <div class="micwrap"><textarea id="cDesc" placeholder="Man in his 30s, short curly brown hair, beard, round glasses, tall and broad. Always wears a green hoodie, jeans and red sneakers."></textarea><button type="button" class="polish" data-polish="cDesc" aria-label="Polish the description" title="Polish: rewrite so the AI understands it clearly"></button><button type="button" class="mic" data-mic="cDesc" aria-label="Speak the description"></button></div>
-      <p class="hint">Describe their usual outfit too. It keeps clothes the same on every page.</p></div>
+      <p class="hint" id="cDescHint">Describe their usual outfit too. It keeps clothes the same on every page.</p></div>
     <div>
-      <label>Reference photos (front, side, back… up to 6)</label>
+      <label id="cPhotosLbl">Reference photos (front, side, back… up to 6)</label>
       <div class="drop" id="drop" tabindex="0">Tap to choose photos, or drop them here</div>
       <input type="file" id="cFiles" accept="image/*" multiple hidden>
       <div class="views" id="views" style="margin-top:10px"></div>
     </div>
+    <div class="section" id="sidesBox" hidden>
+      <h3>Sides of the room</h3>
+      <p class="hint" style="margin:0">Name each wall or side (e.g. Gallery wall, Window, Door) and add a photo of it. Go round the room in order, clockwise. Then a panel can say which side is behind the characters.</p>
+      <div class="row" style="align-items:center">
+        <button type="button" class="small fit" id="addSide">+ Add a side</button>
+        <label class="btn small fit" style="cursor:pointer;position:relative">Cut a panorama into sides<input type="file" id="panoFile" accept="image/*" style="position:absolute;opacity:0;width:1px;height:1px"></label>
+        <label class="fit" style="display:flex;align-items:center;gap:6px;margin:0;font-weight:700">into <select id="panoN" style="width:auto;padding:6px"><option>2</option><option>3</option><option selected>4</option></select> sides</label>
+      </div>
+      <div id="sides" class="stack"></div>
+      <input type="file" id="sideFiles" accept="image/*" multiple hidden>
+    </div>
     <div class="section">
       <h3>Approved comic look</h3>
-      <p class="hint" style="margin:0">The app draws a model sheet (front, side, back, face). Approve it, and every panel uses this exact look.</p>
+      <p class="hint" style="margin:0" id="sheetHint">The app draws a model sheet (front, side, back, face). Approve it, and every panel uses this exact look.</p>
       <div class="sheet" id="sheetBox"></div>
       <div id="sheetErr"></div>
       <div><label for="sheetNotes">Changes for the next try (optional)</label><div class="micwrap"><input id="sheetNotes" placeholder="e.g. make the hair shorter, add a scar over the left eye"><button type="button" class="polish" data-polish="sheetNotes" aria-label="Polish the changes" title="Polish: rewrite so the AI understands it clearly" style="top:3px"></button><button type="button" class="mic" data-mic="sheetNotes" aria-label="Speak the changes" style="top:3px"></button></div></div>
@@ -317,7 +342,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
     </div>
     <div class="end">
       <button type="button" id="cancelChar">Close</button>
-      <button type="submit" class="primary">Save character</button>
+      <button type="submit" class="primary" id="saveCharBtn">Save character</button>
     </div>
   </form>
 </dialog>
@@ -331,6 +356,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
         <div><label for="pPrompt">What happens in this panel? Type it or tap the mic.</label>
           <div class="micwrap"><textarea id="pPrompt" placeholder="Dave and Mia sprint down a rainy alley, Dave looking back over his shoulder. Speech bubble from Mia: &quot;Faster!&quot;"></textarea><button type="button" class="polish" data-polish="pPrompt" aria-label="Polish the panel description" title="Polish: rewrite so the AI understands it clearly"></button><button type="button" class="mic" data-mic="pPrompt" aria-label="Speak the panel description"></button></div></div>
         <div class="chips" id="pChips"></div>
+        <div class="row" id="pBgRow" hidden style="align-items:center"><label for="pBg" class="fit" style="margin:0">Background behind the characters</label><select id="pBg" style="flex:1 1 200px"></select></div>
         <div class="chips" id="pInsert"></div>
         <div id="panelErr"></div>
         <div class="pstage" id="pStage"></div>
@@ -573,7 +599,7 @@ const POLISH = {
   pPrompt: () => ({
     system: `You polish descriptions of single comic book panels so an image-generating AI understands them exactly.
 Rewrite the user's text into one clear, specific description (at most about 90 words) that states: who is in the panel and what each is doing (pose, action), their expressions, the setting and time/lighting, the camera framing, and any speech bubbles, thought bubbles, captions or sound effects with the exact words and who says them.
-Rules: keep every character code word exactly as written (these are the known characters: ${chars.map(c => c.name).join(', ') || 'none'}). Keep all dialogue word for word. Keep the user's meaning; fill only small gaps sensibly and never add major new events or characters. Fix spelling and speech-to-text mistakes. Reply with only the rewritten description, no quotes, no preamble.`,
+Rules: keep every character code word exactly as written (these are the known characters and places: ${chars.concat(places).map(c => c.name).join(', ') || 'none'}). Keep all dialogue word for word. Keep the user's meaning; fill only small gaps sensibly and never add major new events or characters. Fix spelling and speech-to-text mistakes. Reply with only the rewritten description, no quotes, no preamble.`,
     user: ovContext(page(), curPanel()) + 'Panel description to polish:\n' }),
   cDesc: () => ({
     system: `You polish character descriptions for a comic book, so an image AI draws the character the same way every time.
@@ -621,48 +647,108 @@ function tickProg(){
 }
 setInterval(tickProg, 300);
 
-/* ---------- cast ---------- */
-function renderChars(){
-  $('#chars').innerHTML = chars.length ? chars.map(c => {
+/* ---------- cast & places ---------- */
+let places = [];
+const PLACE_VIEWS = ['wide view','panorama','front','angle','left side','right side','close-up detail'];
+const KIND = {
+  char: {store: 'chars', list: () => chars, set: v => { chars = v; }, el: '#chars', newTitle: 'New character', save: 'Save character',
+    nameHint: 'One word. This is what you type in panel prompts.', namePh: 'e.g. Dave',
+    descPh: 'Man in his 30s, short curly brown hair, beard, round glasses, tall and broad. Always wears a green hoodie, jeans and red sneakers.',
+    descHint: 'Describe their usual outfit too. It keeps clothes the same on every page.',
+    photos: 'Reference photos (front, side, back… up to 6)', views: () => VIEWS,
+    sheetHint: 'The app draws a model sheet (front, side, back, face). Approve it, and every panel uses this exact look.',
+    draw: 'Draw model sheet', empty: 'No characters yet. Add up to 6 people with a few photos each.', notesPh: 'e.g. make the hair shorter, add a scar over the left eye'},
+  place: {store: 'places', list: () => places, set: v => { places = v; }, el: '#places', newTitle: 'New place', save: 'Save place',
+    nameHint: 'One word, e.g. Kitchen or Park. Type it in a panel to set the scene there.', namePh: 'e.g. Kitchen',
+    descPh: 'Bright family kitchen: white marble counter with a wooden chopping board, dark green cabinets, window above the sink, fruit bowl on the left.',
+    descHint: 'Mention the main things that should always be there, and their colours.',
+    photos: 'Photos of the place (wide view, angles, details… up to 6)', views: () => PLACE_VIEWS,
+    sheetHint: 'The app redraws the place in your comic style, empty of people: a wide view and a closer view, or one view of each side if you\'ve named the sides above. Approve it, and every panel set there uses this exact place.',
+    draw: 'Draw place sheet', empty: 'No places yet. Add a real place with a few photos.', notesPh: 'e.g. make the cabinets darker, add a plant on the counter'}
+};
+let edKind = 'char';
+function renderList(kind){
+  const K = KIND[kind], list = K.list();
+  $(K.el).innerHTML = list.length ? list.map(c => {
     const thumb = c.sheet?.data || c.photos[0]?.data;
     return `<div class="char">
-      ${thumb ? `<img src="${thumb}" alt="">` : '<div class="thumb"></div>'}
+      ${thumb ? `<img class="ph" src="${thumb}" alt="">` : '<div class="thumb"></div>'}
       <div><div class="code">${esc(c.name)}</div>
         ${c.sheet ? '<span class="badge ok">✓ Look approved</span>' : '<span class="badge no">Needs approval</span>'}
         <div class="acts"><button class="small" type="button" data-edit="${esc(c.id)}">${c.sheet ? 'Open' : 'Approve look'}</button>
         <button class="small" type="button" data-del="${esc(c.id)}">Delete</button></div></div></div>`; }).join('')
-    : '<div class="empty">No characters yet. Add up to 6 people with a few photos each.</div>';
+    : `<div class="empty">${K.empty}</div>`;
 }
-$('#chars').onclick = async e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const c = chars.find(x => x.id === (b.dataset.edit || b.dataset.del)); if (!c) return;
-  if (b.dataset.edit) openChar(c);
+function renderChars(){ renderList('char'); renderList('place'); }
+['char','place'].forEach(kind => $(KIND[kind].el).onclick = async e => {
+  const K = KIND[kind], b = e.target.closest('button'); if (!b) return;
+  const c = K.list().find(x => x.id === (b.dataset.edit || b.dataset.del)); if (!c) return;
+  if (b.dataset.edit) openChar(c, kind);
   if (b.dataset.del){
-    if (b.dataset.sure){ await del('chars', c.id); chars = chars.filter(x => x !== c); renderChars(); }
+    if (b.dataset.sure){ await del(K.store, c.id); K.set(K.list().filter(x => x !== c)); renderChars(); }
     else { b.dataset.sure = 1; b.textContent = 'Sure?'; setTimeout(() => { if (b.isConnected){ delete b.dataset.sure; b.textContent = 'Delete'; } }, 3000); }
   }
-};
+});
 
 /* ---------- character editor ---------- */
-let editing = null, draftPhotos = [], sheetBusy = false, sheetStart = 0;
-function openChar(c){
+let editing = null, draftPhotos = [], draftSides = [], sideFor = -1, sheetBusy = false, sheetStart = 0;
+function openChar(c, kind = 'char'){
+  edKind = kind; const K = KIND[kind];
   editing = c || null; draftPhotos = c ? c.photos.map(p => ({...p})) : [];
-  $('#charDlgTitle').textContent = c ? c.name : 'New character';
+  draftSides = (c?.sides || []).map(x => ({...x, photos: (x.photos || []).map(q => ({...q}))}));
+  $('#charDlgTitle').textContent = c ? c.name : K.newTitle;
+  $('#cNameHint').textContent = K.nameHint; $('#cName').placeholder = K.namePh; $('#cDesc').placeholder = K.descPh; $('#cDescHint').textContent = K.descHint;
+  $('#cPhotosLbl').textContent = K.photos; $('#sheetHint').textContent = K.sheetHint; $('#saveCharBtn').textContent = K.save; $('#sheetNotes').placeholder = K.notesPh;
   $('#cName').value = c?.name || ''; $('#cDesc').value = c?.desc || ''; $('#sheetNotes').value = '';
-  $('#sheetErr').innerHTML = ''; renderViews(); renderSheet(); $('#charDlg').showModal();
+  $('#sheetErr').innerHTML = ''; $('#sidesBox').hidden = kind !== 'place'; renderViews(); renderSides(); renderSheet(); $('#charDlg').showModal();
 }
+/* sides of a place (walls you can put behind the characters) */
+function renderSides(){
+  $('#addSide').disabled = draftSides.length >= 4;
+  $('#sides').innerHTML = draftSides.length ? draftSides.map((sd, i) => `<div class="side">
+      <div class="row"><label class="fit" style="margin:0" for="sdn${i}">Side ${i+1}</label><input id="sdn${i}" data-sname="${i}" value="${esc(sd.name)}" placeholder="e.g. Gallery wall" maxlength="40" style="flex:1 1 160px">
+        <button type="button" class="small fit" data-sadd="${i}">+ Photo</button><button type="button" class="small fit" data-sdel="${i}" aria-label="Remove side ${i+1}">Remove</button></div>
+      <div class="pics">${sd.photos.map((q, j) => `<span><img src="${q.data}" alt=""><button type="button" class="x" data-sprm="${i}:${j}" aria-label="Remove photo">✕</button></span>`).join('') || '<span class="hint" style="margin:0">No photo yet</span>'}</div></div>`).join('')
+    : '<p class="hint" style="margin:0">No sides yet. Optional: without them, the AI picks the view.</p>';
+}
+$('#addSide').onclick = () => { if (draftSides.length >= 4) return; draftSides.push({id: uid(), name: '', photos: []}); renderSides(); $('#sdn' + (draftSides.length - 1))?.focus(); };
+$('#sides').addEventListener('input', e => { const i = e.target.dataset.sname; if (i != null) draftSides[+i].name = e.target.value; });
+$('#sides').addEventListener('click', e => {
+  const add = e.target.closest('[data-sadd]'), dl = e.target.closest('[data-sdel]'), pr = e.target.closest('[data-sprm]');
+  if (add){ sideFor = +add.dataset.sadd; $('#sideFiles').click(); }
+  if (dl){ draftSides.splice(+dl.dataset.sdel, 1); renderSides(); }
+  if (pr){ const [i, j] = pr.dataset.sprm.split(':').map(Number); draftSides[i].photos.splice(j, 1); renderSides(); }
+});
+$('#sideFiles').onchange = async e => {
+  const files = [...e.target.files].filter(f => f.type.startsWith('image/')); e.target.value = ''; const sd = draftSides[sideFor]; if (!sd) return;
+  for (const f of files){ if (sd.photos.length >= 3) break;
+    try { const orig = await shrink(f, 1800), r = await openCrop(orig); if (!r || r === 'skip') continue; sd.photos.push({data: await shrink(orig, 1024, r === 'whole' ? null : r)}); renderSides(); } catch { toast('Could not read one of those photos.'); } }
+};
+$('#panoFile').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const n = +$('#panoN').value, src = await shrink(f, 4000), im = await loadImg(src), W = im.naturalWidth, H = im.naturalHeight, sw = W / n;
+    for (let i = 0; i < n; i++){
+      const piece = await shrink(src, 1024, {x: Math.round(i*sw), y: 0, w: Math.round(sw), h: H});
+      if (!draftSides[i]) draftSides[i] = {id: uid(), name: '', photos: []};
+      draftSides[i].photos.unshift({data: piece}); draftSides[i].photos = draftSides[i].photos.slice(0, 3);
+    }
+    if (draftPhotos.length < 6) draftPhotos.push({data: await shrink(src, 1600), view: 'panorama'});
+    renderViews(); renderSides(); toast(`Cut the panorama into ${n} sides. Now give each side a name.`);
+  } catch { toast('Could not read that panorama.'); }
+};
 function renderViews(){
   $('#views').innerHTML = draftPhotos.map((p,i) => `<div class="view"><button type="button" class="x" data-rm="${i}" aria-label="Remove photo">✕</button>
-      <img src="${p.data}" alt=""><select data-v="${i}" aria-label="Which view">${VIEWS.map(v => `<option${v===p.view?' selected':''}>${v}</option>`).join('')}</select>
+      <img src="${p.data}" alt=""><select data-v="${i}" aria-label="Which view">${KIND[edKind].views().map(v => `<option${v===p.view?' selected':''}>${v}</option>`).join('')}</select>
       <div class="acts2"><button type="button" class="small" data-crop="${i}">Crop</button></div></div>`).join('');
 }
 function renderSheet(){
   const c = editing, show = c?.sheet?.data || c?.sheetDraft;
   if (sheetBusy){ $('#sheetBox').innerHTML = `<div class="burst">DRAWING…${progHTML('sheet', sheetStart)}</div>`; tickProg(); }
   else if (show) $('#sheetBox').innerHTML = `<img src="${show}" alt="Model sheet">${c.sheet ? '<span class="stamp">APPROVED</span>' : ''}`;
-  else $('#sheetBox').innerHTML = '<div class="burst">NO LOOK YET<small>Add photos, then draw a model sheet</small></div>';
+  else $('#sheetBox').innerHTML = `<div class="burst">NO LOOK YET<small>Add photos, then ${edKind === 'place' ? 'draw a place sheet' : 'draw a model sheet'}</small></div>`;
   const approved = !!c?.sheet;
-  $('#genSheet').hidden = approved; $('#genSheet').textContent = c?.sheetDraft ? 'Try again' : 'Draw model sheet';
+  $('#genSheet').hidden = approved; $('#genSheet').textContent = c?.sheetDraft ? 'Try again' : KIND[edKind].draw;
   $('#approveSheet').hidden = approved || !c?.sheetDraft || sheetBusy; $('#unapprove').hidden = !approved;
   $('#sheetNotes').closest('div').hidden = approved; $('#genSheet').disabled = sheetBusy;
 }
@@ -676,10 +762,10 @@ $('#views').onchange = e => { const s = e.target.closest('[data-v]'); if (s) dra
 async function addFiles(files){
   const list = [...files].filter(f => f.type.startsWith('image/'));
   for (const f of list){
-    if (draftPhotos.length >= 6){ toast('That is 6 photos, the most a character can have.'); break; }
+    if (draftPhotos.length >= 6){ toast('That is 6 photos, the most you can add.'); break; }
     try { const orig = await shrink(f, 1800); const r = await openCrop(orig);
       if (!r || r === 'skip') continue;
-      draftPhotos.push({data: await shrink(orig, 1024, r === 'whole' ? null : r), orig, view: VIEWS[Math.min(draftPhotos.length, 2)]}); renderViews();
+      draftPhotos.push({data: await shrink(orig, 1024, r === 'whole' ? null : r), orig, view: KIND[edKind].views()[Math.min(draftPhotos.length, 2)]}); renderViews();
     } catch { toast('Could not read one of those photos.'); }
   }
   renderViews();
@@ -736,51 +822,72 @@ $('#cName').oninput = () => $('#cName').setCustomValidity('');
 
 async function saveChar(){
   const name = $('#cName').value.trim().replace(/\s+/g,'_');
-  const clash = chars.find(c => c.name.toLowerCase() === name.toLowerCase() && c !== editing);
-  if (!name || clash){ $('#cName').setCustomValidity(clash ? 'Another character already uses that code word' : 'Give them a code word'); $('#cName').reportValidity(); return false; }
-  const c = editing || {id: uid()};
-  Object.assign(c, {name, desc: $('#cDesc').value.trim(), photos: draftPhotos.map(p => ({...p}))});
-  if (!editing){ chars.push(c); editing = c; }
+  const clash = chars.concat(places).find(c => c.name.toLowerCase() === name.toLowerCase() && c !== editing);
+  if (!name || clash){ $('#cName').setCustomValidity(clash ? `${clash.kind === 'place' ? 'A place' : 'A character'} already uses that code word` : 'Give it a code word'); $('#cName').reportValidity(); return false; }
+  const K = KIND[edKind], c = editing || {id: uid()};
+  Object.assign(c, {name, desc: $('#cDesc').value.trim(), photos: draftPhotos.map(p => ({...p}))},
+    edKind === 'place' ? {kind: 'place', sides: draftSides.filter(x => x.name.trim() || x.photos.length).map((x, i) => ({id: x.id, name: x.name.trim() || `Side ${i+1}`, photos: x.photos.map(q => ({...q}))}))} : {});
+  if (!editing){ K.list().push(c); editing = c; }
   $('#charDlgTitle').textContent = c.name;
-  await put('chars', c); renderChars(); return true;
+  await put(K.store, c); renderChars(); return true;
 }
 $('#charForm').onsubmit = async e => { e.preventDefault(); if (await saveChar()) $('#charDlg').close(); };
 $('#cancelChar').onclick = () => $('#charDlg').close();
-$('#newChar').onclick = () => openChar(null);
+$('#newChar').onclick = () => openChar(null, 'char');
+$('#newPlace').onclick = () => openChar(null, 'place');
 
 $('#genSheet').onclick = async () => {
   if (sheetBusy) return;
-  if (!draftPhotos.length){ $('#sheetErr').innerHTML = '<div class="err">Add at least one photo first.</div>'; return; }
+  if (!draftPhotos.length && !draftSides.some(x => x.photos.length)){ $('#sheetErr').innerHTML = '<div class="err">Add at least one photo first.</div>'; return; }
   if (!await saveChar()) return;
   const c = editing, notes = $('#sheetNotes').value.trim();
   sheetBusy = true; sheetStart = Date.now(); $('#sheetErr').innerHTML = ''; renderSheet();
-  let text = `Create a comic book CHARACTER MODEL SHEET (turnaround) for a character called "${c.name}", drawn in this style: ${styleText()}.
+  const isPlace = edKind === 'place', store = KIND[edKind].store;
+  let text = isPlace ? `Create a comic book LOCATION SHEET (environment design) for a place called "${c.name}", drawn in this style: ${styleText()}.
+Redraw the real place in the reference photos as comic art: keep the same layout, furniture, fixtures, materials, colours, windows, lighting direction and key objects in the same positions, so it is clearly recognisable as that place.
+Show it EMPTY, with no people or animals. Two views side by side: on the left a wide establishing view of the whole space, on the right a closer view of the main area where action would happen (for example the counter, table or bench). Small label under each view (WIDE, CLOSE). No other text.` : `Create a comic book CHARACTER MODEL SHEET (turnaround) for a character called "${c.name}", drawn in this style: ${styleText()}.
 Show the same character four times, side by side on a plain white background: full body front view, full body side view, full body back view, and a large face close-up. Neutral standing pose, arms slightly away from the body.
 The character must be clearly recognisable as the real person in the reference photos: same face shape, eyes, nose, mouth, hairstyle, hair colour, skin tone, body build and distinguishing features, translated into the comic style.
 Keep the outfit identical in every view. Small label under each view (FRONT, SIDE, BACK, FACE). No other text, no background scenery.`;
-  if (c.desc) text += `\nCharacter description: ${c.desc}`;
-  const refs = c.photos.map(p => ({label: `Reference photo of ${c.name} (${p.view} view)`, data: p.data}));
-  if (notes && c.sheetDraft){ text += `\nThe last attempt is attached as the final image. Keep everything about it the same EXCEPT these changes: ${notes}`; refs.push({label:'Previous model sheet attempt', data: c.sheetDraft}); }
+  const sides = isPlace ? (c.sides || []) : [];
+  if (sides.length) text = `Create a comic book LOCATION SHEET (environment design) for a place called "${c.name}", drawn in this style: ${styleText()}.
+Redraw the real place in the reference photos as comic art, clearly recognisable: same layout, furniture, fixtures, materials, colours, windows and key objects in the same positions. Show it EMPTY, with no people or animals.
+Draw a grid of ${sides.length} views, one for each side of the room, each seen from the middle of the room looking straight at that side, with a clear label under each: ${sides.map((x, i) => `${i+1}. ${x.name.toUpperCase()}`).join(', ')}.
+The sides are listed going round the room clockwise${sides.length === 4 ? ', so side 1 is opposite side 3 and side 2 is opposite side 4' : sides.length === 2 ? ', and the two sides face each other' : ''}. Keep it one consistent room in every view: same floor, ceiling, lighting, colours and style, and anything near a corner appears at the edge of both neighbouring views. No other text.`;
+  if (c.desc) text += `\n${isPlace ? 'Place' : 'Character'} description: ${c.desc}`;
+  const refs = c.photos.map(p => ({label: `Reference photo of ${isPlace ? 'the place' : ''} ${c.name} (${p.view})`, data: p.data}));
+  sides.forEach(x => x.photos.slice(0, 2).forEach(q => refs.push({label: `Photo of the ${x.name} side of ${c.name}`, data: q.data})));
+  if (notes && c.sheetDraft){ text += `\nThe last attempt is attached as the final image. Keep everything about it the same EXCEPT these changes: ${notes}`; refs.push({label: isPlace ? 'Previous location sheet attempt' : 'Previous model sheet attempt', data: c.sheetDraft}); }
   else if (notes) text += `\nAlso: ${notes}`;
-  try { c.sheetDraft = await generateImage(text, refs, '16:9'); recordSecs('sheet', (Date.now() - sheetStart)/1000); await put('chars', c); renderChars(); }
+  try { c.sheetDraft = await generateImage(text, refs, '16:9'); recordSecs('sheet', (Date.now() - sheetStart)/1000); await put(store, c); renderChars(); }
   catch (e) { $('#sheetErr').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
   finally { sheetBusy = false; if (editing === c) renderSheet(); }
 };
 $('#approveSheet').onclick = async () => {
   const c = editing; if (!c?.sheetDraft) return;
   c.sheet = {data: c.sheetDraft, style: book.style, at: Date.now()}; delete c.sheetDraft;
-  await put('chars', c); renderChars(); renderSheet();
+  await put(KIND[edKind].store, c); renderChars(); renderSheet();
 };
 $('#unapprove').onclick = async e => {
   const b = e.target;
   if (!b.dataset.sure){ b.dataset.sure = 1; b.textContent = 'Sure? Future panels will need a new approval'; return; }
   delete b.dataset.sure; b.textContent = 'Redo the look';
-  const c = editing; c.sheetDraft = c.sheet.data; delete c.sheet; await put('chars', c); renderChars(); renderSheet();
+  const c = editing; c.sheetDraft = c.sheet.data; delete c.sheet; await put(KIND[edKind].store, c); renderChars(); renderSheet();
 };
 
 /* ---------- code word detection ---------- */
 const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const found = text => chars.filter(c => new RegExp('(^|[^\\p{L}\\p{N}_])@?' + reEsc(c.name) + '(?![\\p{L}\\p{N}_])', 'iu').test(text));
+const hasWord = (text, name) => new RegExp('(^|[^\\p{L}\\p{N}_])@?' + reEsc(name) + '(?![\\p{L}\\p{N}_])', 'iu').test(text);
+const found = text => chars.filter(c => hasWord(text, c.name));
+const foundPlaces = text => places.filter(c => hasWord(text, c.name));
+const placeList = () => places.length ? places.map(c => `- ${c.name}${c.desc ? ': ' + c.desc : ''}${c.sides?.length ? ` (sides of the room: ${c.sides.map(x => x.name).join(', ')})` : ''}`).join('\n') : '(none)';
+// which side of a place is behind the characters: chosen in the panel window, or spotted in the description
+function bgFor(pn, text){
+  const opts = foundPlaces(text).flatMap(pl => (pl.sides || []).map(sd => ({pl, sd, v: pl.id + ':' + sd.id})));
+  const chosen = opts.find(o => o.v === pn.bg);
+  const auto = opts.find(o => hasWord(text, o.sd.name) || text.toLowerCase().includes(o.sd.name.toLowerCase()));
+  return {opts, pick: chosen || auto, auto, chosen};
+}
 
 /* ---------- pages ---------- */
 const PW = 540, PH = 720;
@@ -872,8 +979,67 @@ async function autoPlace(pg){
 }
 
 /* ---------- speech bubbles ---------- */
-const BUB_TYPES = [['speech','Speech','HI!'],['thought','Thought','HMM…'],['shout','Shout','STOP!'],['whisper','Whisper','psst'],['caption','Caption','LATER…'],['narration','Narration','MEANWHILE'],['sfx','Sound effect','KRAK!'],['radio','Radio / phone','COPY?']];
-const BUB_TEXT = {speech:'Type here', thought:'Hmm…', shout:'Stop!', whisper:'psst…', caption:'Later that night…', narration:'Meanwhile…', sfx:'KRAK!', radio:'Copy that?'};
+// Every bubble type: its outline, tail, colours and lettering. The editor, the page download and the picture buttons all draw from this one table.
+const BT = {
+  speech:    {name:'Speech',          text:'Type here',          shape:'ellipse', tail:'curve'},
+  thought:   {name:'Thought',         text:'Hmm…',               shape:'cloud',   tail:'dots',  K:[1.45,56,1.5,54]},
+  shout:     {name:'Shout',           text:'Stop!',              shape:'star',    tail:'curve', spikes:16, inner:.78, K:[1.55,50,1.7,50]},
+  whisper:   {name:'Whisper',         text:'psst…',              shape:'ellipse', tail:'curve', dash:'9 7'},
+  caption:   {name:'Caption',         text:'Later that night…',  shape:'rect',    K:[1,26,1,20]},
+  narration: {name:'Narration',       text:'Meanwhile…',         shape:'rect',    fill:'#ffd43b', K:[1,26,1,20]},
+  sfx:       {name:'Sound effect',    text:'KRAK!',              shape:null,      font:'bangers', big:2.4, color:'#e8352e', textStroke:1.5, K:[1,16,1,8]},
+  radio:     {name:'Radio / phone',   text:'Copy that?',         shape:'ellipse', tail:'zigzag'},
+  scream:    {name:'Scream',          text:'Aaaah!',             shape:'star',    tail:'curve', spikes:22, inner:.6, font:'bangers', big:1.3, K:[1.8,60,2,64]},
+  angry:     {name:'Angry',           text:'Get out!',           shape:'star',    tail:'curve', spikes:30, inner:.9, fill:'#ffe0de', sw:4.5, K:[1.42,40,1.46,36]},
+  scared:    {name:'Scared / shaky',  text:'W-what was that?',   shape:'wobble',  tail:'curve', K:[1.4,38,1.44,34]},
+  telepathy: {name:'Telepathy',       text:'Can you hear me?',   shape:'wave',    tail:'dots',  fill:'#e3ecff', K:[1.45,42,1.5,40]},
+  dream:     {name:'Dream',           text:'If only…',           shape:'cloud',   tail:'dots',  fill:'#efe3ff', K:[1.45,56,1.5,54]},
+  sad:       {name:'Sad / melting',   text:'Oh no…',             shape:'drip',    tail:'curve', fill:'#eef3f7', K:[1.38,34,1.4,46]},
+  cold:      {name:'Cold / icy',      text:'Brrr…',              shape:'icicle',  tail:'curve', fill:'#e6f6ff', K:[1.38,34,1.4,48]},
+  monster:   {name:'Monster',         text:'Grrraah!',           shape:'rough',   tail:'curve', fill:'#141414', color:'#ffffff', font:'bangers', big:1.25, K:[1.5,44,1.6,44]},
+  box:       {name:'Box speech',      text:'Type here',          shape:'rect',    tail:'curve', K:[1.08,30,1.1,24]},
+  pill:      {name:'Rounded box',     text:'Type here',          shape:'round',   tail:'curve', K:[1.1,32,1.12,26]},
+  love:      {name:'Love',            text:'I love you',         shape:'heart',   tail:'curve', fill:'#ffe3ee', K:[1.6,60,1.8,70]},
+  song:      {name:'Singing',         text:'La la la',           shape:'ellipse', tail:'curve', notes:true},
+  impact:    {name:'Impact',          text:'BAM!',               shape:'star',    spikes:12, inner:.58, fill:'#ffd43b', font:'bangers', big:1.9, color:'#e8352e', textStroke:1.5, K:[1.75,52,1.95,52]},
+  scroll:    {name:'Scroll banner',   text:'Chapter one',        shape:'scroll',  fill:'#f6e7c1', K:[1,64,1,24]},
+  note:      {name:'Note / sign',     text:'Keep out',           shape:'note',    fill:'#fff7a8', K:[1,30,1,30]},
+  computer:  {name:'Computer / robot',text:'Access denied',      shape:'screen',  tail:'zigzag', fill:'#0f2a1a', color:'#6dff9c', font:'mono', K:[1.08,34,1.12,28]},
+  echo:      {name:'Echo / far away', text:'Hellooo…',           shape:'echo',    tail:'curve', K:[1.36,40,1.38,36]},
+  sleepy:    {name:'Sleepy / snoring',  text:'So tired…',        shape:'ellipse', tail:'curve', fill:'#eef0ff', decor:'zzz'},
+  crying:    {name:'Crying',            text:'Why me?',          shape:'wobble',  tail:'curve', fill:'#eaf6ff', decor:'tears', K:[1.4,38,1.44,34]},
+  laughing:  {name:'Laughing',          text:'Ha ha ha!',        shape:'scallop', tail:'curve', fill:'#fff6d6', K:[1.45,44,1.5,42]},
+  sarcastic: {name:'Sarcastic',         text:'Oh, great.',       shape:'tilt',    tail:'curve', italic:true, decor:'smirk'},
+  nervous:   {name:'Nervous / sweating',text:'Um… well…',        shape:'wobble',  tail:'curve', decor:'sweat', K:[1.4,38,1.44,34]},
+  confused:  {name:'Confused',          text:'Huh?',             shape:'ellipse', tail:'curve', decor:'qmarks'},
+  surprised: {name:'Surprised',         text:'What?!',           shape:'ellipse', tail:'curve', sw:6, decor:'rays', font:'bangers', big:1.2},
+  dizzy:     {name:'Dizzy / drunk',     text:'Whoa…',            shape:'wave',    tail:'curve', fill:'#f2ffe0', rot:-.14, decor:'spiral', K:[1.45,42,1.5,40]},
+  evil:      {name:'Villain / evil',    text:'Mwahaha!',         shape:'star',    tail:'curve', spikes:26, inner:.86, fill:'#2b0a0a', color:'#ff5a4d', font:'bangers', big:1.2, K:[1.5,44,1.6,44]},
+  ghost:     {name:'Ghostly',           text:'Wooo…',            shape:'ghost',   fill:'#f1f1ff', dash:'7 5', color:'#4b4f8a', italic:true, K:[1.3,36,1.5,48]},
+  furious:   {name:'Furious / burning', text:'I said NO!',       shape:'flame',   tail:'curve', fill:'#ffd6bf', color:'#b3261e', font:'bangers', big:1.15, K:[1.4,40,1.6,56]},
+  underwater:{name:'Underwater',        text:'Blub blub',        shape:'ellipse', tail:'dots',  fill:'#dff4ff', decor:'fizz'},
+  tv:        {name:'TV / broadcast',    text:'Breaking news!',   shape:'rect',    tail:'zigzag', fill:'#ececec', decor:'antenna', K:[1.08,32,1.12,28]},
+  speaker:   {name:'Loudspeaker',       text:'Attention please', shape:'rect',    tail:'zigzag', decor:'sound', K:[1.08,32,1.12,28]},
+  stop:      {name:'Order / command',   text:'Halt!',            shape:'octagon', fill:'#d7261e', color:'#ffffff', font:'bangers', big:1.4, K:[1.5,48,1.7,48]},
+  flashback: {name:'Flashback / memory',text:'Years ago…',       shape:'round',   fill:'#f5ecd8', dash:'4 4', decor:'double', color:'#5a4630', italic:true, K:[1.1,36,1.12,30]},
+  offpanel:  {name:'Off-panel voice',   text:'Over here!',       shape:'ellipse', tail:'curve', decor:'arrow'},
+  crowd:     {name:'Crowd / many voices',text:'Hooray!',         shape:'cluster', tail:'curve', K:[1.6,60,1.7,58]},
+  chalk:     {name:'Chalkboard',        text:'Lesson one',       shape:'rect',    fill:'#1e3b2b', color:'#f4f4f4', sw:5, K:[1.06,32,1.1,28]},
+  aside:     {name:'Aside / to yourself',text:'Not again…',      shape:'brackets', italic:true, color:'#4d4752', K:[1,40,1,14]},
+  excited:   {name:'Excited / happy',   text:'Yay!',             shape:'star',    tail:'curve', spikes:12, inner:.86, fill:'#fff2a8', K:[1.45,44,1.55,44]},
+  alien:     {name:'Alien / weird',     text:'Greetings, human', shape:'hexagon', tail:'zigzag', fill:'#d9ffe0', font:'mono', color:'#1b5e20', K:[1.35,40,1.5,40]},
+  royal:     {name:'Royal / formal',    text:'Hear ye!',         shape:'rect',    fill:'#fff8e6', decor:'ornate', italic:true, color:'#5a3d00', K:[1.1,44,1.1,36]},
+  textmsg:   {name:'Text message',      text:'On my way',        shape:'round',   tail:'curve', fill:'#2e6fe8', color:'#ffffff', K:[1.08,30,1.12,24]},
+  idea:      {name:'Idea!',             text:'I’ve got it!',     shape:'cloud',   tail:'dots',  fill:'#fff6b3', decor:'rays', K:[1.45,56,1.5,54]},
+  sick:      {name:'Sick / disgusted',  text:'Eww…',             shape:'wave',    tail:'curve', fill:'#e2f5c8', color:'#3d5a1a', K:[1.45,42,1.5,40]},
+  animal:    {name:'Animal sound',      text:'Woof!',            shape:'fur',     tail:'curve', fill:'#f5e6d3', font:'bangers', big:1.2, K:[1.45,44,1.5,42]},
+  muffled:   {name:'Muffled / behind door',text:'Mmph mmph',     shape:'rect',    dash:'6 4', color:'#77707d', italic:true, K:[1.06,30,1.1,26]},
+  glitch:    {name:'Glitch / broken',   text:'Sys…tem err…',     shape:'glitch',  tail:'zigzag', fill:'#f0f0ff', font:'mono', color:'#5b2bd6', K:[1.08,36,1.12,28]},
+  shy:       {name:'Shy / quiet',       text:'h-hi…',            shape:'ellipse', tail:'curve', sw:1.6, big:.8, color:'#55505c'}
+};
+const BUB_TYPES = Object.entries(BT).map(([v, t]) => [v, t.name, t.text]);
+const BUB_TEXT = Object.fromEntries(Object.entries(BT).map(([v, t]) => [v, t.text]));
+const bt = b => BT[b.type] || BT.speech;
 let mctx = null;
 function wrapText(text, font, maxW){
   mctx = mctx || document.createElement('canvas').getContext('2d'); mctx.font = font;
@@ -885,12 +1051,17 @@ function wrapText(text, font, maxW){
   return {lines, width: Math.max(width, 24)};
 }
 function bGeo(b){
-  const sfx = b.type === 'sfx', fs = sfx ? b.fs * 2.4 : b.fs;
-  const font = sfx ? `400 ${fs}px Bangers, Impact, sans-serif` : `700 ${fs}px "Comic Neue", "Comic Sans MS", cursive`;
-  const lh = Math.round(fs * 1.12), m = wrapText(b.text, font, b.tw || (sfx ? 320 : 190));
-  const taW = Math.ceil(m.width) + 8, taH = m.lines.length * lh + 2;
-  const K = {caption:[1,26,1,20], narration:[1,26,1,20], sfx:[1,16,1,8], shout:[1.55,50,1.7,50], thought:[1.45,56,1.5,54]}[b.type] || [1.36,34,1.38,30];
-  return {font, fs, lh, lines: m.lines, taW, taH, w: Math.round(taW*K[0] + K[1]), h: Math.round(taH*K[2] + K[3]), kx: K[0], px: K[1]};
+  const T = bt(b), fs = b.fs * (T.big || 1);
+  const it = T.italic ? 'italic ' : '';
+  const font = T.font === 'bangers' ? `${it}400 ${fs}px Bangers, Impact, sans-serif` : T.font === 'mono' ? `${it}700 ${fs}px "Courier New", Courier, monospace` : `${it}700 ${fs}px "Comic Neue", "Comic Sans MS", cursive`;
+  const K = T.K || [1.36,34,1.38,30], lh = Math.round(fs * 1.12);
+  // a bubble you've resized keeps your width and height; the words re-flow inside it at the same size
+  const boxW = b.bw ? Math.max(30, (b.bw - K[1]) / K[0] - 8) : 0;
+  const m = wrapText(b.text, font, boxW || b.tw || (T.big > 2 ? 320 : 190));
+  const taW = Math.ceil(Math.max(m.width, boxW)) + 8, taH = m.lines.length * lh + 2;
+  const w = Math.round(taW*K[0] + K[1]), h = Math.max(Math.round(taH*K[2] + K[3]), b.bh || 0);
+  return {font, fs, lh, lines: m.lines, taW, taH, w, h, kx: K[0], px: K[1], minH: Math.round(taH*K[2] + K[3]),
+    color: T.color || '#141414', stroke: T.textStroke ? `${T.textStroke}px #141414` : '0'};
 }
 function tailGeo(cx, cy, rx, ry, tx, ty, spread){
   const dx = (tx-cx)/rx, dy = (ty-cy)/ry; if (dx*dx + dy*dy < 1.15) return null;
@@ -898,40 +1069,116 @@ function tailGeo(cx, cy, rx, ry, tx, ty, spread){
   return {d: `M${f(p1[0])},${f(p1[1])}Q${f((p1[0]+tx)/2)},${f((p1[1]+ty)/2)} ${f(tx)},${f(ty)}Q${f((p2[0]+tx)/2)},${f((p2[1]+ty)/2)} ${f(p2[0])},${f(p2[1])}Z`, p1, p2, edge: [cx + rx*Math.cos(a), cy + ry*Math.sin(a)]};
 }
 const ellD = (cx, cy, a, c) => `M${(cx-a).toFixed(1)},${cy.toFixed(1)}A${a.toFixed(1)},${c.toFixed(1)} 0 1,0 ${(cx+a).toFixed(1)},${cy.toFixed(1)}A${a.toFixed(1)},${c.toFixed(1)} 0 1,0 ${(cx-a).toFixed(1)},${cy.toFixed(1)}Z`;
-// Draw steps shared by the editor (SVG) and page export (canvas), so both look identical.
+// an outline that goes round the bubble's middle, pushed in/out by r(angle)
+const polarD = (x, y, rx, ry, r, n = 144, rot = 0) => { const pts = [], c = Math.cos(rot), sn = Math.sin(rot); for (let i = 0; i < n; i++){ const a = 2*Math.PI*i/n, k = r(a), px = rx*k*Math.cos(a), py = ry*k*Math.sin(a); pts.push([x + px*c - py*sn, y + px*sn + py*c]); } return G.path(pts); };
+const polyN = (x, y, rx, ry, n, rot) => { const pts = []; for (let i = 0; i < n; i++){ const a = rot + 2*Math.PI*i/n; pts.push([x + rx*Math.cos(a), y + ry*Math.sin(a)]); } return G.path(pts); };
+const roundD = (x0, y0, x1, y1, r) => { const f = n => n.toFixed(1); return `M${f(x0+r)},${f(y0)}H${f(x1-r)}A${f(r)},${f(r)} 0 0,1 ${f(x1)},${f(y0+r)}V${f(y1-r)}A${f(r)},${f(r)} 0 0,1 ${f(x1-r)},${f(y1)}H${f(x0+r)}A${f(r)},${f(r)} 0 0,1 ${f(x0)},${f(y1-r)}V${f(y0+r)}A${f(r)},${f(r)} 0 0,1 ${f(x0+r)},${f(y0)}Z`; };
+// Draw steps shared by the editor (SVG), page export (canvas) and the picture buttons.
 function bubbleOps(b){
-  const g = bGeo(b), rx = g.w/2, ry = g.h/2, x = b.x, y = b.y, t = b.type, S = '#141414', ops = [];
-  const dash = t === 'whisper' ? '9 7' : null, fill = t === 'narration' ? '#ffd43b' : '#fff';
-  let tail = null, radio = null, shape = null, hasTip = false;
-  if (['speech','whisper','radio','shout'].includes(t)){
-    const k = t === 'shout' ? 0.78 : 1, tg = tailGeo(x, y, rx*k, ry*k, b.tx, b.ty, t === 'radio' ? 0.22 : 0.3); hasTip = true;
+  const T = bt(b), g = bGeo(b), rx = g.w/2, ry = g.h/2, x = b.x, y = b.y, S = '#141414', ops = [], sw = T.sw || 3.5;
+  const fill = T.fill || '#fff', dash = T.dash || null;
+  let shape = null, tail = null, zig = null, hasTip = !!T.tail;
+  const tailK = {star: T.inner ? T.inner*.97 : .78, heart: .7, rect: 1, round: 1, screen: 1, cluster: .75, flame: .85, octagon: 1, hexagon: .95, glitch: 1}[T.shape] || 1;
+  if (T.tail === 'curve' || T.tail === 'zigzag'){
+    const tg = tailGeo(x, y, rx*tailK, ry*tailK, b.tx, b.ty, T.tail === 'zigzag' ? 0.22 : 0.3);
     if (tg){
-      if (t === 'radio'){ const cx = (tg.p1[0]+tg.p2[0])/2, cy = (tg.p1[1]+tg.p2[1])/2, dx = b.tx-cx, dy = b.ty-cy, len = Math.hypot(dx,dy) || 1, nx = -dy/len, ny = dx/len, P = (k2, o) => [cx+dx*k2+nx*o, cy+dy*k2+ny*o];
-        radio = G.path([tg.p1, P(0.38,16), P(0.66,-10), [b.tx,b.ty], P(0.66,2), P(0.38,2), tg.p2]); }
+      if (T.tail === 'zigzag'){ const cx = (tg.p1[0]+tg.p2[0])/2, cy = (tg.p1[1]+tg.p2[1])/2, dx = b.tx-cx, dy = b.ty-cy, len = Math.hypot(dx,dy) || 1, nx = -dy/len, ny = dx/len, P = (k2, o) => [cx+dx*k2+nx*o, cy+dy*k2+ny*o];
+        zig = G.path([tg.p1, P(0.38,16), P(0.66,-10), [b.tx,b.ty], P(0.66,2), P(0.38,2), tg.p2]); }
       else tail = tg.d;
     }
   }
-  if (t === 'speech' || t === 'whisper' || t === 'radio') shape = ellD(x, y, rx, ry);
-  if (t === 'shout'){ const pts = []; for (let i = 0; i < 32; i++){ const a = Math.PI*i/16, r = i % 2 ? 0.78 : 1; pts.push([x + rx*r*Math.cos(a), y + ry*r*Math.sin(a)]); } shape = G.path(pts); }
-  if (t === 'caption' || t === 'narration') shape = G.path([[x-rx,y-ry],[x+rx,y-ry],[x+rx,y+ry],[x-rx,y+ry]]);
-  if (tail) ops.push({d: tail, fill: '#fff', stroke: S, sw: 3.5, dash});
-  if (radio) ops.push({d: radio, fill: '#fff', stroke: S, sw: 3.5});
-  if (shape) ops.push({d: shape, fill, stroke: S, sw: 3.5, dash});
-  if (t === 'thought'){
-    hasTip = true;
+  const wob = (amp, freq, ph = 0) => a => 1 + amp*Math.sin(a*freq + ph);
+  switch (T.shape){
+    case 'ellipse': shape = ellD(x, y, rx, ry); break;
+    case 'echo': ops.push({d: ellD(x, y, rx + 9, ry + 9), fill: 'none', stroke: S, sw: 1.5, dash: '3 5'}); shape = ellD(x, y, rx, ry); break;
+    case 'star': { const n = T.spikes || 16, pts = []; for (let i = 0; i < 2*n; i++){ const a = Math.PI*i/n, r = i % 2 ? T.inner : 1; pts.push([x + rx*r*Math.cos(a), y + ry*r*Math.sin(a)]); } shape = G.path(pts); break; }
+    case 'rect': shape = G.path([[x-rx,y-ry],[x+rx,y-ry],[x+rx,y+ry],[x-rx,y+ry]]); break;
+    case 'round': shape = roundD(x-rx, y-ry, x+rx, y+ry, Math.min(rx, ry)*.55); break;
+    case 'screen': shape = roundD(x-rx, y-ry, x+rx, y+ry, 10); break;
+    case 'wobble': shape = polarD(x, y, rx, ry, wob(.035, 22)); break;
+    case 'wave': shape = polarD(x, y, rx, ry, wob(.07, 9), 144, T.rot || 0); break;
+    case 'tilt': shape = polarD(x, y, rx, ry*.96, () => 1, 96, -.12); break;
+    case 'scallop': shape = polarD(x, y, rx, ry, a => 1 + .07*Math.abs(Math.sin(a*12)), 240); break;
+    case 'fur': shape = polarD(x, y, rx, ry, a => 1 + .06*Math.abs(Math.sin(a*30)) - .02*Math.sin(a*5), 300); break;
+    case 'octagon': shape = polyN(x, y, rx*1.04, ry*1.04, 8, Math.PI/8); break;
+    case 'hexagon': shape = polyN(x, y, rx*1.04, ry*1.04, 6, 0); break;
+    case 'flame': shape = polarD(x, y, rx, ry*.84, a => { const up = -Math.sin(a); return 1 + (up > 0 ? .3*up*Math.pow(Math.abs(Math.sin(a*6)), 3) : 0); }, 300); break;
+    case 'ghost': { const pts = [];
+      for (let i = 0; i <= 40; i++){ const a = Math.PI + Math.PI*i/40; pts.push([x + rx*Math.cos(a), y - ry*.15 + ry*.85*Math.sin(a)]); }
+      for (let i = 0; i <= 60; i++){ const t = i/60, px = x + rx - 2*rx*t; pts.push([px, y + ry*.82 + ry*.16*Math.sin(t*Math.PI*8)]); }
+      shape = G.path(pts); break; }
+    case 'glitch': { const x0 = x-rx, x1 = x+rx, y0 = y-ry, y1 = y+ry, h = y1-y0;
+      shape = G.path([[x0,y0],[x1,y0],[x1,y0+h*.28],[x1+8,y0+h*.28],[x1+8,y0+h*.44],[x1,y0+h*.44],[x1,y1],[x0+10,y1],[x0+10,y1-h*.22],[x0,y1-h*.22],[x0,y0+h*.6],[x0-8,y0+h*.6],[x0-8,y0+h*.4],[x0,y0+h*.4]]); break; }
+    case 'rough': shape = polarD(x, y, rx, ry, a => 1 + .07*Math.sin(a*7) + .05*Math.sin(a*13 + 1) + .04*Math.sign(Math.sin(a*23)), 46); break;
+    case 'drip': shape = polarD(x, y, rx, ry*.86, a => { let k = 1; [[Math.PI/2 - .65, .26],[Math.PI/2 + .05, .38],[Math.PI/2 + .7, .22]].forEach(([c, h]) => { const d = Math.abs(a - c); if (d < .18) k += h * Math.pow(Math.cos(d / .18 * Math.PI/2), 2); }); return k; }, 220); break;
+    case 'icicle': shape = polarD(x, y, rx, ry*.86, a => { if (a < .45 || a > Math.PI - .45) return 1; const t = (a - .45) / (Math.PI - .9) * 7, f = t - Math.floor(t); return 1 + .3 * (1 - Math.abs(f*2 - 1)) * Math.sin(Math.PI * (a - .45)/(Math.PI - .9)); }, 220); break;
+    case 'heart': { const pts = []; for (let i = 0; i < 120; i++){ const t = 2*Math.PI*i/120, hx = 16*Math.pow(Math.sin(t),3), hy = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t); pts.push([x + rx*hx/16, y - ry*(hy + 2.5)/14.5]); } shape = G.path(pts); break; }
+    case 'cloud': break;
+    case 'cluster': break;
+    case 'brackets': break;
+    case 'scroll': {
+      const r = 10;
+      ops.push({d: roundD(x-rx-14, y-ry+8, x-rx+18, y+ry+8, 7), fill: '#e2cd96', stroke: S, sw});
+      ops.push({d: roundD(x+rx-18, y-ry+8, x+rx+14, y+ry+8, 7), fill: '#e2cd96', stroke: S, sw});
+      shape = G.path([[x-rx+r,y-ry],[x+rx-r,y-ry],[x+rx-r,y+ry],[x-rx+r,y+ry]]); break; }
+    case 'note': { const c = Math.min(22, ry*.6); shape = G.path([[x-rx,y-ry],[x+rx,y-ry],[x+rx,y+ry-c],[x+rx-c,y+ry],[x-rx,y+ry]]); break; }
+  }
+  if (tail) ops.push({d: tail, fill, stroke: S, sw, dash});
+  if (zig) ops.push({d: zig, fill, stroke: S, sw});
+  if (shape) ops.push({d: shape, fill, stroke: S, sw, dash});
+  if (T.shape === 'cloud'){
     const crx = rx*0.82, cry = ry*0.78, pr = Math.min(rx, ry)*0.36, puffs = [];
     for (let i = 0; i < 12; i++){ const a = 2*Math.PI*i/12; puffs.push([x + crx*Math.cos(a), y + cry*Math.sin(a), pr*(i % 2 ? 0.86 : 1)]); }
-    puffs.forEach(c => ops.push({d: ellD(c[0], c[1], c[2], c[2]), fill: '#fff', stroke: S, sw: 7}));
-    ops.push({d: ellD(x, y, crx, cry), fill: '#fff'});
-    puffs.forEach(c => ops.push({d: ellD(c[0], c[1], c[2], c[2]), fill: '#fff'}));
-    const tg = tailGeo(x, y, rx, ry, b.tx, b.ty, 0.2);
-    if (tg){ const E = tg.edge; [[0.35,9],[0.7,6],[1,3.5]].forEach(([k,r]) => ops.push({d: ellD(E[0]+(b.tx-E[0])*k, E[1]+(b.ty-E[1])*k, r, r), fill: '#fff', stroke: S, sw: 3.5})); }
+    puffs.forEach(c => ops.push({d: ellD(c[0], c[1], c[2], c[2]), fill, stroke: S, sw: 7}));
+    ops.push({d: ellD(x, y, crx, cry), fill});
+    puffs.forEach(c => ops.push({d: ellD(c[0], c[1], c[2], c[2]), fill}));
   }
-  if (tail) ops.push({d: tail, fill: '#fff'});
-  if (radio) ops.push({d: radio, fill: '#fff'});
+  if (T.shape === 'cluster'){
+    const blobs = [[-.42,.06,.62,.7],[.4,-.1,.62,.72],[.02,.18,.6,.66],[-.05,-.28,.5,.5]].map(([dx,dy,sx,sy]) => [x + rx*dx, y + ry*dy, rx*sx, ry*sy]);
+    blobs.forEach(c => ops.push({d: ellD(c[0], c[1], c[2], c[3]), fill, stroke: S, sw: 7}));
+    blobs.forEach(c => ops.push({d: ellD(c[0], c[1], c[2], c[3]), fill}));
+  }
+  if (T.shape === 'brackets'){
+    const br = side => { const sx = x + side*rx, k = side; return `M${(sx - k*6).toFixed(1)},${(y-ry).toFixed(1)}Q${(sx + k*8).toFixed(1)},${y.toFixed(1)} ${(sx - k*6).toFixed(1)},${(y+ry).toFixed(1)}`; };
+    ops.push({d: br(-1), fill: 'none', stroke: '#4d4752', sw: 3}); ops.push({d: br(1), fill: 'none', stroke: '#4d4752', sw: 3});
+  }
+  if (T.tail === 'dots'){
+    const tg = tailGeo(x, y, rx, ry, b.tx, b.ty, 0.2);
+    if (tg){ const E = tg.edge; [[0.35,9],[0.7,6],[1,3.5]].forEach(([k,r]) => ops.push({d: ellD(E[0]+(b.tx-E[0])*k, E[1]+(b.ty-E[1])*k, r, r), fill, stroke: S, sw: 3.5})); }
+  }
+  if (tail) ops.push({d: tail, fill});
+  if (zig) ops.push({d: zig, fill});
+  if (T.shape === 'screen') ops.push({d: roundD(x-rx+6, y-ry+6, x+rx-6, y+ry-6, 6), fill: 'none', stroke: '#6dff9c', sw: 1.5});
+  if (T.shape === 'note'){ const c = Math.min(22, ry*.6); ops.push({d: G.path([[x+rx,y+ry-c],[x+rx-c,y+ry-c],[x+rx-c,y+ry]]), fill: '#e6d86a', stroke: S, sw: 2}); }
+  if (T.notes){ const note = (nx, ny, s) => { ops.push({d: ellD(nx, ny, 5*s, 3.8*s), fill: S}); ops.push({d: G.path([[nx+4*s, ny-1], [nx+5.6*s, ny-1], [nx+5.6*s, ny-20*s], [nx+4*s, ny-20*s]]), fill: S}); ops.push({d: G.path([[nx+5.6*s, ny-20*s], [nx+12*s, ny-15*s], [nx+12*s, ny-12*s], [nx+5.6*s, ny-16*s]]), fill: S}); };
+    note(x + rx*.82, y - ry*.72, 1); note(x + rx*1.02, y - ry*.2, .75); note(x - rx*.95, y - ry*.75, .7); }
+  const D = T.decor, line = (pts, c = S, w = 2.5) => ops.push({d: 'M' + pts.map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join('L'), fill: 'none', stroke: c, sw: w});
+  if (D === 'zzz') [[1.02,-.75,9],[1.2,-1.1,12],[1.42,-1.5,15]].forEach(([kx,ky,z]) => { const zx = x + rx*kx*.8, zy = y + ry*ky*.8; line([[zx,zy],[zx+z,zy],[zx,zy+z],[zx+z,zy+z]], '#3b4a9e', 2.5); });
+  if (D === 'tears') [[-.55,1.15,1],[-.3,1.35,.8],[.5,1.2,.9]].forEach(([kx,ky,k]) => { const tx = x + rx*kx, ty = y + ry*ky; ops.push({d: `M${tx},${ty - 10*k}Q${tx + 7*k},${ty} ${tx},${ty + 5*k}Q${tx - 7*k},${ty} ${tx},${ty - 10*k}Z`, fill: '#7cc4ff', stroke: S, sw: 1.5}); });
+  if (D === 'sweat'){ const tx = x + rx*.95, ty = y - ry*.95; ops.push({d: `M${tx},${ty - 16}Q${tx + 11},${ty + 2} ${tx},${ty + 8}Q${tx - 11},${ty + 2} ${tx},${ty - 16}Z`, fill: '#bfe6ff', stroke: S, sw: 2}); }
+  if (D === 'qmarks') [[1.05,-.6,1],[-1.12,-.5,.8]].forEach(([kx,ky,k]) => { const qx = x + rx*kx, qy = y + ry*ky; ops.push({d: `M${qx - 6*k},${qy - 6*k}A${6*k},${6*k} 0 1,1 ${qx},${qy + 1*k}V${qy + 5*k}`, fill: 'none', stroke: S, sw: 3*k}); ops.push({d: ellD(qx, qy + 11*k, 2.2*k, 2.2*k), fill: S}); });
+  if (D === 'rays') for (let i = 0; i < 9; i++){ const a = Math.PI*1.08 + i*Math.PI*.105, c = Math.cos(a), sn = Math.sin(a); line([[x + (rx+8)*c, y + (ry+8)*sn],[x + (rx+20)*c, y + (ry+20)*sn]], S, 2.5); }
+  if (D === 'smirk'){ const sx = x + rx*.9, sy = y - ry*.9; line([[sx-10,sy+3],[sx-3,sy-2],[sx+4,sy+3],[sx+11,sy-2]], S, 2.5); }
+  if (D === 'spiral'){ const sx = x + rx*.95, sy = y - ry*.95, pts = []; for (let i = 0; i < 40; i++){ const a = i*.42, r = 1 + i*.28; pts.push([sx + r*Math.cos(a), sy + r*Math.sin(a)]); } line(pts, S, 2); }
+  if (D === 'fizz') [[1.1,-.5,6],[1.25,-.95,4],[1.05,-1.2,3],[-1.1,-.7,5],[-1.2,-1.1,3.5]].forEach(([kx,ky,r]) => ops.push({d: ellD(x + rx*kx, y + ry*ky, r, r), fill: '#ffffff', stroke: '#2e6fe8', sw: 1.5}));
+  if (D === 'antenna'){ line([[x-14,y-ry],[x-30,y-ry-24]], S, 2.5); line([[x+14,y-ry],[x+30,y-ry-24]], S, 2.5); ops.push({d: ellD(x-30, y-ry-24, 3.5, 3.5), fill: S}); ops.push({d: ellD(x+30, y-ry-24, 3.5, 3.5), fill: S}); }
+  if (D === 'sound') [10,18,26].forEach(r => ops.push({d: `M${(x+rx+4).toFixed(1)},${(y-r).toFixed(1)}A${r},${r} 0 0,1 ${(x+rx+4).toFixed(1)},${(y+r).toFixed(1)}`, fill: 'none', stroke: S, sw: 2.5}));
+  if (D === 'double') ops.push({d: roundD(x-rx-6, y-ry-6, x+rx+6, y+ry+6, Math.min(rx, ry)*.55 + 6), fill: 'none', stroke: '#5a4630', sw: 1.5});
+  if (D === 'ornate'){ ops.push({d: G.path([[x-rx+6,y-ry+6],[x+rx-6,y-ry+6],[x+rx-6,y+ry-6],[x-rx+6,y+ry-6]]), fill: 'none', stroke: '#b08a2e', sw: 1.5}); [[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([sx,sy]) => { const cx = x + sx*rx, cy = y + sy*ry; ops.push({d: G.path([[cx,cy-7],[cx+7,cy],[cx,cy+7],[cx-7,cy]]), fill: '#e2b84a', stroke: S, sw: 1.5}); }); }
+  if (D === 'arrow' && (tail || zig)){ const dx = b.tx - x, dy = b.ty - y, len = Math.hypot(dx, dy) || 1, ux = dx/len, uy = dy/len, nx = -uy, ny = ux, L = 16, W = 9; ops.push({d: G.path([[b.tx + ux*6, b.ty + uy*6],[b.tx - ux*L + nx*W, b.ty - uy*L + ny*W],[b.tx - ux*L - nx*W, b.ty - uy*L - ny*W]]), fill: S}); }
   return {ops, g, hasTip};
 }
 const opSVG = o => `<path d="${o.d}" fill="${o.fill || 'none'}"${o.stroke ? ` stroke="${o.stroke}" stroke-width="${o.sw}" stroke-linejoin="round"` : ''}${o.dash ? ` stroke-dasharray="${o.dash}"` : ''}/>`;
+// a small picture of one bubble type, for the bubble buttons
+function bubbleIcon(type){
+  const T = BT[type], b = {type, x: 0, y: 0, text: T.text.length > 11 ? T.text.split(' ').slice(0, 2).join(' ') : T.text, fs: 15, tw: 110, tx: -26, ty: 0};
+  const g0 = bGeo(b); b.ty = g0.h/2 + 26; b.tx = -g0.w*.22;
+  const {ops, g} = bubbleOps(b), pad = 14 + (T.notes ? 18 : 0) + (T.shape === 'scroll' ? 16 : 0) + (T.shape === 'echo' ? 10 : 0);
+  const x0 = -g.w/2 - pad, y0 = -g.h/2 - pad, w = g.w + pad*2, h = g.h/2 + pad + Math.max(g.h/2 + pad, T.tail ? b.ty + 8 : 0) ;
+  const top = -g.lh*g.lines.length/2;
+  const words = g.lines.map((l, i) => `<text x="0" y="${(top + g.lh*(i + .5)).toFixed(1)}" text-anchor="middle" dominant-baseline="central" style="font:${g.font};fill:${g.color}${T.textStroke ? ';stroke:#141414;stroke-width:1.2;paint-order:stroke' : ''}">${esc(l)}</text>`).join('');
+  return `<svg viewBox="${x0.toFixed(1)} ${y0.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}" aria-hidden="true">${ops.map(opSVG).join('')}${words}</svg>`;
+}
 /* ---------- page editor ---------- */
 const ed = {tool: 'panels', cut: null, sel: null, editing: null, panelSel: null, past: [], future: [], drag: null, pageId: null};
 let tray = []; // pictures you uploaded: [{id, src}]
@@ -999,12 +1246,13 @@ function renderBubbles(){
     const ta = el.firstElementChild, sel = ed.sel === b.id;
     Object.assign(el.style, {left: (b.x - g.w/2) + 'px', top: (b.y - g.h/2) + 'px', width: g.w + 'px', height: g.h + 'px', pointerEvents: bt ? 'auto' : 'none', cursor: ed.editing === b.id ? 'text' : 'move', outline: sel && bt ? '2px dashed #2e6fe8' : 'none'});
     if (document.activeElement !== ta || ta.value !== b.text) { if (ta.value !== b.text) ta.value = b.text; }
-    Object.assign(ta.style, {width: g.taW + 'px', height: g.taH + 'px', font: g.font, lineHeight: g.lh + 'px', color: b.type === 'sfx' ? '#e8352e' : '#141414', webkitTextStroke: b.type === 'sfx' ? '1.5px #141414' : '0', pointerEvents: ed.editing === b.id ? 'auto' : 'none'});
+    Object.assign(ta.style, {width: g.taW + 'px', height: g.taH + 'px', font: g.font, lineHeight: g.lh + 'px', color: g.color, webkitTextStroke: g.stroke, pointerEvents: ed.editing === b.id ? 'auto' : 'none'});
     if (sel && bt){
       const L = b.x - g.w/2, T = b.y - g.h/2;
-      [[L,T,'nwse'],[L+g.w,T,'nesw'],[L,T+g.h,'nesw'],[L+g.w,T+g.h,'nwse']].forEach(([x,y,c]) => { hd += `<span class="hdl" data-corner="${esc(b.id)}" style="left:${x-8}px;top:${y-8}px;cursor:${c}-resize"></span>`; });
+      [['nw',L,T,'nwse'],['n',L+g.w/2,T,'ns'],['ne',L+g.w,T,'nesw'],['e',L+g.w,T+g.h/2,'ew'],['se',L+g.w,T+g.h,'nwse'],['s',L+g.w/2,T+g.h,'ns'],['sw',L,T+g.h,'nesw'],['w',L,T+g.h/2,'ew']]
+        .forEach(([dir,x,y,c]) => { hd += `<span class="hdl" data-corner="${esc(b.id)}" data-dir="${dir}" title="Drag to resize" style="left:${x-8}px;top:${y-8}px;cursor:${c}-resize"></span>`; });
       if (hasTip) hd += `<span class="tip" data-tip="${esc(b.id)}" title="Drag to aim the tail" style="left:${b.tx}px;top:${b.ty}px"></span>`;
-      hd += `<div class="qbar" data-qbar="${esc(b.id)}" style="left:${Math.max(-90, Math.min(PW-390, b.x-190))}px;top:${Math.max(-56, T-58)}px">
+      hd += `<div class="qbar" data-qbar="${esc(b.id)}" style="left:${Math.max(4, Math.min(PW-436, b.x-216))}px;top:${T - 58 >= 4 ? T - 58 : Math.min(PH - 56, T + g.h + 14)}px">
         <select data-q="type" aria-label="Bubble type">${BUB_TYPES.map(([v,n]) => `<option value="${v}"${v===b.type?' selected':''}>${n}</option>`).join('')}</select>
         <button type="button" data-q="smaller" aria-label="Smaller text">A−</button><button type="button" data-q="bigger" aria-label="Bigger text">A+</button>
         <button type="button" data-q="ideas" aria-label="Suggest better lines for this bubble">Ideas</button><button type="button" data-q="front" aria-label="Bring to front">Front</button><button type="button" data-q="delete" aria-label="Delete bubble" style="color:#a3241e">Delete</button></div>`;
@@ -1016,6 +1264,7 @@ function renderBubbles(){
   $('#gBubbles').innerHTML = svg; $('#edHandles').innerHTML = hd;
   $('#edUndo').disabled = !ed.past.length; $('#edRedo').disabled = !ed.future.length;
 }
+const iconCache = {};
 function allPictures(){
   const seen = new Set(), out = [];
   tray.forEach(t => { if (!seen.has(t.src)){ seen.add(t.src); out.push({src: t.src, kind: 'upload', id: t.id}); } });
@@ -1031,7 +1280,7 @@ function renderSide(){
       <div class="laybtns">${Object.entries(LAYOUTS).map(([k,l]) => `<button type="button" class="lay" data-lay="${k}" title="${l.name}" aria-label="${l.name}">${l.rows.map(([n]) => `<span class="r">${'<i></i>'.repeat(n)}</span>`).join('')}</button>`).join('')}</div>`;
   } else if (ed.tool === 'bubbles'){
     h = `<h3>Speech bubbles</h3><p class="hint" style="margin:0">Drag one onto the page, or click to add it in the middle.</p>
-      <div class="tiles">${BUB_TYPES.map(([v,n,sm]) => `<button type="button" draggable="true" data-btype="${v}"><span style="color:${v==='sfx'?'#e8352e':v==='narration'?'#8a5a00':'#141414'}">${sm}</span>${n}</button>`).join('')}</div>
+      <div class="tiles">${BUB_TYPES.map(([v,n]) => `<button type="button" draggable="true" data-btype="${v}" title="${esc(n)}" aria-label="${esc(n)}">${iconCache[v] || (iconCache[v] = bubbleIcon(v))}</button>`).join('')}</div>
       <p class="hint" style="margin:0">Bubbles sit on top of the pictures, so your words are always spelled exactly right.</p>`;
   } else {
     const pn = pg.panels.find(p => p.id === ed.panelSel);
@@ -1103,7 +1352,11 @@ stage.addEventListener('pointerdown', e => {
   if (e.button) return;
   const p = edPt(e), pg = page(), corner = e.target.closest('[data-corner]'), tip = e.target.closest('[data-tip]'), q = e.target.closest('.qbar'), bub = e.target.closest('.bub');
   if (q) return;
-  if (corner || tip){ e.preventDefault(); pushHist(); stage.setPointerCapture(e.pointerId); ed.drag = {kind: corner ? 'corner' : 'tip', id: (corner || tip).dataset[corner ? 'corner' : 'tip']}; return; }
+  if (corner || tip){ e.preventDefault(); pushHist(); stage.setPointerCapture(e.pointerId);
+    if (corner){ const b = pg.bubbles.find(x => String(x.id) === corner.dataset.corner); if (!b) return; const g = bGeo(b);
+      ed.drag = {kind: 'resize', id: b.id, dir: corner.dataset.dir || 'se', box: {x0: b.x - g.w/2, y0: b.y - g.h/2, x1: b.x + g.w/2, y1: b.y + g.h/2}}; }
+    else ed.drag = {kind: 'tip', id: tip.dataset.tip};
+    return; }
   if (ed.tool === 'bubbles' && bub){
     const b = pg.bubbles.find(x => String(x.id) === bub.dataset.b); if (!b) return;
     if (ed.editing === b.id && e.target.tagName === 'TEXTAREA') return;
@@ -1133,7 +1386,17 @@ stage.addEventListener('pointermove', e => {
   const b = pg.bubbles.find(x => String(x.id) === String(d.id)); if (!b) return;
   if (d.kind === 'move'){ const dx = p[0]-d.start[0], dy = p[1]-d.start[1]; if (Math.abs(dx)+Math.abs(dy) > 3) d.moved = true; Object.assign(b, {x: d.b.x+dx, y: d.b.y+dy, tx: d.b.tx+dx, ty: d.b.ty+dy}); }
   if (d.kind === 'tip'){ b.tx = p[0]; b.ty = p[1]; }
-  if (d.kind === 'corner'){ const g = bGeo(b); b.tw = Math.max(40, Math.min(460, (Math.abs(p[0]-b.x)*2 - g.px)/g.kx - 8)); }
+  if (d.kind === 'resize'){
+    // the opposite side stays put; the words re-flow to the new width, and height can't go below what the words need
+    const bx = {...d.box}, MIN = 44;
+    if (d.dir.includes('w')) bx.x0 = Math.min(p[0], bx.x1 - MIN); if (d.dir.includes('e')) bx.x1 = Math.max(p[0], bx.x0 + MIN);
+    if (d.dir.includes('n')) bx.y0 = Math.min(p[1], bx.y1 - MIN); if (d.dir.includes('s')) bx.y1 = Math.max(p[1], bx.y0 + MIN);
+    b.tw = null; b.bw = Math.round(bx.x1 - bx.x0); b.bh = Math.round(bx.y1 - bx.y0);
+    const g = bGeo(b);                                     // words may need more room than you dragged to
+    if (g.minH > b.bh){ b.bh = g.minH; if (d.dir.includes('n')) bx.y0 = bx.y1 - g.minH; else bx.y1 = bx.y0 + g.minH; }
+    const W = g.w; if (W > b.bw){ if (d.dir.includes('w')) bx.x0 = bx.x1 - W; else bx.x1 = bx.x0 + W; b.bw = W; }
+    const nx = (bx.x0 + bx.x1)/2, ny = (bx.y0 + bx.y1)/2; b.x = nx; b.y = ny;
+  }
   renderBubbles();
 });
 function endDrag(){
@@ -1212,11 +1475,11 @@ async function renderPagePNG(pg){
   }
   for (const b of pg.bubbles){
     const {ops, g} = bubbleOps(b);
-    ops.forEach(o => { const p = new Path2D(o.d); if (o.fill){ x.fillStyle = o.fill; x.fill(p); } if (o.stroke){ x.lineWidth = o.sw; x.strokeStyle = o.stroke; x.lineJoin = 'round'; x.setLineDash(o.dash ? o.dash.split(' ').map(Number) : []); x.stroke(p); x.setLineDash([]); } });
+    ops.forEach(o => { const p = new Path2D(o.d); if (o.fill && o.fill !== 'none'){ x.fillStyle = o.fill; x.fill(p); } if (o.stroke){ x.lineWidth = o.sw; x.strokeStyle = o.stroke; x.lineJoin = 'round'; x.setLineDash(o.dash ? o.dash.split(' ').map(Number) : []); x.stroke(p); x.setLineDash([]); } });
     x.font = g.font; x.textAlign = 'center'; x.textBaseline = 'middle';
     const top = b.y - (g.lines.length * g.lh)/2;
     g.lines.forEach((l, i) => { const ly = top + g.lh*(i + 0.5);
-      if (b.type === 'sfx'){ x.lineWidth = 3; x.strokeStyle = '#141414'; x.strokeText(l, b.x, ly); x.fillStyle = '#e8352e'; } else x.fillStyle = '#141414';
+      const T = bt(b); if (T.textStroke){ x.lineWidth = T.textStroke * 2; x.strokeStyle = '#141414'; x.lineJoin = 'round'; x.strokeText(l, b.x, ly); } x.fillStyle = g.color;
       x.fillText(l, b.x, ly); });
   }
   return c.toDataURL('image/png');
@@ -1249,14 +1512,14 @@ function openPanel(id){
   pId = id; const pg = page(), pn = curPanel();
   $('#panelTitle').textContent = `Page ${cur+1} · Panel ${panelNo(pg, pn)}`;
   $('#pPrompt').value = pn.prompt || ''; $('#panelErr').innerHTML = '';
-  $('#pInsert').innerHTML = chars.map(c => `<button type="button" class="small" data-ins="${esc(c.id)}">+ ${esc(c.name)}</button>`).join('');
+  $('#pInsert').innerHTML = chars.concat(places).map(c => `<button type="button" class="small" data-ins="${esc(c.id)}" title="${c.kind === 'place' ? 'Place' : 'Character'}">+ ${c.kind === 'place' ? '⌂ ' : ''}${esc(c.name)}</button>`).join('');
   panelChips(); renderPanelStage(); if (!$('#panelDlg').open) $('#panelDlg').showModal(); checkOverview(true);
 }
 
 /* ---------- AI understood ---------- */
 let ovTimer = null, ovSeq = 0;
 const OV_SYSTEM = `You help someone make a comic book. They describe one panel; you explain back, briefly and plainly, what will be drawn so they can check you understood them.
-Known characters are listed with their code words. Only those names are known characters. Anyone else mentioned is an unnamed extra.
+Known characters and known places are listed with their code words. Only those names are known characters; anyone else mentioned is an unnamed extra. A place code word means the scene happens in that place; mention it under "setting".
 If something is ambiguous (who says a line, where the scene is, what someone is doing), make the most sensible assumption and list it under "unclear" as a short question or assumption.
 Reply with JSON only, in this shape:
 {"summary":"one plain sentence of what the panel shows",
@@ -1270,7 +1533,7 @@ function ovContext(pg, pn){
   const cast = chars.length ? chars.map(c => `- ${c.name}${c.desc ? ': ' + c.desc : ''}`).join('\n') : '(none yet)';
   const ord = ordered(pg), i = ord.indexOf(pn);
   const prev = ord.slice(0, Math.max(0, i)).map(p => p.prompt).filter(Boolean).slice(-2);
-  return `Known characters:\n${cast}\n\n` + (prev.length ? `Earlier panels on this page, for context:\n${prev.map(p => '- ' + p).join('\n')}\n\n` : '');
+  return `Known characters:\n${cast}\n\nKnown places:\n${placeList()}\n\n` + (prev.length ? `Earlier panels on this page, for context:\n${prev.map(p => '- ' + p).join('\n')}\n\n` : '');
 }
 function checkOverview(now){
   clearTimeout(ovTimer);
@@ -1332,10 +1595,19 @@ function breakdownText(pn, prompt){
   return t;
 }
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', stopMic));
+function renderBg(){
+  const pn = curPanel(), t = $('#pPrompt').value, r = bgFor(pn, t);
+  $('#pBgRow').hidden = !r.opts.length; if (!r.opts.length) return;
+  $('#pBg').innerHTML = `<option value="">${r.auto && !r.chosen ? `Auto: ${esc(r.auto.pl.name)} · ${esc(r.auto.sd.name)} (from your words)` : 'Let the AI choose'}</option>` +
+    r.opts.map(o => `<option value="${esc(o.v)}"${r.chosen && r.chosen.v === o.v ? ' selected' : ''}>${esc(o.pl.name)} · ${esc(o.sd.name)}</option>`).join('');
+}
+$('#pBg').onchange = () => { curPanel().bg = $('#pBg').value; savePage(page()); renderBg(); };
 function panelChips(){
-  const f = found($('#pPrompt').value);
-  $('#pChips').innerHTML = f.length ? f.map(c => c.sheet ? `<span class="chip">★ ${esc(c.name)} ✓</span>` : `<span class="chip warn">⚠ ${esc(c.name)}: look not approved</span>`).join('')
-    : (chars.length ? '<span class="chip off">No characters in this panel yet. Type a code word or tap + below.</span>' : '');
+  renderBg();
+  const t = $('#pPrompt').value, f = found(t), pl = foundPlaces(t);
+  const chip = (c, mark) => c.sheet ? `<span class="chip">${mark} ${esc(c.name)} ✓</span>` : `<span class="chip warn">⚠ ${esc(c.name)}: look not approved</span>`;
+  $('#pChips').innerHTML = (f.length || pl.length) ? f.map(c => chip(c, '★')).concat(pl.map(c => chip(c, '⌂'))).join('')
+    : ((chars.length || places.length) ? '<span class="chip off">No characters or places in this panel yet. Type a code word or tap + below.</span>' : '');
 }
 function renderPanelStage(){
   const pg = page(), pn = curPanel(), bb = panelBox(pg, pn), img = panelImg(pn), asp = bestAspect(bb.w / bb.h);
@@ -1360,7 +1632,7 @@ function renderPanelStage(){
 }
 $('#pPrompt').oninput = async () => { curPanel().prompt = $('#pPrompt').value; panelChips(); checkOverview(false); };
 $('#pPrompt').onchange = () => savePage(page());
-$('#pInsert').onclick = e => { const b = e.target.closest('[data-ins]'); if (!b) return; const c = chars.find(x => x.id === b.dataset.ins);
+$('#pInsert').onclick = e => { const b = e.target.closest('[data-ins]'); if (!b) return; const c = chars.concat(places).find(x => x.id === b.dataset.ins);
   const t = $('#pPrompt'), p = t.selectionStart ?? t.value.length; t.value = t.value.slice(0,p) + c.name + ' ' + t.value.slice(p);
   curPanel().prompt = t.value; savePage(page()); panelChips(); checkOverview(false); t.focus(); };
 $('#takes').onclick = async e => { const b = e.target.closest('[data-take]'); if (!b) return; curPanel().pick = +b.dataset.take; await savePage(page()); renderPanelStage(); };
@@ -1384,14 +1656,19 @@ $('#drawPanel').onclick = async () => {
   if (busyPanels.has(pn.id)) return;
   pn.prompt = prompt; await savePage(pg);
   if (!prompt){ $('#panelErr').innerHTML = '<div class="err">Describe what happens in this panel first.</div>'; return; }
-  const cast = found(prompt), notOk = cast.filter(c => !c.sheet);
-  if (notOk.length){ $('#panelErr').innerHTML = `<div class="err">Approve ${esc(notOk.map(c => c.name).join(' and '))}'s look first (Your cast → Approve look). That's what keeps them consistent.</div>`; return; }
+  const cast = found(prompt), where = foundPlaces(prompt).slice(0, 2), notOk = cast.concat(where).filter(c => !c.sheet);
+  if (notOk.length){ $('#panelErr').innerHTML = `<div class="err">Approve the look of ${esc(notOk.map(c => c.name).join(' and '))} first (Open → Approve look). That's what keeps them consistent.</div>`; return; }
   const bb = panelBox(pg, pn), aspect = bestAspect(bb.w / bb.h);
   const ord = ordered(pg), prev = ord[ord.indexOf(pn) - 1], prevImg = prev && (srcOf(prev) || panelImg(prev));
   let text = `Draw ONE comic book panel in this style: ${styleText()}. Panel shape ${aspect} (${bb.w > bb.h * 1.15 ? 'wide' : bb.h > bb.w * 1.15 ? 'tall' : 'square-ish'}). Fill the whole frame with artwork; no panel borders, no page layout, no extra panels.
 Scene: ${prompt}`;
   if (cast.length) text += `\n\nCharacters in this panel: ${cast.map(c => c.name).join(', ')}. Each one has an APPROVED model sheet attached. Draw each character exactly as on their model sheet: same face, hair, body build, skin tone and outfit. Pose and expression should fit the scene; do not copy the model-sheet poses. Do not draw anyone else who looks like them.` +
     cast.filter(c => c.desc).map(c => `\n${c.name}: ${c.desc}`).join('');
+  const bg = bgFor(pn, prompt).pick;
+  if (bg){ const sides = bg.pl.sides, i = sides.indexOf(bg.sd), opp = sides.length === 4 ? sides[(i + 2) % 4] : sides.length === 2 ? sides[1 - i] : null;
+    text += `\n\nCamera direction: the camera faces the "${bg.sd.name}" side of ${bg.pl.name}. That side is directly behind the characters and fills the background, exactly as shown in the "${bg.sd.name.toUpperCase()}" view of the approved location sheet.${opp ? ` The "${opp.name}" side is behind the camera and is not visible.` : ''}`; }
+  if (where.length) text += `\n\nPlace: this panel is set in ${where.map(w => w.name).join(' and ')}. ${where.length > 1 ? 'Each place has' : 'It has'} an APPROVED location sheet attached. Redraw that exact place as the setting: same layout, furniture, fixtures, colours and key objects, in the same comic style. Choose the camera angle and how much of the room shows to suit the action; the place is the backdrop, the characters are the focus.` +
+    where.filter(w => w.desc).map(w => `\n${w.name}: ${w.desc}`).join('');
   text += breakdownText(pn, prompt);
   text += ROOM_TEXT;
   if (book.blurBg !== false) text += BLUR_TEXT;
@@ -1399,6 +1676,8 @@ Scene: ${prompt}`;
   const refs = [];
   cast.forEach(c => { refs.push({label:`APPROVED model sheet for ${c.name}: this is exactly how ${c.name} looks`, data: c.sheet.data});
     const face = c.photos.find(p => /face|front/.test(p.view)) || c.photos[0]; if (face && cast.length <= 4) refs.push({label:`Photo of the real ${c.name}, for face likeness only`, data: face.data}); });
+  where.forEach(w => refs.push({label:`APPROVED location sheet for the place ${w.name}: the scene takes place here`, data: w.sheet.data}));
+  if (bg && bg.sd.photos[0]) refs.push({label:`Photo of the ${bg.sd.name} side of ${bg.pl.name}: this is the background behind the characters`, data: bg.sd.photos[0].data});
   if (prevImg && refs.length < 12){ refs.push({label:'Previous panel on this page, for matching colours, lighting and art style only', data: prevImg}); }
   busyPanels.set(pn.id, Date.now()); $('#panelErr').innerHTML = ''; renderPanelStage(); renderPanels(); tickProg();
   try {
@@ -1421,7 +1700,7 @@ function pageScript(pg){
   bubs.forEach((x,i) => bRef.set('B' + (i+1), x.b));
   ord.forEach((p,i) => pRef.set('P' + (i+1), p));
   const cast = chars.length ? chars.map(c => `- ${c.name}${c.desc ? ': ' + c.desc : ''}`).join('\n') : '(none)';
-  let t = `Book: ${book.title || 'untitled comic'}. Page ${cur+1} of ${pages.length}.\nKnown characters (code words):\n${cast}\n\nThe page, in reading order:\n`;
+  let t = `Book: ${book.title || 'untitled comic'}. Page ${cur+1} of ${pages.length}.\nKnown characters (code words):\n${cast}\nKnown places (code words):\n${placeList()}\n\nThe page, in reading order:\n`;
   ord.forEach((p,i) => {
     t += `P${i+1} (panel ${i+1}) description: ${p.prompt ? p.prompt : '(not written yet)'}\n`;
     bubs.forEach((x,j) => { if (x.pi === i) t += `   B${j+1} [${BUB_NAME[x.b.type] || x.b.type} bubble]: "${x.b.text}"\n`; });
@@ -1526,7 +1805,7 @@ $('#blurBg').onchange = () => { book.blurBg = $('#blurBg').checked; saveBook(); 
 $('#exportBtn').onclick = async () => {
   const btn = $('#exportBtn'); btn.disabled = true; btn.textContent = 'Preparing…';
   try {
-    const data = JSON.parse(JSON.stringify({app:'comic-studio', v:3, book, chars, pages, tray})), cache = new Map(), jobs = [];
+    const data = JSON.parse(JSON.stringify({app:'comic-studio', v:3, book, chars, places, pages, tray})), cache = new Map(), jobs = [];
     const inline = async url => { if (!cache.has(url)) cache.set(url, fetch(url, {credentials: 'same-origin'}).then(r => r.blob()).then(b => new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); }))); return cache.get(url); };
     const walk = x => { for (const k of Object.keys(x)){ const v = x[k]; if (typeof v === 'string' && v.startsWith('/api/comic/img/')) jobs.push(inline(v).then(d => { x[k] = d; })); else if (v && typeof v === 'object') walk(v); } };
     walk(data); await Promise.all(jobs);
@@ -1541,6 +1820,7 @@ $('#importFile').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try { const j = JSON.parse(await f.text()); if (j.app !== 'comic-studio') throw 0;
     for (const c of j.chars || []){ if (!c.id || !Array.isArray(c.photos)) continue; await put('chars', c); chars = chars.filter(x => x.id !== c.id).concat(c); }
+    for (const c of j.places || []){ if (!c.id || !Array.isArray(c.photos)) continue; c.kind = 'place'; await put('places', c); places = places.filter(x => x.id !== c.id).concat(c); }
     if (Array.isArray(j.pages) && j.pages.length){ for (const p of pages) await del('pages', p.id);
       pages = j.pages.filter(p => p.id && Array.isArray(p.panels)).map(migratePage).sort((a,b) => a.order - b.order);
       for (const p of pages) await put('pages', p); cur = 0; }
@@ -1587,11 +1867,11 @@ async function start(){
   started = true;
   let data;
   try { data = await api('GET', '/api/comic/all'); } catch (e) { showTopErr('Could not load your comic from the server: ' + e.message); data = {chars: [], pages: [], meta: []}; }
-  chars = data.chars || []; pages = (data.pages || []).map(migratePage).sort((a,b) => a.order - b.order);
+  chars = data.chars || []; places = data.places || []; pages = (data.pages || []).map(migratePage).sort((a,b) => a.order - b.order);
   const m = (data.meta || []).find(x => x.id === 'book'); if (m) book = {...book, ...m};
   const t = (data.meta || []).find(x => x.id === 'tray'); if (t && Array.isArray(t.items)) tray = t.items;
   // first time on the server: bring across anything made earlier in this browser
-  if (!chars.length && !pages.some(p => p.panels.some(x => x.takes.length || x.prompt) || p.bubbles.length) && ls.get('cs.moved', '') !== '1'){
+  if (!chars.length && !places.length && !pages.some(p => p.panels.some(x => x.takes.length || x.prompt) || p.bubbles.length) && ls.get('cs.moved', '') !== '1'){
     const old = await readOldBrowserData();
     if (old && ((old.chars || []).length || (old.pages || []).length)){
       chars = old.chars || []; pages = (old.pages || []).map(migratePage).sort((a,b) => a.order - b.order);

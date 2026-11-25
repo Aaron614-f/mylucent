@@ -6,7 +6,7 @@
 //     Logging in gives the browser a cookie that lasts 60 days.
 //   • AI: the page never sees an API key. It asks this server, and the
 //     server calls OpenAI or Google with the key from Railway's Variables.
-//   • Saving: characters, pages, pictures and settings are saved on the
+//   • Saving: characters, places, pages, pictures and settings are saved on the
 //     Railway Volume (DATA_DIR, normally /data) in /data/comic/, so they
 //     survive every redeploy. Pictures are saved as image files.
 //
@@ -29,7 +29,7 @@ const crypto = require('crypto');
 module.exports = function mountComicStudio(app, { express, dataDir }) {
   const ROOT = path.join(dataDir, 'comic');
   const IMG_DIR = path.join(ROOT, 'img');
-  const STORES = ['chars', 'pages', 'meta'];
+  const STORES = ['chars', 'places', 'pages', 'meta'];
   fs.mkdirSync(IMG_DIR, { recursive: true });
   STORES.forEach((s) => fs.mkdirSync(path.join(ROOT, s), { recursive: true }));
 
