@@ -123,6 +123,19 @@ module.exports = function mountComicStudio(app, { express, dataDir }) {
     res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
     res.sendFile(file);
   });
+  // delete a picture file, but only when no saved document still uses it
+  app.delete('/api/comic/img/:name', needLogin, (req, res) => {
+    const name = req.params.name;
+    if (!/^[a-f0-9]{40}\.(png|jpg|webp|gif)$/.test(name)) return res.status(404).end();
+    for (const s of STORES) {
+      for (const f of fs.readdirSync(path.join(ROOT, s))) {
+        if (!f.endsWith('.json')) continue;
+        try { if (fs.readFileSync(path.join(ROOT, s, f), 'utf8').includes(name)) return res.json({ ok: true, kept: true }); } catch {}
+      }
+    }
+    try { fs.unlinkSync(path.join(IMG_DIR, name)); } catch {}
+    res.json({ ok: true, deleted: true });
+  });
   const big = express.json({ limit: '60mb' });
   app.post('/api/comic/img', needLogin, big, (req, res) => {
     try { res.json({ url: saveDataUrl(req.body && req.body.data) }); }
