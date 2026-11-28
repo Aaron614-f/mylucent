@@ -93,6 +93,11 @@ textarea{resize:vertical;min-height:90px}
 .pthumb .no{font:800 13px 'Nunito Sans',sans-serif;padding:1px 8px;border-radius:999px;color:var(--ink)}
 .pthumb.on .no{background:var(--ink);color:var(--bg)}
 .pthumb.drop .mini{outline:3px dashed #2e6fe8;outline-offset:3px}
+.pgwrap{position:relative;flex:none}
+.pgdel{position:absolute;top:-8px;right:-8px;z-index:2;min-height:0;width:24px;height:24px;padding:0;border-radius:999px;background:#fff;font:800 15px/1 'Nunito Sans',sans-serif;box-shadow:2px 2px 0 var(--line);opacity:0;transition:opacity .12s}
+.pgwrap:hover .pgdel,.pgdel:focus-visible,.pgdel.sure{opacity:1}
+.pgdel.sure{width:auto;padding:0 8px;font-size:12px;background:#e8352e;color:#fff}
+@media (hover:none){.pgdel{opacity:1}}
 .peek{position:fixed;z-index:60;width:170px;aspect-ratio:540/720;background:#fff;border:3px solid var(--line);box-shadow:5px 5px 0 var(--line);pointer-events:none}
 .peek img{display:block;width:100%;height:100%;object-fit:cover}
 .addpg{flex:none;width:66px;height:88px;min-height:0;padding:0;border:3px dashed var(--line);border-radius:6px;background:var(--bg);box-shadow:none;font:800 13px 'Nunito Sans',sans-serif;line-height:1.2;display:grid;place-items:center}
@@ -464,8 +469,8 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
         <div id="panelErr"></div>
         <div class="pstage" id="pStage"></div>
         <div id="fixBar" class="stack" hidden style="gap:8px;border:2px solid var(--line);border-radius:6px;padding:10px">
-          <p class="hint" style="margin:0">Brush over the part to fix. Only that part is redrawn; the rest of the picture stays exactly the same.</p>
-          <div><label for="fixText">What should change there?</label><input id="fixText" placeholder="e.g. remove the extra side lock, keep the hair like his model sheet"></div>
+          <p class="hint" style="margin:0" id="fixHint">Brush over the part to change: only that part is redrawn and the rest stays exactly the same. Or don't brush at all to let the AI change the whole picture while keeping the scene the same.</p>
+          <div><label for="fixText" id="fixLbl">What should change?</label><input id="fixText" placeholder="e.g. remove the extra side lock, keep the hair like his model sheet"></div>
           <div class="row" style="align-items:end">
             <div><label for="fixBrush">Brush size</label><input type="range" id="fixBrush" min="10" max="160" value="50" style="accent-color:#e8352e;padding:0"></div>
             <button type="button" class="small fit" id="fixClear">Clear marks</button>
@@ -473,7 +478,12 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
             <button type="button" class="primary fit" id="fixGo">Fix it</button>
           </div>
         </div>
-        <div class="row" style="justify-content:center"><button type="button" class="small fit" id="fixOpen" hidden>Fix part of the picture</button></div>
+        <div class="row" style="justify-content:center;gap:8px"><button type="button" class="small fit" id="contOpen" hidden>Continue the scene from another panel</button><button type="button" class="small fit" id="fixOpen" hidden>Fix part of the picture</button></div>
+        <div id="contBar" class="stack" hidden style="gap:8px;border:2px solid var(--line);border-radius:6px;padding:10px">
+          <p class="hint" style="margin:0">Pick the panel this one carries on from. Its picture is copied here, then you say what changes.</p>
+          <div class="bgpick" id="contPick"></div>
+          <div class="row"><button type="button" class="small fit" id="contCancel">Cancel</button></div>
+        </div>
         <p class="hint" id="pShape" style="margin:0;text-align:center"></p>
         <div class="takes" id="takes" hidden></div>
       </div>
@@ -1465,8 +1475,8 @@ function edPt(e){ const r = $('#edPage').getBoundingClientRect(); return [(e.cli
 const panelAt = p => page().panels.find(x => G.inside(x.pts, p));
 
 function renderPages(){
-  $('#pages').innerHTML = pages.map((p, i) => `<button type="button" class="pthumb${i === cur ? ' on' : ''}" data-pg="${i}" draggable="true" aria-label="Page ${i+1}"${i === cur ? ' aria-current="page"' : ''}>
-      <span class="mini">${thumbs.get(p.id)?.url ? `<img src="${thumbs.get(p.id).url}" alt="">` : ''}</span><span class="no">${i+1}</span></button>`).join('')
+  $('#pages').innerHTML = pages.map((p, i) => `<div class="pgwrap"><button type="button" class="pthumb${i === cur ? ' on' : ''}" data-pg="${i}" draggable="true" aria-label="Page ${i+1}"${i === cur ? ' aria-current="page"' : ''}>
+      <span class="mini">${thumbs.get(p.id)?.url ? `<img src="${thumbs.get(p.id).url}" alt="">` : ''}</span><span class="no">${i+1}</span></button>${pages.length > 1 ? `<button type="button" class="pgdel" data-pgdel="${i}" aria-label="Delete page ${i+1}" title="Delete page ${i+1}">×</button>` : ''}</div>`).join('')
     + `<button type="button" class="addpg" id="addPage" aria-label="Add a page">+<br>Page</button>`;
   $('#pageTitle').textContent = `Page ${cur+1} of ${pages.length}`;
   $('#delPage').disabled = pages.length < 2;
@@ -1493,6 +1503,10 @@ async function makeThumbs(){
 }
 $('#pages').addEventListener('click', e => {
   if (e.target.closest('#addPage')) return addPage();
+  const x = e.target.closest('[data-pgdel]');
+  if (x){ const i = +x.dataset.pgdel;
+    if (!x.classList.contains('sure')){ x.classList.add('sure'); x.textContent = 'Delete?'; setTimeout(() => { if (x.isConnected){ x.classList.remove('sure'); x.textContent = '×'; } }, 3500); return; }
+    return deletePage(i); }
   const b = e.target.closest('[data-pg]'); if (!b) return; const i = +b.dataset.pg; if (i === cur) return; cur = i; ls.set('cs.cur', cur); hidePeek(); renderPages();
 });
 $('#pgLeft').onclick = () => $('#pages').scrollBy({left: -$('#pages').clientWidth * .8});
@@ -1749,11 +1763,15 @@ stage.addEventListener('dblclick', e => {
   const pt = edPt(e), hit = page().bubbles.slice().reverse().find(b => { const g = bGeo(b); return Math.abs(pt[0] - b.x) <= g.w/2 && Math.abs(pt[1] - b.y) <= g.h/2; });
   if (hit && ed.editing !== hit.id) editBubble(hit.id);
 });
-// a click anywhere off the page lets go of the selected panel
+// a click anywhere else lets go of whatever is selected (a panel or a bubble)
 document.addEventListener('pointerdown', e => {
-  if (ed.panelSel == null || e.target.closest('#edStage, #edSide, #edTools, dialog, .pstrip, .peek')) return;
-  ed.panelSel = null; renderPanels(); renderSide();
-}, true);   // capture: checked before the page redraws the clicked element
+  const t = e.target, keep = t.closest('#edSide, #edTools, dialog, .menu, .peek');
+  if (keep) return;
+  let changed = false;
+  if (ed.sel != null && !t.closest('.bub, [data-corner], [data-tip], .qbar')){ ed.sel = ed.editing = null; changed = 'b'; }
+  if (ed.panelSel != null && !t.closest('#edStage, .pstrip')){ ed.panelSel = null; changed = 'p'; }
+  if (changed){ renderBubbles(); renderPanels(); renderSide(); }
+}, true);   // capture: checked before the page redraws the clicked element   // capture: checked before the page redraws the clicked element
 stage.addEventListener('wheel', e => {
   if (ed.tool !== 'panels') return; const pn = panelAt(edPt(e)); if (!pn?.img || !srcOf(pn)) return;   // not over a picture: let the page scroll
   if (ed.panelSel !== pn.id){ ed.panelSel = pn.id; renderPanels(); renderSide(); }
@@ -1870,8 +1888,14 @@ $('#delPage').onclick = async e => {
   const b = e.target; if (pages.length < 2) return;
   if (!b.dataset.sure){ b.dataset.sure = 1; b.textContent = 'Click again to delete'; setTimeout(() => { delete b.dataset.sure; b.textContent = 'Delete this page'; }, 3000); return; }
   delete b.dataset.sure; b.textContent = 'Delete this page'; $('#pagePop').hidden = true;
-  await del('pages', page().id); pages.splice(cur, 1); cur = Math.max(0, cur-1); await reorder(); renderPages();
+  await deletePage(cur);
 };
+async function deletePage(i){
+  if (pages.length < 2 || !pages[i]) return;
+  const gone = pages[i]; await del('pages', gone.id); thumbs.delete(gone.id); pages.splice(i, 1);
+  if (cur > i || cur >= pages.length) cur = Math.max(0, cur - 1);
+  ls.set('cs.cur', cur); await reorder(); hidePeek(); renderPages(); toast(`Page ${i+1} deleted.`);
+}
 
 /* ---------- page image (download + print) ---------- */
 async function renderPagePNG(pg, W = 1600){
@@ -2053,7 +2077,7 @@ function panelChips(){
 }
 function renderPanelStage(){
   if (fix.on && curPanel().id === fix.pid && !busyPanels.has(fix.pid)) return renderFixStage();
-  $('#fixBar').hidden = true;
+  $('#fixBar').hidden = true; $('#contOpen').hidden = true;
   const pg = page(), pn = curPanel(), bb = panelBox(pg, pn), img = panelImg(pn), asp = bestAspect(bb.w / bb.h);
   const ins = G.inset(pn.pts, (pg.gutter || 12)/2);
   $('#pStage').style.aspectRatio = `${bb.w.toFixed(1)} / ${bb.h.toFixed(1)}`;
@@ -2074,6 +2098,7 @@ function renderPanelStage(){
   $('#putPanel').disabled = !img || busyPanels.has(pn.id);
   $('#putPanel').textContent = inPlace ? '✓ In the panel' : '✓ Put in panel';
   $('#fixOpen').hidden = !img || busyPanels.has(pn.id) || !!(pn.img && pn.img.upload && pn.pick < 0);
+  $('#contOpen').hidden = busyPanels.has(pn.id) || !contSources(pn).length; if (busyPanels.has(pn.id) || !$('#contBar').dataset.on) $('#contBar').hidden = true;
 }
 $('#pPrompt').oninput = async () => { curPanel().prompt = $('#pPrompt').value; panelChips(); checkOverview(false); };
 $('#pPrompt').onchange = () => savePage(page());
@@ -2112,10 +2137,13 @@ const fixDims = r => {
   if (settings().provider === 'gemini'){ const a = bestAspect(r), k = ratio(a); return k >= 1 ? {W: 1536, H: Math.round(1536 / k), aspect: a} : {W: Math.round(1536 * k), H: 1536, aspect: a}; }
   return r > 1.05 ? {W: 1536, H: 1024, aspect: '3:2'} : r < 0.95 ? {W: 1024, H: 1536, aspect: '2:3'} : {W: 1024, H: 1024, aspect: '1:1'};
 };
-async function startFix(){
+async function startFix(cont){
   const pn = curPanel(), src = panelImg(pn); if (!src) return;
-  fix.img = await loadImg(src); Object.assign(fix, fixDims(fix.img.naturalWidth / fix.img.naturalHeight), {on: true, pid: pn.id});
-  fixMask.width = fix.W; fixMask.height = fix.H; $('#fixText').value = ''; renderPanelStage(); $('#fixText').focus();
+  fix.img = await loadImg(src); Object.assign(fix, fixDims(fix.img.naturalWidth / fix.img.naturalHeight), {on: true, pid: pn.id, cont: !!cont});
+  fixMask.width = fix.W; fixMask.height = fix.H; $('#fixText').value = '';
+  $('#fixLbl').textContent = cont ? 'What happens next? (only this changes)' : 'What should change?';
+  $('#fixText').placeholder = cont ? 'e.g. Dave now turns to face Mia and smiles' : 'e.g. remove the extra side lock';
+  renderPanelStage(); $('#fixText').focus();
 }
 function stopFix(){ fix.on = false; fix.img = null; renderPanelStage(); }
 function renderFixStage(){
@@ -2140,21 +2168,44 @@ $('#pStage').addEventListener('pointerdown', e => { if (e.target.id !== 'fixCv')
 $('#pStage').addEventListener('pointermove', e => { if (!fdrawing || e.target.id !== 'fixCv') return; const p = fixPt(e); fixBrush(fdrawing, p); fdrawing = p; drawFix(); });
 $('#pStage').addEventListener('pointerup', () => { fdrawing = null; });
 const fixEmpty = () => { const d = fixMask.getContext('2d').getImageData(0, 0, fix.W, fix.H).data; for (let i = 3; i < d.length; i += 16) if (d[i]) return false; return true; };
-$('#fixOpen').onclick = startFix;
+$('#fixOpen').onclick = () => startFix(false);
+// Continue the scene: other panels' pictures, nearest earlier panel first
+function contSources(pn){
+  const out = [], all = pages.flatMap((pg, pi) => ordered(pg).map((x, k) => ({pg, pi, pn: x, k})));
+  const me = all.findIndex(a => a.pn === pn), ord = me < 0 ? all : all.slice(0, me).reverse().concat(all.slice(me + 1));
+  for (const a of ord){ const src = srcOf(a.pn) || panelImg(a.pn); if (src && a.pn !== pn) out.push({src, label: `Page ${a.pi+1}, panel ${a.k+1}`}); }
+  return out.slice(0, 24);
+}
+$('#contOpen').onclick = () => {
+  const list = contSources(curPanel());
+  $('#contPick').innerHTML = list.map((x, i) => `<button type="button" data-cont="${i}" title="${esc(x.label)}" aria-label="${esc(x.label)}"${i === 0 ? ' class="on"' : ''}><img src="${x.src}" alt=""></button>`).join('');
+  $('#contBar').dataset.on = 1; $('#contBar').hidden = false;
+};
+$('#contCancel').onclick = () => { delete $('#contBar').dataset.on; $('#contBar').hidden = true; };
+$('#contPick').onclick = async e => {
+  const b = e.target.closest('[data-cont]'); if (!b) return; const x = contSources(curPanel())[+b.dataset.cont]; if (!x) return;
+  const pg = page(), pn = curPanel();
+  let i = pn.takes.indexOf(x.src); if (i < 0){ pn.takes.push(x.src); if (pn.takes.length > 6){ pn.takes.shift(); if (pn.img && !pn.img.upload){ pn.img.take--; if (pn.img.take < 0) pn.img = null; } } i = pn.takes.indexOf(x.src); }
+  pn.pick = i; await savePage(pg); delete $('#contBar').dataset.on; $('#contBar').hidden = true;
+  startFix(true);
+};
 $('#fixCancel').onclick = stopFix;
 $('#fixClear').onclick = () => { fixMask.getContext('2d').clearRect(0, 0, fix.W, fix.H); drawFix(); };
 $('#fixGo').onclick = async () => {
   const pg = page(), pn = curPanel(), what = $('#fixText').value.trim();
   const err = m => { $('#panelErr').innerHTML = `<div class="err">${esc(m)}</div>`; };
   if (busyPanels.has(pn.id)) return;
-  if (fixEmpty()) return err('Brush over the part you want fixed first.');
-  if (!what) return err('Say what should change there, e.g. "remove the extra side lock".');
+  if (!what) return err(fix.cont ? 'Say what happens next, e.g. "Dave now turns to face Mia".' : 'Say what should change, e.g. "remove the extra side lock".');
+  const whole = fixEmpty();   // no marks: the AI may touch the whole picture, keeping the scene the same
   const mk = () => { const c = document.createElement('canvas'); c.width = fix.W; c.height = fix.H; return c; };
   const baseCv = mk(); baseCv.getContext('2d').drawImage(fix.img, 0, 0, fix.W, fix.H);
   const apiMask = mk(), am = apiMask.getContext('2d'); am.fillStyle = '#000'; am.fillRect(0, 0, fix.W, fix.H); am.globalCompositeOperation = 'destination-out'; am.drawImage(fixMask, 0, 0);
   const hintCv = mk(), hm = hintCv.getContext('2d'); hm.drawImage(baseCv, 0, 0); hm.globalAlpha = .55; hm.drawImage(fixMask, 0, 0);
   const cast = found(what + ' ' + (pn.prompt || '')).filter(c => c.sheet);
-  let text = `Edit this comic book panel. Change ONLY the marked area (transparent in the mask, shown in red on the hint copy): ${what}.
+  let text = whole
+    ? `This is a comic book panel. Make the ${fix.cont ? 'NEXT moment of the very same scene' : 'same picture again'} with ONE change: ${what}.
+Keep EVERYTHING else exactly as it is: the same camera position and angle, framing, background, room, furniture, objects, lighting, colours, characters, faces, hair, clothes and art style. Change only what the change needs (for example a pose, an expression or one object); nothing else may move, appear or disappear.`
+    : `Edit this comic book panel. Change ONLY the marked area (transparent in the mask, shown in red on the hint copy): ${what}.
 Everything outside the marked area must stay exactly as it is. Inside it, match the picture exactly: same comic art style, line weight, colours, lighting and perspective, so the fix blends in invisibly.`;
   if (cast.length) text += `\nCharacters in this panel: ${cast.map(c => c.name).join(', ')}. Their APPROVED model sheets are attached: anything you redraw on them must match their sheet exactly.` + cast.map(charRules).join('') + HAIR_RULE;
   text += neverText() + '\nDo NOT add speech bubbles, captions or any text.';
@@ -2162,17 +2213,21 @@ Everything outside the marked area must stay exactly as it is. Inside it, match 
   const keepImg = fix.img; fix.on = false;
   busyPanels.set(pn.id, Date.now()); $('#panelErr').innerHTML = ''; renderPanelStage(); renderPanels(); tickProg();
   try {
-    const url = await generateImage(text, refs, fix.aspect, {base: baseCv.toDataURL('image/png'), mask: apiMask.toDataURL('image/png'), hint: hintCv.toDataURL('image/jpeg', .85), baseLabel: 'THE PANEL TO FIX (only the masked area may change)'});
+    const url = whole
+      ? await generateImage(text, refs, fix.aspect, {base: baseCv.toDataURL('image/png'), baseLabel: 'THE PANEL TO COPY (keep everything; make only the one change)'})
+      : await generateImage(text, refs, fix.aspect, {base: baseCv.toDataURL('image/png'), mask: apiMask.toDataURL('image/png'), hint: hintCv.toDataURL('image/jpeg', .85), baseLabel: 'THE PANEL TO FIX (only the masked area may change)'});
     recordSecs('panel', (Date.now() - busyPanels.get(pn.id)) / 1000);
     // put the untouched picture back everywhere outside the marks (soft edges), so nothing else can change
     const gen = await loadImg(url), out = mk(), o = out.getContext('2d'); o.drawImage(gen, 0, 0, fix.W, fix.H);
+    if (!whole){
     const soft = mk(), sm = soft.getContext('2d'); sm.filter = `blur(${Math.round(fix.W / 160)}px)`; sm.drawImage(fixMask, 0, 0); sm.drawImage(fixMask, 0, 0);
     const keep = mk(), km = keep.getContext('2d'); km.drawImage(keepImg, 0, 0, fix.W, fix.H); km.globalCompositeOperation = 'destination-out'; km.drawImage(soft, 0, 0);
     o.drawImage(keep, 0, 0);
+    }
     pn.takes.push(out.toDataURL('image/jpeg', .92));
     if (pn.takes.length > 6){ pn.takes.shift(); if (pn.img && !pn.img.upload){ pn.img.take--; if (pn.img.take < 0) pn.img = null; } }
     pn.pick = pn.takes.length - 1; await savePage(pg); remember(pn.takes[pn.pick]);
-    toast('Fixed. It is saved as a new take, so the old one is still there.');
+    toast(fix.cont ? 'Done. The new moment is saved as a new take.' : 'Done. It is saved as a new take, so the old one is still there.');
   } catch (e) { if (curPanel() === pn && $('#panelDlg').open) err(e.message); else showTopErr(`Page ${pages.indexOf(pg)+1}, panel ${panelNo(pg, pn)}: ${e.message}`); }
   finally { busyPanels.delete(pn.id); if (curPanel() === pn) renderPanelStage(); if (pg === page()){ renderPanels(); renderSide(); } }
 };
