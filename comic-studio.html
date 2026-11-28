@@ -254,6 +254,12 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
 .gal .x.sure{width:auto;padding:0 10px;font-size:13px;background:#e8352e;color:#fff}
 .gal img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .gal [data-gal]:hover{outline:3px solid var(--red)}
+.sphead{display:flex;align-items:center;justify-content:space-between;gap:8px}.sphead h3{margin:0}
+.sphead .small{min-height:34px;width:34px;padding:0;font-size:18px}
+.sidepics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:calc(100vh - 330px);min-height:160px;overflow-y:auto;padding:2px 6px 6px 2px;align-content:start}
+.sidepics button{padding:0;aspect-ratio:1/1;min-height:0;overflow:hidden;box-shadow:2px 2px 0 var(--line);cursor:grab;display:block}
+.sidepics img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.sidepics button:hover{outline:3px solid #e8352e}
 .idrow{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:10px 12px;border:2px solid var(--line);border-radius:6px;background:var(--bg)}
 .idrow input{width:22px;height:22px;margin:2px 0 0;accent-color:#e8352e}
 .idrow .old{color:var(--muted);text-decoration:line-through;font-size:14px}
@@ -457,7 +463,7 @@ body>.toast{position:fixed;left:16px;right:16px;bottom:16px;margin:0;border-radi
           <div class="micwrap"><textarea id="pPrompt" placeholder="Dave and Mia sprint down a rainy alley, Dave looking back over his shoulder. Speech bubble from Mia: &quot;Faster!&quot;"></textarea><button type="button" class="polish" data-polish="pPrompt" aria-label="Polish the panel description" title="Polish: rewrite so the AI understands it clearly"></button><button type="button" class="mic" data-mic="pPrompt" aria-label="Speak the panel description"></button></div></div>
         <p class="castline" id="pChips"></p>
         <div class="chips" id="pInsert" hidden></div>
-        <aside class="ov" id="ov" aria-live="polite"></aside>
+        <aside class="ov" id="ov" aria-live="polite" hidden></aside>
         <div class="stack" id="pBgBox" style="gap:8px">
           <label style="margin:0">Background photo</label>
           <div class="bgpick" id="pBgPick"></div>
@@ -1562,7 +1568,7 @@ function renderPanels(){
     if (ed.tool === 'panels' && ed.panelSel === p.id) svg += `<polygon points="${pts}" fill="none" stroke="#2e6fe8" stroke-width="3" stroke-dasharray="9 6"/>`;
     const n = order.indexOf(p) + 1;
     if (busyPanels.has(p.id)) labels += `<div class="busy2" style="left:${c[0].toFixed(0)}px;top:${c[1].toFixed(0)}px">DRAWING…${progHTML('panel', busyPanels.get(p.id), false)}</div>`;
-    else if (!src) labels += `<div class="lbl2" style="left:${c[0].toFixed(0)}px;top:${c[1].toFixed(0)}px"><b>Panel ${n}</b><small>${p.prompt ? esc(p.prompt.slice(0,50)) + (p.prompt.length > 50 ? '…' : '') : (p.takes.length ? 'Picture ready: click to put it in' : 'Click to draw')}</small></div>`;
+    else if (!src) labels += `<div class="lbl2" style="left:${c[0].toFixed(0)}px;top:${c[1].toFixed(0)}px"><b>Panel ${n}</b><small>${p.prompt ? esc(p.prompt.slice(0,50)) + (p.prompt.length > 50 ? '…' : '') : (p.takes.length ? 'Picture ready: click to put it in' : 'Double-click to draw')}</small></div>`;
   });
   $('#gPanels').innerHTML = svg; $('#edLabels').innerHTML = labels; tickProg();
 }
@@ -1627,7 +1633,13 @@ function renderSide(){
         h += `<label for="edZoom" style="margin:0">Zoom: ${z}%</label><input type="range" id="edZoom" min="50" max="400" value="${z}" style="accent-color:#e8352e;padding:0">
           <div class="row"><button type="button" class="small" id="edFit">Fit to panel</button><button type="button" class="small" id="edRemoveImg">Remove picture</button></div>`; }
     } else h += `<h3>Panels</h3><p class="hint" style="margin:0">Click a panel on the page to draw it or adjust its picture.</p>`;
-    h += `<button type="button" class="small" id="edGal" style="margin-top:4px">Choose from all pictures</button><p class="hint" style="margin:0">Or drag a photo from your computer straight onto a panel.</p>`;
+    if (ed.pics){
+      const pics = everyPicture();
+      h += `<div class="sphead"><h3>All pictures</h3><button type="button" class="small fit" id="spClose" aria-label="Close pictures">×</button></div>
+        <p class="hint" style="margin:0">Drag a picture onto any panel, or click one to put it in ${pn ? `panel ${panelNo(pg, pn)}` : 'the next empty panel'}.</p>
+        <div class="sidepics">${pics.length ? pics.map((src, i) => `<button type="button" data-sp="${i}" draggable="true" aria-label="Picture ${i+1}"><img src="${src}" alt="" loading="lazy"></button>`).join('') : '<p class="hint" style="margin:0;grid-column:1/-1">No pictures yet.</p>'}</div>
+        <div class="row"><label class="btn small" style="cursor:pointer;position:relative">+ Add pictures<input type="file" id="spUpload" accept="image/*" multiple style="position:absolute;opacity:0;width:1px;height:1px"></label><button type="button" class="small" id="edGal">Delete pictures…</button></div>`;
+    } else h += `<button type="button" class="small" id="spOpen" style="margin-top:4px">Choose from all pictures</button><p class="hint" style="margin:0">Opens your pictures here, so you can drag them onto the panels. You can also drag a photo from your computer straight onto a panel.</p>`;
   }
   $('#edSide').innerHTML = h;
 }
@@ -1659,6 +1671,12 @@ $('#edSide').addEventListener('click', async e => {
   const bt = e.target.closest('[data-btype]'); if (bt){ addBubble(bt.dataset.btype, PW/2, PH*0.28); return; }
   if (e.target.id === 'edDraw' && pn){ openPanel(pn.id); return; }
   if (e.target.id === 'edGal'){ openGallery('page'); return; }
+  if (e.target.id === 'spOpen'){ ed.pics = true; renderSide(); return; }
+  if (e.target.id === 'spClose'){ ed.pics = false; renderSide(); return; }
+  const sp = e.target.closest('[data-sp]');
+  if (sp){ const src = everyPicture()[+sp.dataset.sp]; if (!src) return; const pg = page(), target = pg.panels.find(p => p.id === ed.panelSel) || ordered(pg).find(p => !srcOf(p));
+    if (!target){ toast('Select a panel first, or drag the picture onto one.'); return; }
+    pushHist(); await putPicture(pg, target, {upload: src}); ed.panelSel = target.id; saveSoon(); renderEditor(); return; }
   if (e.target.id === 'edFit' && pn?.img){ pushHist(); Object.assign(pn.img, coverPlace(pg, pn, pn.img.w, pn.img.h)); saveSoon(); renderEditor(); return; }
   if (e.target.id === 'edRemoveImg' && pn){ pushHist(); pn.img = null; saveSoon(); renderEditor(); return; }
   const pic = e.target.closest('[data-pic]');
@@ -1838,7 +1856,11 @@ function openGallery(forWhat){
   $('#galGrid').innerHTML = pics.length ? pics.map((src, i) => `<div class="galt"><button type="button" data-gal="${i}" draggable="true" aria-label="Picture ${i+1}"><img src="${src}" alt="" loading="lazy"></button><button type="button" class="x" data-galdel="${i}" aria-label="Delete picture ${i+1}" title="Delete this picture">×</button></div>`).join('') : '<p class="hint" style="margin:0">No pictures yet. Draw a panel, or add your own.</p>';
   $('#galDlg').showModal();
 }
-$('#openGallery').onclick = () => openGallery('page');
+$('#openGallery').onclick = () => { ed.tool = 'panels'; ed.pics = true; renderTools(); renderPanels(); renderSide(); $('#edSide').scrollIntoView({block: 'nearest'}); };
+$('#edSide').addEventListener('dragstart', e => { const b = e.target.closest('[data-sp]'); if (!b) return; try { e.dataTransfer.setData('text/plain', 'cs-src:' + everyPicture()[+b.dataset.sp]); e.dataTransfer.effectAllowed = 'copy'; } catch {} });
+$('#edSide').addEventListener('change', async e => { if (e.target.id !== 'spUpload') return;
+  for (const f of [...e.target.files].filter(f => /^image\//.test(f.type))){ try { const src = await asUrl(await shrink(f, 1600)); tray.unshift({id: uid(), src}); remember(src); } catch {} }
+  put('meta', {id: 'tray', items: tray.slice(0, 200)}); renderSide(); });
 // remove a picture everywhere: the list of all pictures, uploads, every panel's takes (a panel showing it is emptied), then the file on the server
 async function deletePicture(src){
   picHistory = picHistory.filter(h => h.src !== src); tray = tray.filter(t => t.src !== src);
@@ -1859,10 +1881,10 @@ async function deletePicture(src){
   } catch {}
   if (touched.has(page())) renderEditor();
   if ($('#panelDlg').open) renderPanelStage();
-  toast('Picture deleted.');
+  renderSide(); toast('Picture deleted.');
 }
 $('#panelGallery').onclick = () => openGallery('panel');
-$('#galUpload').onchange = async e => { for (const f of [...e.target.files].filter(f => /^image\//.test(f.type))){ try { const src = await shrink(f, 1600); tray.unshift({id: uid(), src}); remember(src); } catch {} }
+$('#galUpload').onchange = async e => { for (const f of [...e.target.files].filter(f => /^image\//.test(f.type))){ try { const src = await asUrl(await shrink(f, 1600)); tray.unshift({id: uid(), src}); remember(src); } catch {} }
   e.target.value = ''; put('meta', {id: 'tray', items: tray.slice(0, 200)}); openGallery(galFor); };
 $('#galGrid').onclick = async e => {
   const x = e.target.closest('[data-galdel]');
@@ -1971,7 +1993,7 @@ function ovContext(pg, pn){
   return `Known characters:\n${cast}\n\nKnown places:\n${placeList()}\n\n` + (prev.length ? `Earlier panels on this page, for context:\n${prev.map(p => '- ' + p).join('\n')}\n\n` : '');
 }
 function checkOverview(now){
-  clearTimeout(ovTimer);
+  clearTimeout(ovTimer); return;   // the "AI understood" box was taken out of the drawing window
   const pn = curPanel(), prompt = $('#pPrompt').value.trim();
   if (pn.overview && pn.overview.forPrompt === prompt){ renderOverview(pn.overview.data, 'ok'); return; }
   if (prompt.length < 12){ renderOverview(null, 'empty'); return; }
@@ -2388,7 +2410,7 @@ $('#edIdeas').onclick = pageIdeas;
 function setPtab(t){
   t = 'ov';
   document.querySelectorAll('[data-ptab]').forEach(b => b.setAttribute('aria-selected', b.dataset.ptab === t));
-  $('#ov').hidden = t !== 'ov'; $('#pform').hidden = t !== 'form';
+  $('#ov').hidden = true; $('#pform').hidden = true;
   if (t === 'form') renderForm();
 }
 document.querySelectorAll('[data-ptab]').forEach(b => b.onclick = () => setPtab(b.dataset.ptab));
